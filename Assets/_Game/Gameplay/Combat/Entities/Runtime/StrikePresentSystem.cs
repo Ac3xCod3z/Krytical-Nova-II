@@ -49,7 +49,7 @@ namespace KryticalNova.Combat.Entities
                     continue;
                 }
                 m_Last[entry.Ghost] = new Last { Step = s.Step, Start = s.StepStartTick };
-                if (entry.Body.TryGetComponent(out PlayerMeleeCombat melee)) melee.ShowStrikeFromGhost(s.Step);
+                if (entry.TryGetPart(out PlayerMeleeCombat melee)) melee.ShowStrikeFromGhost(s.Step);
                 Shown++;
                 if (Trace) UnityEngine.Debug.Log($"[KnStrike] frame {UnityEngine.Time.frameCount}: strike {s.Step} drawn on '{entry.Body.name}' (start tick {s.StepStartTick.ToFixedString()})");
             }

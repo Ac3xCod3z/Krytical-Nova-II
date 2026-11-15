@@ -41,7 +41,7 @@ namespace KryticalNova.Combat.Entities
                     if (cast.Seq <= seen) continue;
                     seen = cast.Seq;
                     Shown++;
-                    if (caster.Body.TryGetComponent(out PlayerCombatSkills skills))
+                    if (caster.TryGetPart(out PlayerCombatSkills skills))
                         skills.ShowCastSeen(cast.SkillId.ToString(), cast.Rank, FindBody(em, cast.TargetGhostId));
                 }
                 m_Seen[caster.Ghost] = seen;

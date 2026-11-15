@@ -31,7 +31,7 @@ namespace KryticalNova.Persistence.Entities
                 ? rate.SimulationTickRate : 30);
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
-                if (!ReferenceEquals(entry.World, World) || entry.Body == null || !entry.Body.TryGetComponent(out PlayerDeathMotor death)) continue;
+                if (!ReferenceEquals(entry.World, World) || entry.Body == null || !entry.TryGetPart(out PlayerDeathMotor death)) continue;
                 // the owner's rule (5 Nov 2026): off solid ground, a death de-rezzes; read from the ghost the body follows
                 if (timed && em.Exists(entry.Ghost) && em.HasComponent<MotionPlan>(entry.Ghost) && em.HasComponent<MoveState>(entry.Ghost))
                     death.ServerBodyOffGround = DeathGround.OffTheGround(em.GetComponentData<MotionPlan>(entry.Ghost), curves, now.ServerTick, tickMicros,
@@ -101,7 +101,7 @@ namespace KryticalNova.Persistence.Entities
             foreach (GhostBodyEntry player in GhostBodyRegistry.Entries)
             {
                 if (!ReferenceEquals(player.World, World) || player.Body == null || !em.Exists(player.Ghost) || !em.HasComponent<DeathState>(player.Ghost)
-                    || !player.Body.TryGetComponent(out PlayerDeathMotor death)) continue;
+                    || !player.TryGetPart(out PlayerDeathMotor death)) continue;
                 DeathState now = em.GetComponentData<DeathState>(player.Ghost);
                 bool met = m_Seen.TryGetValue(player.Ghost, out byte seen);
                 m_Seen[player.Ghost] = now.Seq;

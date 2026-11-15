@@ -137,7 +137,7 @@ namespace KryticalNova.Persistence.Entities
             using var ids = m_InGame.ToComponentDataArray<NetworkId>(Allocator.Temp);
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
-                if (!ReferenceEquals(entry.World, World) || entry.Body == null || !em.Exists(entry.Ghost) || !entry.Body.TryGetComponent(out PlayerAutopilot autopilot)) continue;
+                if (!ReferenceEquals(entry.World, World) || entry.Body == null || !em.Exists(entry.Ghost) || !entry.TryGetPart(out PlayerAutopilot autopilot)) continue;
                 var state = autopilot.StateForOwner();
                 if (em.HasComponent<AutopilotTag>(entry.Ghost) && em.GetComponentData<AutopilotTag>(entry.Ghost).On != (byte)(state.on ? 1 : 0))
                     em.SetComponentData(entry.Ghost, new AutopilotTag { On = (byte)(state.on ? 1 : 0) });
@@ -260,7 +260,7 @@ namespace KryticalNova.Persistence.Entities
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
                 if (!ReferenceEquals(entry.World, World) || entry.Body == null) continue;
-                if (entry.IsLocal && m_HasPending && entry.Body.TryGetComponent(out PlayerAutopilot own))
+                if (entry.IsLocal && m_HasPending && entry.TryGetPart(out PlayerAutopilot own))
                 {
                     AutopilotStateRpc s = m_Pending;
                     own.ApplyServerState(s.On != 0, new Vector3(s.Anchor.x, s.Anchor.y, s.Anchor.z), s.ExpiresUtc, AutopilotRpcText.Join(s.Preferences, s.PreferencesMore));

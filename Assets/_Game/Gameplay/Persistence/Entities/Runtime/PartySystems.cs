@@ -141,7 +141,7 @@ namespace KryticalNova.Persistence.Entities
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
                 if (!ReferenceEquals(entry.World, World) || entry.Body == null || !em.Exists(entry.Ghost) || !em.HasComponent<PlayerPartyTag>(entry.Ghost)
-                    || !entry.Body.TryGetComponent(out IBodyParty party)) continue;
+                    || !entry.TryGetPart(out IBodyParty party)) continue;
                 if (em.GetComponentData<PlayerPartyTag>(entry.Ghost).Id == party.PartyId) continue;
                 em.SetComponentData(entry.Ghost, new PlayerPartyTag { Id = party.PartyId });
                 Writes++;
@@ -168,7 +168,7 @@ namespace KryticalNova.Persistence.Entities
             IBodyParty own = null;
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
-                if (!ReferenceEquals(entry.World, World) || entry.Body == null || !em.Exists(entry.Ghost) || !entry.Body.TryGetComponent(out IBodyParty party)) continue;
+                if (!ReferenceEquals(entry.World, World) || entry.Body == null || !em.Exists(entry.Ghost) || !entry.TryGetPart(out IBodyParty party)) continue;
                 if (em.HasComponent<PlayerPartyTag>(entry.Ghost)) party.MirrorPartyId(em.GetComponentData<PlayerPartyTag>(entry.Ghost).Id);
                 if (entry.IsLocal) own = party;
             }

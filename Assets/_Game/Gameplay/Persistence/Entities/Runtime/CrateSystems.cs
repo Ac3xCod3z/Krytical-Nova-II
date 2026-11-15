@@ -98,7 +98,7 @@ namespace KryticalNova.Persistence.Entities
             using var ids = m_InGame.ToComponentDataArray<NetworkId>(Allocator.Temp);
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
-                if (!ReferenceEquals(entry.World, World) || entry.Body == null || !em.Exists(entry.Ghost) || !entry.Body.TryGetComponent(out IBodyCrate crate)) continue;
+                if (!ReferenceEquals(entry.World, World) || entry.Body == null || !em.Exists(entry.Ghost) || !entry.TryGetPart(out IBodyCrate crate)) continue;
                 if (m_Told.TryGetValue(entry.Ghost, out int told) && told == crate.Version) continue;
                 Entity connection = Entity.Null;
                 for (int i = 0; i < ids.Length; i++) if (ids[i].Value == entry.NetworkId) { connection = connections[i]; break; }
@@ -149,7 +149,7 @@ namespace KryticalNova.Persistence.Entities
                 if (!whole || !CrateText.TryDecode(string.Concat(m_Parts), m_Entries)) continue;
                 m_Parts = null;
                 foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
-                    if (entry.IsLocal && ReferenceEquals(entry.World, World) && entry.Body != null && entry.Body.TryGetComponent(out IBodyCrate own))
+                    if (entry.IsLocal && ReferenceEquals(entry.World, World) && entry.Body != null && entry.TryGetPart(out IBodyCrate own))
                     { own.MirrorEntries(m_Entries); break; }
             }
         }

@@ -83,7 +83,7 @@ namespace KryticalNova.Combat.Entities
         {
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
-                if (!ReferenceEquals(entry.World, World) || entry.Body == null || !entry.Body.TryGetComponent(out PlayerMeleeCombat melee)
+                if (!ReferenceEquals(entry.World, World) || entry.Body == null || !entry.TryGetPart(out PlayerMeleeCombat melee)
                     || !m_Heard.Add(melee)) continue;
                 int networkId = entry.NetworkId;
                 melee.DamageShown += (position, result, fromSkill) => { if (HitNumbers.Send(World, networkId, position, result, fromSkill)) Sent++; };
@@ -112,7 +112,7 @@ namespace KryticalNova.Combat.Entities
             EntityManager.DestroyEntity(m_Numbers);
             PlayerMeleeCombat own = null;
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
-                if (entry.IsLocal && ReferenceEquals(entry.World, World) && entry.Body != null && entry.Body.TryGetComponent(out own)) break;
+                if (entry.IsLocal && ReferenceEquals(entry.World, World) && entry.Body != null && entry.TryGetPart(out own)) break;
             foreach (HitNumberRpc hit in numbers)
             {
                 Received++;

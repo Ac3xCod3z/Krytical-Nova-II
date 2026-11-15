@@ -33,7 +33,7 @@ namespace KryticalNova.Combat.Entities
         {
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
-                if (!ReferenceEquals(entry.World, World) || entry.Body == null || !entry.Body.TryGetComponent(out PlayerResources resources)
+                if (!ReferenceEquals(entry.World, World) || entry.Body == null || !entry.TryGetPart(out PlayerResources resources)
                     || !m_Heard.Add(resources)) continue;
                 int networkId = entry.NetworkId;
                 resources.Hurt += fraction => { if (HitNumbers.SendTo(World, networkId, Of(fraction))) Sent++; };

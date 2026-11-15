@@ -107,7 +107,7 @@ namespace KryticalNova.Persistence.Entities
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
                 if (!ReferenceEquals(entry.World, World) || entry.Body == null || !em.Exists(entry.Ghost) || !em.HasComponent<PlayerMountTag>(entry.Ghost)
-                    || !entry.Body.TryGetComponent(out IBodyMounts mounts)) continue;
+                    || !entry.TryGetPart(out IBodyMounts mounts)) continue;
                 var now = new PlayerMountTag { Selected = mounts.ShownSelected, Phase = mounts.ShownPhase, Growth = mounts.ShownGrowth, Fed = (byte)(mounts.ShownFed ? 1 : 0),
                     Running = (byte)(mounts.ShownRunning ? 1 : 0), EndsRunning = (byte)(mounts.ShownEndsRunning ? 1 : 0) };
                 PlayerMountTag had = em.GetComponentData<PlayerMountTag>(entry.Ghost);
@@ -137,7 +137,7 @@ namespace KryticalNova.Persistence.Entities
             IBodyMounts own = null;
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
-                if (!ReferenceEquals(entry.World, World) || entry.Body == null || !entry.Body.TryGetComponent(out IBodyMounts mounts)) continue;
+                if (!ReferenceEquals(entry.World, World) || entry.Body == null || !entry.TryGetPart(out IBodyMounts mounts)) continue;
                 if (entry.IsLocal) own = mounts;
                 if (!em.Exists(entry.Ghost) || !em.HasComponent<PlayerMountTag>(entry.Ghost)) continue;
                 PlayerMountTag tag = em.GetComponentData<PlayerMountTag>(entry.Ghost);
@@ -154,7 +154,7 @@ namespace KryticalNova.Persistence.Entities
             using var evolved = m_Evolved.ToComponentDataArray<MountEvolvedRpc>(Allocator.Temp);
             em.DestroyEntity(m_Evolved);
             foreach (MountEvolvedRpc e in evolved)
-                if (GhostBodyRegistry.TryGetByNetworkId(World, e.NetworkId, out GhostBodyEntry entry) && entry.Body != null && entry.Body.TryGetComponent(out IBodyMounts mounts))
+                if (GhostBodyRegistry.TryGetByNetworkId(World, e.NetworkId, out GhostBodyEntry entry) && entry.Body != null && entry.TryGetPart(out IBodyMounts mounts))
                     mounts.PlayEvolved(e.Stage);
         }
     }

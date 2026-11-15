@@ -177,7 +177,7 @@ namespace KryticalNova.Combat.Entities
                     else Dropped++;
                     continue;
                 }
-                if (hit == null || !hit.Body.TryGetComponent(out CombatEntity target)
+                if (hit == null || !hit.TryGetPart(out CombatEntity target)
                     || !HostileStrikes.Apply(target, strike, HostileAttackers.Of(strike.Attacker)))
                 {
                     Dropped++;
@@ -223,7 +223,7 @@ namespace KryticalNova.Combat.Entities
             }
             if (!em.Exists(ghost) || !em.HasBuffer<DodgeEvent>(ghost) || !em.HasComponent<DodgeSeq>(ghost)) return;   // a ghost not re-baked yet
             bool attacking = em.HasComponent<CombatState>(ghost) && IsAttacking(em.GetComponentData<CombatState>(ghost));
-            CombatStatTuningData tuning = hit.Body.TryGetComponent(out CharacterCombatStats own) ? own.TuningData : null;
+            CombatStatTuningData tuning = hit.TryGetPart(out CharacterCombatStats own) ? own.TuningData : null;
             int forCounter = tuning != null ? tuning.dodgesForCounter : CombatStatTuningData.DefaultDodgesForCounter;
             float streakSeconds = tuning != null ? tuning.dodgeStreakSeconds : CombatStatTuningData.DefaultDodgeStreakSeconds;
             DodgeMove move = DodgeRules.OnEvaded(ref streak, strike.Height, attacking, (float)World.Time.ElapsedTime, forCounter, streakSeconds, out bool counter);

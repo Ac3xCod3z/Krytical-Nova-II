@@ -148,7 +148,7 @@ namespace KryticalNova.Persistence.Entities
             if (m_Pages.IsEmpty && m_Prompts.IsEmpty) return;
             IBodyContacts own = null;
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
-                if (entry.IsLocal && ReferenceEquals(entry.World, World) && entry.Body != null && entry.Body.TryGetComponent(out own)) break;
+                if (entry.IsLocal && ReferenceEquals(entry.World, World) && entry.Body != null && entry.TryGetPart(out own)) break;
             if (!m_Pages.IsEmpty)
             {
                 using var pages = m_Pages.ToComponentDataArray<ContactPageRpc>(Allocator.Temp);

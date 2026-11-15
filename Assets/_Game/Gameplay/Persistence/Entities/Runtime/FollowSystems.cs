@@ -117,12 +117,12 @@ namespace KryticalNova.Persistence.Entities
                     if (plan.Kind == MotionKind.Jump && !m_Jumps.Knows(entry.Key))
                         Debug.Log($"[KnFollow] server: {entry.Body.name}'s first plan seen is a jump (seq {plan.PlanSeq}): mark set, not reported to followers.");
                     if (m_Jumps.IsNewJump(entry.Key, plan.Kind == MotionKind.Jump, plan.PlanSeq, plan.StartTick.IsValid ? plan.StartTick.SerializedData : 0)
-                        && entry.Body.TryGetComponent(out KryticalNova.Player.PlayerJumpMotor motor))
+                        && entry.TryGetPart(out KryticalNova.Player.PlayerJumpMotor motor))
                     {
                         // A plan's points are the body's own (its feet plus the NavMeshAgent's base offset, PlayerJumpFromSkills); a follower
                         // needs the ground points, as NGO's JumpStarted gave them. Cause of "Follow does not copy the leader's jump" (owner,
                         // 8 Nov 2026; two-bot run 3, 12 Nov): the landing 1 m above the ground was refused "Choose a walkable landing surface."
-                        Vector3 lift = Vector3.up * (entry.Body.TryGetComponent(out UnityEngine.AI.NavMeshAgent agent) ? agent.baseOffset : 0f);
+                        Vector3 lift = Vector3.up * (entry.TryGetPart(out UnityEngine.AI.NavMeshAgent agent) ? agent.baseOffset : 0f);
                         motor.ReportGhostJump(new Vector3(plan.FromXMm, plan.FromYMm, plan.FromZMm) * 0.001f - lift, new Vector3(plan.ToXMm, plan.ToYMm, plan.ToZMm) * 0.001f - lift);
                         Debug.Log($"[KnFollow] server: new jump of {entry.Body.name} (seq {plan.PlanSeq}) reported to its followers.");
                         GhostJumps++;
@@ -130,7 +130,7 @@ namespace KryticalNova.Persistence.Entities
                 }
                 if (!em.HasComponent<PlayerInput>(entry.Ghost)) continue;
                 if (!m_Clicks.IsNewClick(entry.Key, em.GetComponentData<PlayerInput>(entry.Ghost).ClickSeq)) continue;
-                if (entry.Body.TryGetComponent(out IBodyFollow follow)) { follow.OwnMoveOrdered(); OwnClicks++; }
+                if (entry.TryGetPart(out IBodyFollow follow)) { follow.OwnMoveOrdered(); OwnClicks++; }
             }
         }
     }
@@ -151,7 +151,7 @@ namespace KryticalNova.Persistence.Entities
             using var shown = m_Following.ToComponentDataArray<FollowingRpc>(Allocator.Temp);
             EntityManager.DestroyEntity(m_Following);
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
-                if (entry.IsLocal && ReferenceEquals(entry.World, World) && entry.Body != null && entry.Body.TryGetComponent(out IBodyFollow own))
+                if (entry.IsLocal && ReferenceEquals(entry.World, World) && entry.Body != null && entry.TryGetPart(out IBodyFollow own))
                 {
                     foreach (FollowingRpc rpc in shown) own.MirrorFollowing(rpc.Name.ToString());
                     break;

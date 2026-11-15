@@ -70,7 +70,7 @@ namespace KryticalNova.Persistence.Entities
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
                 if (!ReferenceEquals(entry.World, World) || entry.Body == null || !em.Exists(entry.Ghost) || !em.HasComponent<DuelState>(entry.Ghost)
-                    || !entry.Body.TryGetComponent(out IBodyDuel body)) continue;
+                    || !entry.TryGetPart(out IBodyDuel body)) continue;
                 int opponent = GhostIdOf(em, body.OpponentBody);
                 if (em.GetComponentData<DuelState>(entry.Ghost).OpponentGhostId != opponent)
                     em.SetComponentData(entry.Ghost, new DuelState { OpponentGhostId = opponent });
@@ -175,7 +175,7 @@ namespace KryticalNova.Persistence.Entities
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
                 if (!ReferenceEquals(entry.World, World) || entry.Body == null || !em.Exists(entry.Ghost) || !em.HasComponent<DuelState>(entry.Ghost)
-                    || !entry.Body.TryGetComponent(out IBodyDuel view)) continue;
+                    || !entry.TryGetPart(out IBodyDuel view)) continue;
                 int opponent = em.GetComponentData<DuelState>(entry.Ghost).OpponentGhostId;
                 Component found = null;
                 if (opponent != 0)
@@ -189,7 +189,7 @@ namespace KryticalNova.Persistence.Entities
             EntityManager.DestroyEntity(m_Shows);
             IBodyDuel own = null;
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
-                if (entry.IsLocal && ReferenceEquals(entry.World, World) && entry.Body != null && entry.Body.TryGetComponent(out own)) break;
+                if (entry.IsLocal && ReferenceEquals(entry.World, World) && entry.Body != null && entry.TryGetPart(out own)) break;
             if (own == null) return;
             foreach (DuelShowRpc show in shows) own.MirrorShow((DuelShowKind)show.Kind, show.Name.ToString(), show.Seconds, show.Won != 0);
         }

@@ -102,7 +102,7 @@ namespace KryticalNova.Persistence.Entities
             if (m_Done.IsEmpty) return;
             EntityManager.DestroyEntity(m_Done);
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
-                if (entry.IsLocal && ReferenceEquals(entry.World, World) && entry.Body != null && entry.Body.TryGetComponent(out IBodyRestyle restyle))
+                if (entry.IsLocal && ReferenceEquals(entry.World, World) && entry.Body != null && entry.TryGetPart(out IBodyRestyle restyle))
                 { restyle.MirrorRestyled(); break; }
         }
     }

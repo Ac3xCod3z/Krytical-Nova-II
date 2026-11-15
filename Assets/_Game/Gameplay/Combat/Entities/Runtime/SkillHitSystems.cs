@@ -22,7 +22,7 @@ namespace KryticalNova.Combat.Entities
         {
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
-                if (!ReferenceEquals(entry.World, World) || entry.Body == null || !entry.Body.TryGetComponent(out PlayerSkillAttacks attacks)
+                if (!ReferenceEquals(entry.World, World) || entry.Body == null || !entry.TryGetPart(out PlayerSkillAttacks attacks)
                     || !m_Heard.Add(attacks)) continue;
                 Entity ghost = entry.Ghost;
                 attacks.SkillHitShown += (skillId, position) => Record(ghost, skillId, position);
@@ -73,7 +73,7 @@ namespace KryticalNova.Combat.Entities
                     SkillHitEvent hit = ring[i];
                     if (hit.Seq <= seen) continue;
                     seen = hit.Seq;
-                    if (attacker.Body.TryGetComponent(out PlayerSkillAttacks attacks))
+                    if (attacker.TryGetPart(out PlayerSkillAttacks attacks))
                         attacks.ShowSkillHitSeen(hit.SkillId.ToString(), new Vector3(hit.XMm, hit.YMm, hit.ZMm) * 0.001f);
                 }
                 m_Seen[attacker.Ghost] = seen;
