@@ -37,6 +37,10 @@ namespace KryticalNova.Networking.Entities
         [Tooltip("How often Mount Companions are sent (written into the MountCompanionGhost prefab by its builder; day list item 19).")]
         [Min(1)] public int importanceCompanion = 40;
 
+        [Header("Serialized once for every client")]
+        [Tooltip("On: the server packs each player's snapshot once a tick and every client's packet copies it, instead of packing it again per client (perf round 3, R3-1: at 200 players this was the server's biggest cost). Written into the PlayerGhost prefab by its builder; what clients receive is the same. Changing it changes the baked ghost: client and server are then built together.")]
+        public bool preSerializePlayer = true;
+
         /// <summary>The asset from Resources; null when it is missing (the caller logs it and relevancy stays off).</summary>
         public static RelevancySettings Load() => Resources.Load<RelevancySettings>(ResourcePath);
     }

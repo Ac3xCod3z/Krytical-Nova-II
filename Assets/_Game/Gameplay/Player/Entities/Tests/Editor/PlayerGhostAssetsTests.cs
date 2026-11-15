@@ -32,6 +32,18 @@ namespace KryticalNova.Player.Entities.Tests
         }
 
         [Test]
+        public void TheShippedGhostPrefab_IsPreSerialized_AsTheSettingsSay()
+        {
+            // perf round 3 R3-1: the builder writes RelevancySettings.preSerializePlayer into the prefab; a prefab edited by hand
+            // (or a setting changed without a rebuild) would bake another ghost type than the settings describe.
+            var ghost = AssetDatabase.LoadAssetAtPath<GameObject>(PlayerGhostAssetsBuilder.PrefabPath).GetComponent<GhostAuthoringComponent>();
+            Networking.Entities.RelevancySettings s = Networking.Entities.RelevancySettings.Load();
+            Assert.IsNotNull(s);
+            Assert.IsTrue(s.preSerializePlayer, "the owner's perf pass ships player pre-serialization on");
+            Assert.AreEqual(s.preSerializePlayer, ghost.UsePreSerialization, "run Build Player Ghost Assets after changing the setting");
+        }
+
+        [Test]
         public void TheShippedGhost_SwingsTheNgoPlayersClips_WithItsNumbers()
         {
             // M4.4b: a strike lasts clip length / strike speed (NGO PlayerMeleeCombat.GetStrikeDuration), so the clips and every
@@ -133,6 +145,8 @@ namespace KryticalNova.Player.Entities.Tests
                 Assert.AreNotEqual(Entity.Null, prefab, w.Name);
                 Assert.IsTrue(w.EntityManager.HasComponent<PlayerGhostTag>(prefab), w.Name + ": the prefab is the player ghost");
                 Assert.IsTrue(w.EntityManager.HasComponent<PlayerLook>(prefab), w.Name + ": with the look version of step 8");
+                if (w.IsServer())
+                    Assert.IsTrue(w.EntityManager.HasComponent<PreSerializedGhost>(prefab), w.Name + ": players are packed once a tick (R3-1)");
                 Entity dummy = KnTestWorld.Singleton<StrikeDummyGhostPrefab>(w).Prefab;
                 Assert.AreNotEqual(Entity.Null, dummy, w.Name + ": the Strike Dummy ghost (M4.2b)");
                 Assert.IsTrue(w.EntityManager.HasComponent<CombatTarget>(dummy), w.Name + ": an attackable target");

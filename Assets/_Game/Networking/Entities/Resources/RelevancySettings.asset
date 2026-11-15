@@ -21,3 +21,4 @@ MonoBehaviour:
   importancePlayer: 100
   importanceHostile: 60
   importanceDummy: 10
+  preSerializePlayer: 1

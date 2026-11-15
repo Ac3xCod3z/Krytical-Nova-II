@@ -23,6 +23,13 @@ namespace KryticalNova.Networking.Entities
         public const float StopGraceSeconds = 3f;
 
         /// <summary>
+        /// The most closed connections the server handles in one tick (save, body, ghost); the rest wait in their close order for the
+        /// next ticks (the server's <c>leavesPerTick</c> setting overrides it; 0 = all at once). Perf round 3, R3-7: 200 bots leaving
+        /// together cost one 490-530 ms frame at about 2 ms a player. A player who joins again while queued is handled at once.
+        /// </summary>
+        public const int LeavesPerTick = 10;
+
+        /// <summary>
         /// A server that falls behind runs up to this many whole ticks in one frame, each on its own, never several ticks folded into
         /// one step (the package's default batches up to 4). The player's walk and jump are integer plans the owner predicts tick by
         /// tick; a folded step moved the server's walk one tick for several and skipped a jump's landing tick (GUI run 1, 31 Oct, at

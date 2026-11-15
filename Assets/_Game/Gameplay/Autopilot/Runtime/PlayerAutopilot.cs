@@ -208,6 +208,13 @@ namespace KryticalNova.Autopilot
         /// <summary>What the entity server sends the owner (and what a test compares): on, anchor, expiry, choices.</summary>
         public (bool on, Vector3 anchor, long expiresUtc, string preferences) StateForOwner() => (on, anchor, expiresUtc, preferences.ToJson());
 
+        /// <summary>
+        /// <see cref="StateForOwner"/> without building the JSON: the live choices themselves (never change them through this). The entity
+        /// server compares these every tick and builds the JSON only when something changed (perf round 3, R3-8: the JSON of 200 players
+        /// every tick was 85 % of the server's garbage).
+        /// </summary>
+        public (bool on, Vector3 anchor, long expiresUtc, AutopilotPreferences preferences) StateParts() => (on, anchor, expiresUtc, preferences);
+
         [Rpc(SendTo.Owner)]
         private void PreferencesRpc(string json)
         {

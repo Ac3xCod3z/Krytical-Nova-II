@@ -80,7 +80,15 @@ namespace KryticalNova.Persistence.Entities
     public partial class AutopilotServerSystem : SystemBase
     {
         EntityQuery m_SetOns, m_Prefs, m_InGame;
-        readonly Dictionary<Entity, string> m_Told = new Dictionary<Entity, string>();
+        // what each owner was last sent; compared field by field every tick, the JSON built only on a change (perf round 3, R3-8)
+        sealed class Told
+        {
+            public bool On;
+            public Vector3 Anchor;
+            public long ExpiresUtc;
+            public AutopilotPreferences Preferences;
+        }
+        readonly Dictionary<Entity, Told> m_Told = new Dictionary<Entity, Told>();
         readonly List<(PlayerAutopilot autopilot, string text)> m_Texts = new List<(PlayerAutopilot, string)>();
         readonly List<Entity> m_Gone = new List<Entity>();
 
@@ -138,19 +146,24 @@ namespace KryticalNova.Persistence.Entities
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
                 if (!ReferenceEquals(entry.World, World) || entry.Body == null || !em.Exists(entry.Ghost) || !entry.TryGetPart(out PlayerAutopilot autopilot)) continue;
-                var state = autopilot.StateForOwner();
+                var state = autopilot.StateParts();
                 if (em.HasComponent<AutopilotTag>(entry.Ghost) && em.GetComponentData<AutopilotTag>(entry.Ghost).On != (byte)(state.on ? 1 : 0))
                     em.SetComponentData(entry.Ghost, new AutopilotTag { On = (byte)(state.on ? 1 : 0) });
                 Entity connection = Connection(connections, ids, entry.NetworkId);
                 if (connection == Entity.Null) continue;
-                string key = state.on + "|" + state.anchor + "|" + state.expiresUtc + "|" + state.preferences;
-                if (m_Told.TryGetValue(entry.Ghost, out string told) && told == key) continue;
-                if (!AutopilotRpcText.TrySplit(state.preferences, out FixedString512Bytes prefs, out FixedString512Bytes prefsMore))
+                if (m_Told.TryGetValue(entry.Ghost, out Told told) && told.On == state.on && told.Anchor == state.anchor &&
+                    told.ExpiresUtc == state.expiresUtc && state.preferences != null && state.preferences.SameAs(told.Preferences)) continue;
+                string preferencesJson = state.preferences?.ToJson();
+                if (!AutopilotRpcText.TrySplit(preferencesJson, out FixedString512Bytes prefs, out FixedString512Bytes prefsMore))
                 {
-                    Debug.LogError($"[Autopilot] preferences of {System.Text.Encoding.UTF8.GetByteCount(state.preferences ?? "")} B do not fit the state RPC ({AutopilotRpcText.MaxBytes} B): not sent.");
+                    Debug.LogError($"[Autopilot] preferences of {System.Text.Encoding.UTF8.GetByteCount(preferencesJson ?? "")} B do not fit the state RPC ({AutopilotRpcText.MaxBytes} B): not sent.");
                     continue;
                 }
-                m_Told[entry.Ghost] = key;
+                if (told == null) m_Told[entry.Ghost] = told = new Told();
+                told.On = state.on;
+                told.Anchor = state.anchor;
+                told.ExpiresUtc = state.expiresUtc;
+                told.Preferences = state.preferences?.Copy();
                 Entity rpc = em.CreateEntity();
                 em.AddComponentData(rpc, new AutopilotStateRpc
                 {

@@ -61,6 +61,24 @@ namespace KryticalNova.Autopilot
 
         public string ToJson() => JsonUtility.ToJson(this);
 
+        /// <summary>A field-for-field copy (what was last sent, kept to compare with).</summary>
+        public AutopilotPreferences Copy() => (AutopilotPreferences)MemberwiseClone();
+
+        /// <summary>
+        /// True when every field equals <paramref name="other"/>'s, i.e. the JSON would be the same, without building it. A new field
+        /// must be added here too: AutopilotPreferencesTests changes every field by reflection and fails on one this misses.
+        /// </summary>
+        public bool SameAs(AutopilotPreferences other) =>
+            other != null &&
+            wholeZone == other.wholeZone && huntRadius.Equals(other.huntRadius) &&
+            skipTagged == other.skipTagged && skipGrey == other.skipGrey && skipRed == other.skipRed && includeBruisers == other.includeBruisers &&
+            attackSlot == other.attackSlot && areaSlot == other.areaSlot && gatherCount == other.gatherCount &&
+            buffSlotA == other.buffSlotA && buffSlotB == other.buffSlotB &&
+            stimHealthPercent.Equals(other.stimHealthPercent) && stimFluxPercent.Equals(other.stimFluxPercent) &&
+            magnetOn == other.magnetOn && magnetStims == other.magnetStims && magnetMaterials == other.magnetMaterials &&
+            takeCommon == other.takeCommon && takeUncommon == other.takeUncommon && takeRare == other.takeRare && takeEpic == other.takeEpic &&
+            whenPackFull == other.whenPackFull && whenStimsOut == other.whenStimsOut && whenAttacked == other.whenAttacked;
+
         /// <summary>Preferences from JSON, with every value brought inside its limits. Bad or empty JSON gives the defaults.</summary>
         public static AutopilotPreferences FromJson(string json, AutopilotSettings settings)
         {
