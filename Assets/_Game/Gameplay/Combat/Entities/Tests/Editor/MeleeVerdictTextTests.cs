@@ -1,6 +1,8 @@
 using System;
 using NUnit.Framework;
 using Unity.Mathematics;
+using UnityEngine.TestTools.Constraints;
+using Is = UnityEngine.TestTools.Constraints.Is;
 
 namespace KryticalNova.Combat.Entities.Tests
 {
@@ -31,22 +33,25 @@ namespace KryticalNova.Combat.Entities.Tests
         [Test]
         public void RecordingSwings_AllocatesNothing_TheOldLineDid()
         {
+            // GC.GetAllocatedBytesForCurrentThread reads 0 under Unity's Mono (proved by the first run): the Test Framework's own
+            // GC.Alloc recorder is the instrument; the heap growth printed beside it is only an estimate.
             const int swings = 1000;
             var v = default(MeleeResolveServerSystem.Verdict);
             string last = null;
             for (int i = 0; i < 10; i++) last = OldLine((byte)(i % 3 + 1), new int3(i), new int3(-i), i, i, true, false, 2500);   // warm up
-            long before = GC.GetAllocatedBytesForCurrentThread();
-            for (int i = 0; i < swings; i++) last = OldLine((byte)(i % 3 + 1), new int3(i), new int3(-i), i, i, true, false, 2500);
-            long oldBytes = GC.GetAllocatedBytesForCurrentThread() - before;
-            before = GC.GetAllocatedBytesForCurrentThread();
-            for (int i = 0; i < swings; i++)
-                v = new MeleeResolveServerSystem.Verdict { Step = (byte)(i % 3 + 1), Me = new int3(i), Them = new int3(-i), TicksBack = i, RingSamples = i, Resolved = true, ReachMm = 2500 };
-            long newBytes = GC.GetAllocatedBytesForCurrentThread() - before;
-            string line = $"[perf chunk 3] melee verdict, {swings} due swings: old {oldBytes} bytes, new {newBytes} bytes";
+            System.Action oldWay = () => { for (int i = 0; i < swings; i++) last = OldLine((byte)(i % 3 + 1), new int3(i), new int3(-i), i, i, true, false, 2500); };
+            System.Action newWay = () =>
+            {
+                for (int i = 0; i < swings; i++)
+                    v = new MeleeResolveServerSystem.Verdict { Step = (byte)(i % 3 + 1), Me = new int3(i), Them = new int3(-i), TicksBack = i, RingSamples = i, Resolved = true, ReachMm = 2500 };
+            };
+            long before = GC.GetTotalMemory(false); oldWay(); long oldBytes = GC.GetTotalMemory(false) - before;
+            before = GC.GetTotalMemory(false); newWay(); long newBytes = GC.GetTotalMemory(false) - before;
+            string line = $"[perf chunk 3] melee verdict, {swings} due swings: old ~{oldBytes} bytes of heap, new ~{newBytes} bytes";
             TestContext.WriteLine(line);
             UnityEngine.Debug.Log(line);
-            Assert.AreEqual(0, newBytes, line);
-            Assert.Greater(oldBytes, 0, line);
+            Assert.That(oldWay, Is.AllocatingGCMemory(), "the old per-swing line made garbage");
+            Assert.That(newWay, Is.Not.AllocatingGCMemory(), "recording a swing makes none");
             Assert.IsNotNull(last); Assert.AreEqual(swings - 1, v.TicksBack);
         }
     }
