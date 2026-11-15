@@ -109,7 +109,7 @@ namespace KryticalNova.World
         float m_FlowerApplied = -1f, m_NextTerrainLook;
         float m_NextLawnLook;
         readonly HashSet<Terrain> m_LawnTerrains = new HashSet<Terrain>();
-        MaterialPropertyBlock m_LawnBlock;
+        readonly List<(Terrain terrain, Material original, Material copy)> m_LawnMaterials = new List<(Terrain, Material, Material)>();
         bool m_PublishedOff;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -146,7 +146,7 @@ namespace KryticalNova.World
             m_NextLawnLook = 0f;
             m_ShelterSceneKey = int.MinValue;
             m_LitterSwept = 0f;
-            m_LawnTerrains.Clear();
+            ReleaseLawnMaterials();
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -176,6 +176,7 @@ namespace KryticalNova.World
             if (Instance == this) Instance = null;
             HeatHazeRuntime.Strength = 0f;
             if (!s_ShuttingDown) PublishOff();
+            if (!s_ShuttingDown) ReleaseLawnMaterials();
         }
 
         void LateUpdate()
@@ -473,6 +474,13 @@ namespace KryticalNova.World
         {
             if (Time.unscaledTime < m_NextLawnLook) return;
             m_NextLawnLook = Time.unscaledTime + 2f;
+            for (int i = m_LawnMaterials.Count - 1; i >= 0; i--)
+                if (m_LawnMaterials[i].terrain == null)
+                {
+                    if (m_LawnMaterials[i].copy != null) Destroy(m_LawnMaterials[i].copy);
+                    m_LawnMaterials.RemoveAt(i);
+                }
+            m_LawnTerrains.RemoveWhere(x => x == null);
             Terrain.GetActiveTerrains(m_Terrains);
             for (int i = 0; i < m_Terrains.Count; i++)
             {
@@ -484,13 +492,28 @@ namespace KryticalNova.World
                 bool any = false;
                 for (int l = 0; l < 4 && layers != null && l < layers.Length; l++)
                     if (layers[l] != null && settings.IsLawnLayer(layers[l].name)) { mask[l] = 1f; any = true; }
-                if (!any) continue;   // no lawn-named layer: this terrain keeps telling its lawn by colour
-                m_LawnBlock ??= new MaterialPropertyBlock();
-                t.GetSplatMaterialPropertyBlock(m_LawnBlock);
-                m_LawnBlock.SetVector(LawnLayersId, mask);
-                m_LawnBlock.SetFloat(LawnLayersSetId, 1f);
-                t.SetSplatMaterialPropertyBlock(m_LawnBlock);
+                if (!any || t.materialTemplate == null) continue;   // no lawn-named layer: this terrain keeps telling its lawn by colour
+                // Owner 15 Nov, measured in Play: the splat property block never reached the (instanced) terrain draws (the shader read
+                // "not set" and fell back to the colour test, which scores this olive grass 0), so the lawn never went green. A runtime
+                // copy of the terrain's material carries the mask instead (made in Play, gone with it; the asset is untouched; one per terrain).
+                var copy = new Material(t.materialTemplate) { name = t.materialTemplate.name + " (KN season lawn)" };
+                copy.SetVector(LawnLayersId, mask);
+                copy.SetFloat(LawnLayersSetId, 1f);
+                m_LawnMaterials.Add((t, t.materialTemplate, copy));
+                t.materialTemplate = copy;
             }
+        }
+
+        // the terrains' own materials back, and the copies gone (a terrain already destroyed took its copy's use with it)
+        void ReleaseLawnMaterials()
+        {
+            foreach (var (terrain, original, copy) in m_LawnMaterials)
+            {
+                if (terrain != null && terrain.materialTemplate == copy) terrain.materialTemplate = original;
+                if (copy != null) Destroy(copy);
+            }
+            m_LawnMaterials.Clear();
+            m_LawnTerrains.Clear();
         }
 
         void UpdateFlowers(SeasonSettings settings, float density)
