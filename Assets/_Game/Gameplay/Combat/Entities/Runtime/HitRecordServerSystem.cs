@@ -30,7 +30,7 @@ namespace KryticalNova.Combat.Entities
             EntityManager em = EntityManager;
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
-                if (!ReferenceEquals(entry.World, World) || entry.Body == null || !entry.Body.TryGetComponent(out PlayerMeleeCombat melee)
+                if (!ReferenceEquals(entry.World, World) || entry.Body == null || !entry.TryGetPart(out PlayerMeleeCombat melee)
                     || !m_Heard.Add(melee)) continue;
                 Entity ghost = entry.Ghost;
                 melee.HitDealt += (target, result, step, fromSkill, label) => Record(ghost, melee, target, result, step, fromSkill, label);

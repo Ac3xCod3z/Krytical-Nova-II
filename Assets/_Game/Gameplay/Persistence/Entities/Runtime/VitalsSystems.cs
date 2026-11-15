@@ -26,7 +26,7 @@ namespace KryticalNova.Persistence.Entities
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
                 if (!ReferenceEquals(entry.World, World) || entry.Body == null || !em.Exists(entry.Ghost) || !em.HasComponent<PlayerVitals>(entry.Ghost)
-                    || !entry.Body.TryGetComponent(out CombatEntity entity)) continue;
+                    || !entry.TryGetPart(out CombatEntity entity)) continue;
                 var now = new PlayerVitals { HealthMilli = ToMilli(entity.CurrentHealth), MaxHealthMilli = ToMilli(entity.MaxHealth) };
                 PlayerVitals had = em.GetComponentData<PlayerVitals>(entry.Ghost);
                 if (had.HealthMilli == now.HealthMilli && had.MaxHealthMilli == now.MaxHealthMilli) continue;
@@ -48,7 +48,7 @@ namespace KryticalNova.Persistence.Entities
             {
                 // the own view's HP comes from OwnerFlux into its PlayerResources (M3); CombatEntity.MirrorHealth leaves such a body alone
                 if (entry.IsLocal || !ReferenceEquals(entry.World, World) || entry.Body == null || !em.Exists(entry.Ghost) || !em.HasComponent<PlayerVitals>(entry.Ghost)
-                    || !entry.Body.TryGetComponent(out CombatEntity entity)) continue;
+                    || !entry.TryGetPart(out CombatEntity entity)) continue;
                 PlayerVitals v = em.GetComponentData<PlayerVitals>(entry.Ghost);
                 entity.MirrorHealth(v.HealthMilli / 1000f, v.MaxHealthMilli / 1000f);
             }

@@ -86,7 +86,7 @@ namespace KryticalNova.Persistence.Entities
                     && !OwnerProgressBridge.Same(serums, em.GetComponentData<OwnerSerums>(entry.Ghost)))
                     em.SetComponentData(entry.Ghost, serums);
                 // the Nova everyone sees: the halo and the Standing worn (M8 8.3.5)
-                if (em.HasComponent<PlayerNovaTag>(entry.Ghost) && entry.Body != null && entry.Body.TryGetComponent(out PlayerNova nova)
+                if (em.HasComponent<PlayerNovaTag>(entry.Ghost) && entry.Body != null && entry.TryGetPart(out PlayerNova nova)
                     && em.GetComponentData<PlayerNovaTag>(entry.Ghost).Packed != nova.State.Packed)
                     em.SetComponentData(entry.Ghost, new PlayerNovaTag { Packed = nova.State.Packed });
                 // the level everyone sees on the nameplate (M8 8.3.1)
@@ -116,14 +116,14 @@ namespace KryticalNova.Persistence.Entities
             {
                 // everyone's Nova on every view, the own one too (M8 8.3.5)
                 if (ReferenceEquals(entry.World, World) && entry.Body != null && em.Exists(entry.Ghost) && em.HasComponent<PlayerNovaTag>(entry.Ghost)
-                    && entry.Body.TryGetComponent(out PlayerNova shownNova))
+                    && entry.TryGetPart(out PlayerNova shownNova))
                     shownNova.MirrorState(NovaState.FromPacked(em.GetComponentData<PlayerNovaTag>(entry.Ghost).Packed));
                 if (!entry.IsLocal && ReferenceEquals(entry.World, World) && entry.Body != null && em.Exists(entry.Ghost)
-                    && em.HasComponent<PlayerLevelTag>(entry.Ghost) && entry.Body.TryGetComponent(out PlayerCharacterProgression other))
+                    && em.HasComponent<PlayerLevelTag>(entry.Ghost) && entry.TryGetPart(out PlayerCharacterProgression other))
                     other.MirrorObservedLevel(em.GetComponentData<PlayerLevelTag>(entry.Ghost).Level);   // another player's nameplate level
                 if (!entry.IsLocal || !ReferenceEquals(entry.World, World) || entry.Body == null) continue;
                 if (!em.Exists(entry.Ghost) || !em.HasComponent<OwnerProgress>(entry.Ghost)) continue;
-                if (em.HasComponent<OwnerSerums>(entry.Ghost) && entry.Body.TryGetComponent(out PlayerSerums ownSerums))
+                if (em.HasComponent<OwnerSerums>(entry.Ghost) && entry.TryGetPart(out PlayerSerums ownSerums))
                     ownSerums.MirrorState(OwnerProgressBridge.StateOf(em.GetComponentData<OwnerSerums>(entry.Ghost)));   // equal: no change
                 OwnerProgress p = em.GetComponentData<OwnerProgress>(entry.Ghost);
                 if (p.Level < 1 || (m_Shown.TryGetValue(entry.Body, out OwnerProgress had) && OwnerProgressBridge.Same(had, p))) continue;

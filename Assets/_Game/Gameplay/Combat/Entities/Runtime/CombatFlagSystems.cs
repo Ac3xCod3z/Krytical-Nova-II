@@ -79,14 +79,14 @@ namespace KryticalNova.Combat.Entities
                     Entity connection = received[i].SourceConnection;
                     if (!em.Exists(connection) || !em.HasComponent<NetworkId>(connection)) continue;
                     if (GhostBodyRegistry.TryGetByNetworkId(World, em.GetComponentData<NetworkId>(connection).Value, out GhostBodyEntry entry)
-                        && entry.Body != null && entry.Body.TryGetComponent(out PlayerCombatState who))
+                        && entry.Body != null && entry.TryGetPart(out PlayerCombatState who))
                         who.ServerSetSelected(CombatSelection.BodyOf(World, selections[i].GhostId));
                 }
             }
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
                 if (!ReferenceEquals(entry.World, World) || entry.Body == null || !em.Exists(entry.Ghost) || !em.HasComponent<CombatFlag>(entry.Ghost)
-                    || !entry.Body.TryGetComponent(out PlayerCombatState state)) continue;
+                    || !entry.TryGetPart(out PlayerCombatState state)) continue;
                 byte now = CombatFlagBits.Of(state.InCombat, state.InRealFight);
                 if (em.GetComponentData<CombatFlag>(entry.Ghost).InCombat != now) em.SetComponentData(entry.Ghost, new CombatFlag { InCombat = now });
             }
@@ -108,7 +108,7 @@ namespace KryticalNova.Combat.Entities
             EntityManager em = EntityManager;
             PlayerCombatState own = null;
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
-                if (entry.IsLocal && ReferenceEquals(entry.World, World) && entry.Body != null && entry.Body.TryGetComponent(out own)) break;
+                if (entry.IsLocal && ReferenceEquals(entry.World, World) && entry.Body != null && entry.TryGetPart(out own)) break;
             if (!ReferenceEquals(own, m_Own))
             {
                 if (m_Own != null) m_Own.SelectionFromView -= SendSelection;
@@ -118,7 +118,7 @@ namespace KryticalNova.Combat.Entities
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
                 if (!ReferenceEquals(entry.World, World) || entry.Body == null || !em.Exists(entry.Ghost) || !em.HasComponent<CombatFlag>(entry.Ghost)
-                    || !entry.Body.TryGetComponent(out PlayerCombatState state)) continue;
+                    || !entry.TryGetPart(out PlayerCombatState state)) continue;
                 byte bits = em.GetComponentData<CombatFlag>(entry.Ghost).InCombat;
                 state.MirrorInCombat(CombatFlagBits.Fighting(bits), CombatFlagBits.RealFight(bits));
             }

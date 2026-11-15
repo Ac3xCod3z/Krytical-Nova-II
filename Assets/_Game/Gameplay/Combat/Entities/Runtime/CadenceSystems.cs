@@ -57,7 +57,7 @@ namespace KryticalNova.Combat.Entities
                     Entity connection = received[i].SourceConnection;
                     if (!em.Exists(connection) || !em.HasComponent<NetworkId>(connection)) continue;
                     if (!GhostBodyRegistry.TryGetByNetworkId(World, em.GetComponentData<NetworkId>(connection).Value, out GhostBodyEntry entry)
-                        || entry.Body == null || !entry.Body.TryGetComponent(out PlayerCadence cadence)) continue;
+                        || entry.Body == null || !entry.TryGetPart(out PlayerCadence cadence)) continue;
                     if (RpcBudget.Spend(entry.Key, CallKind.Combat, UnityEngine.Time.realtimeSinceStartup) != RpcBudget.SpendResult.Allowed) continue;
                     cadence.ServerNotePressFromView(presses[i].SkillId.ToString(), presses[i].PressedAt);
                     Judged++;
@@ -66,7 +66,7 @@ namespace KryticalNova.Combat.Entities
 
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
-                if (!ReferenceEquals(entry.World, World) || entry.Body == null || !entry.Body.TryGetComponent(out PlayerCadence cadence)
+                if (!ReferenceEquals(entry.World, World) || entry.Body == null || !entry.TryGetPart(out PlayerCadence cadence)
                     || !m_Heard.Add(cadence)) continue;
                 int networkId = entry.NetworkId;
                 cadence.EarnedForOwner += skillId =>
@@ -105,7 +105,7 @@ namespace KryticalNova.Combat.Entities
             EntityManager em = EntityManager;
             PlayerCadence own = null;
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
-                if (entry.IsLocal && ReferenceEquals(entry.World, World) && entry.Body != null && entry.Body.TryGetComponent(out own)) break;
+                if (entry.IsLocal && ReferenceEquals(entry.World, World) && entry.Body != null && entry.TryGetPart(out own)) break;
             if (!ReferenceEquals(own, m_Own))
             {
                 if (m_Own != null) m_Own.PressFromView -= Send;
