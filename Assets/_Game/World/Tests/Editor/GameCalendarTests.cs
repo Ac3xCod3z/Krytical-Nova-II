@@ -113,6 +113,22 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void Upcoming_AlwaysFindsEveryEvent_WhereverInItsCycleTodayFalls()
+        {
+            var s = Make<SeasonSettings>();
+            var sky = Make<SkyEventSettings>();
+            var events = new List<UpcomingEvent>();
+            // the watched check's day (7,636, a Pale Wanderer visit just gone) and days spread over two comet periods
+            for (long day = 7636; day < 7636 + 2 * sky.cometPeriodDays; day += 97)
+            {
+                GameCalendar.Upcoming(Clock(Unix(2026, 11, 15), day: day), sky, s.Calendar, events);
+                Assert.IsTrue(events.Exists(e => e.Kind == CalendarEventKind.PaleWanderer), $"day {day}: The Pale Wanderer is listed");
+                Assert.IsTrue(events.Exists(e => e.Kind == CalendarEventKind.Eclipse), $"day {day}: the eclipse is listed");
+                Assert.IsTrue(events.Exists(e => e.Kind == CalendarEventKind.Emberfall), $"day {day}: The Emberfall is listed");
+            }
+        }
+
+        [Test]
         public void Aurora_IsListed_OnlyOnWinterNights_OrOnAnAlwaysWinterMap()
         {
             var s = Make<SeasonSettings>();

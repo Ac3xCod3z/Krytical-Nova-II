@@ -239,8 +239,13 @@ namespace KryticalNova.World
         /// The next of each event (one each, soonest first): full and new moon, The Emberfall, The Pale Wanderer, a total eclipse, an aurora
         /// night (only where the season allows), the next season. An event on now counts (<see cref="UpcomingEvent.Now"/>).
         /// </summary>
-        public static void Upcoming(in CalendarClock c, SkyEventSettings sky, in SeasonCalendar cal, List<UpcomingEvent> into, int horizonDays = 3000)
+        public static void Upcoming(in CalendarClock c, SkyEventSettings sky, in SeasonCalendar cal, List<UpcomingEvent> into, int horizonDays = 0)
         {
+            // far enough to always reach the next of each (found in the watched check, 15 Nov: a visit just gone puts the next Pale
+            // Wanderer up to two periods away)
+            if (sky != null)
+                horizonDays = Math.Max(horizonDays, Math.Max(2 * sky.cometPeriodDays + sky.cometNights,
+                    Math.Max(sky.eclipseEveryYears, 1) * sky.gameYearDays + sky.gameYearDays) + 2);
             into.Clear();
             MoonNow moon = Moon(c);
             into.Add(At(c, CalendarEventKind.FullMoon, c.UnixNow + moon.DaysToFull * c.DaySeconds, 1));
