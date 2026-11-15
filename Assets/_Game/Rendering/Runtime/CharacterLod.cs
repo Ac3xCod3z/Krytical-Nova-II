@@ -29,11 +29,12 @@ namespace KryticalNova.Rendering
         private static int holdStamp;
         private int seenHoldStamp = -1;
         private NetworkObject net;
-        private SkinnedMeshRenderer[] skins = System.Array.Empty<SkinnedMeshRenderer>();
-        private SkinQuality[] skinQuality = System.Array.Empty<SkinQuality>();
-        private ShadowCastingMode[] skinShadows = System.Array.Empty<ShadowCastingMode>();
-        private Animator[] animators = System.Array.Empty<Animator>();
-        private AnimatorCullingMode[] animatorCulling = System.Array.Empty<AnimatorCullingMode>();
+        // Reused lists, refilled every RecollectSeconds (perf clean-ups round 2, chunk 14: four new arrays per character every 5 s).
+        private readonly System.Collections.Generic.List<SkinnedMeshRenderer> skins = new System.Collections.Generic.List<SkinnedMeshRenderer>();
+        private readonly System.Collections.Generic.List<SkinQuality> skinQuality = new System.Collections.Generic.List<SkinQuality>();
+        private readonly System.Collections.Generic.List<ShadowCastingMode> skinShadows = new System.Collections.Generic.List<ShadowCastingMode>();
+        private readonly System.Collections.Generic.List<Animator> animators = new System.Collections.Generic.List<Animator>();
+        private readonly System.Collections.Generic.List<AnimatorCullingMode> animatorCulling = new System.Collections.Generic.List<AnimatorCullingMode>();
         private int tier = -1;
         private float next, nextCollect;
         private static Camera eye;
@@ -60,7 +61,7 @@ namespace KryticalNova.Rendering
         {
             DrivenExternally = true;
             if (level == tier && noShadow == shadowsOff && seenHoldStamp == holdStamp) return;
-            if (skins.Length == 0) Collect();
+            if (skins.Count == 0) Collect();
             shadowsOff = noShadow;
             seenHoldStamp = holdStamp;
             Apply(level);
@@ -123,16 +124,19 @@ namespace KryticalNova.Rendering
             if (wanted != tier || seenHoldStamp != holdStamp) { seenHoldStamp = holdStamp; Apply(wanted); }
         }
 
+        /// <summary>Looks for the character's parts again now (as every few seconds), whole first; allocates nothing once the lists are big enough.</summary>
+        public void Recollect() => Collect();
+
         private void Collect()
         {
             Apply(0); // the old parts back to how they were before they are forgotten
-            skins = GetComponentsInChildren<SkinnedMeshRenderer>(true);
-            skinQuality = new SkinQuality[skins.Length];
-            skinShadows = new ShadowCastingMode[skins.Length];
-            for (int i = 0; i < skins.Length; i++) { skinQuality[i] = skins[i].quality; skinShadows[i] = skins[i].shadowCastingMode; }
-            animators = GetComponentsInChildren<Animator>(true);
-            animatorCulling = new AnimatorCullingMode[animators.Length];
-            for (int i = 0; i < animators.Length; i++) animatorCulling[i] = animators[i].cullingMode;
+            GetComponentsInChildren(true, skins);
+            skinQuality.Clear();
+            skinShadows.Clear();
+            for (int i = 0; i < skins.Count; i++) { skinQuality.Add(skins[i].quality); skinShadows.Add(skins[i].shadowCastingMode); }
+            GetComponentsInChildren(true, animators);
+            animatorCulling.Clear();
+            for (int i = 0; i < animators.Count; i++) animatorCulling.Add(animators[i].cullingMode);
         }
 
         private static bool IsHeld(Transform part)
@@ -146,7 +150,7 @@ namespace KryticalNova.Rendering
         private void Apply(int level)
         {
             tier = level;
-            for (int i = 0; i < skins.Length; i++)
+            for (int i = 0; i < skins.Count; i++)
             {
                 SkinnedMeshRenderer skin = skins[i];
                 if (skin == null) continue;
@@ -155,7 +159,7 @@ namespace KryticalNova.Rendering
                 skin.forceRenderingOff = level >= 3 || IsHeld(skin.transform);
             }
             bool decidesHere = NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening || NetworkManager.Singleton.IsServer;
-            for (int i = 0; i < animators.Length; i++)
+            for (int i = 0; i < animators.Count; i++)
             {
                 Animator animator = animators[i];
                 if (decidesHere) { if (animator != null) animator.cullingMode = animatorCulling[i]; continue; }
