@@ -809,6 +809,41 @@ namespace KryticalNova.EditorTools.GM
         [ButtonGroup(Tabs + "/" + WorldTab + "/Presets"), EnableIf(nameof(HasWorld)), PropertyOrder(404)]
         private void Midnight() => Run("time.midnight");
 
+        // ---------------------------------------------------------------- Sky events (owner's NIGHT list item 24): shown to every player at once
+
+        [TabGroup(Tabs, WorldTab), Title("Sky Events"), ShowInInspector, DisplayAsString, HideLabel, PropertyOrder(404.1f)]
+        private static string SkyEventsHint => "Night events need Midnight first; the eclipse needs Noon. Each lasts a few minutes for everyone.";
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/SkyNight"), EnableIf(nameof(HasWorld)), LabelText("Shooting Stars"), PropertyOrder(404.2f)]
+        private void SkyMeteor() => Run("sky.meteor");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/SkyNight"), EnableIf(nameof(HasWorld)), LabelText("The Emberfall"), PropertyOrder(404.2f)]
+        private void SkyShower() => Run("sky.shower");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/SkyNight"), EnableIf(nameof(HasWorld)), LabelText("The Pale Wanderer"), PropertyOrder(404.2f)]
+        private void SkyComet() => Run("sky.comet");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/SkyNight"), EnableIf(nameof(HasWorld)), LabelText("Nebula"), PropertyOrder(404.2f)]
+        private void SkyNebula() => Run("sky.nebula");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/SkyNight"), EnableIf(nameof(HasWorld)), LabelText("Aurora"), PropertyOrder(404.2f)]
+        private void SkyAurora() => Run("sky.aurora");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/SkyDay"), EnableIf(nameof(HasWorld)), LabelText("Second Sun"), PropertyOrder(404.3f)]
+        private void SkySun2() => Run("sky.sun2");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/SkyDay"), EnableIf(nameof(HasWorld)), LabelText("Eclipse"), PropertyOrder(404.3f)]
+        private void SkyEclipse() => Run("sky.eclipse");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/SkyDay"), EnableIf(nameof(HasWorld)), LabelText("Migration"), PropertyOrder(404.3f)]
+        private void SkyMigration() => Run("sky.migration");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/SkyDay"), EnableIf(nameof(HasWorld)), LabelText("Status"), PropertyOrder(404.3f)]
+        private void SkyEventsStatus() => Run("sky.events");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/SkyDay"), EnableIf(nameof(HasWorld)), LabelText("Clear"), PropertyOrder(404.3f)]
+        private void SkyClear() => Run("sky.events.clear");
+
         // ---------------------------------------------------------------- Crossfire, the hourly war (owner's DAY list item 17)
 
         private static bool HasCrossfire => KryticalNova.Crossfire.CrossfireView.HasServer;
@@ -839,6 +874,106 @@ namespace KryticalNova.EditorTools.GM
 
         [ButtonGroup(Tabs + "/" + WorldTab + "/Crossfire"), EnableIf(nameof(HasCrossfire)), PropertyOrder(423), LabelText("End")]
         private void CrossfireEnd() => Run("gm.crossfire end");
+
+        // ---------------------------------------------------------------- Seasons (owner's DAY list item 21): gm.season / gm.snow, as on the control page
+
+        private static bool HasSeasons => KryticalNova.World.SeasonView.HasServer;
+
+        [TabGroup(Tabs, WorldTab), Title("Season"), ShowInInspector, DisplayAsString, HideLabel, PropertyOrder(424)]
+        private static string SeasonStatus
+        {
+            get
+            {
+                if (!HasSeasons) return "Not running (no server here, or no Resources/SeasonSettings).";
+                KryticalNova.World.SeasonState s = KryticalNova.World.SeasonView.Server;
+                double now = KryticalNova.Core.NetClock.Now;
+                int day = Mathf.FloorToInt((float)((now - s.SeasonStart) / 86400.0)) + 1;
+                int days = Mathf.RoundToInt(s.SeasonSeconds / 86400f);
+                string blend = s.From == s.To ? "" : $", blending {s.From} -> {s.To} {Mathf.RoundToInt(s.BlendAt(now) * 100f)} %";
+                string hold = s.GmHold ? " (GM hold)" : "";
+                string zone = s.AlwaysWinter ? ", always-winter map" : "";
+                return $"Now {s.DominantAt(now)}{hold}{blend}; calendar {(KryticalNova.World.Season)s.CalendarSeason} day {day} of {days}; snow {s.SnowAt(now):0.00}; air {s.Temperature:0.#} C / {KryticalNova.Core.TemperatureUnits.ToFahrenheit(s.Temperature):0} F{zone}";
+            }
+        }
+
+        [TabGroup(Tabs, WorldTab), EnableIf(nameof(HasSeasons)), LabelText("Season"), PropertyOrder(425)]
+        [SerializeField] private KryticalNova.World.Season seasonPick = KryticalNova.World.Season.Winter;
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Season"), EnableIf(nameof(HasSeasons)), PropertyOrder(426), LabelText("Apply (hold)")]
+        private void SeasonApply() => Run($"gm.season {seasonPick.ToString().ToLowerInvariant()}");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Season"), EnableIf(nameof(HasSeasons)), PropertyOrder(426.1f), LabelText("Back to Calendar")]
+        private void SeasonAuto() => Run("gm.season auto");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Season"), EnableIf(nameof(HasSeasons)), PropertyOrder(426.2f), LabelText("Status")]
+        private void SeasonStatusLine() => Run("gm.season status");
+
+        [TabGroup(Tabs, WorldTab), EnableIf(nameof(HasSeasons)), PropertyRange(0f, 1f), LabelText("Season Progress"), PropertyOrder(426.5f)]
+        [Tooltip("How far into the season it looks: Autumn 0.2 turning, 0.5 every kind in colour, 0.9 almost bare.")]
+        [SerializeField] private float progressPick = 0.5f;
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Progress"), EnableIf(nameof(HasSeasons)), PropertyOrder(426.6f), LabelText("Hold Progress")]
+        private void ProgressHold() => Run($"gm.season progress {F(progressPick)}");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Progress"), EnableIf(nameof(HasSeasons)), PropertyOrder(426.7f), LabelText("Calendar Progress")]
+        private void ProgressAuto() => Run("gm.season progress auto");
+
+        [TabGroup(Tabs, WorldTab), EnableIf(nameof(HasSeasons)), PropertyRange(0f, 1f), LabelText("Snow Cover"), PropertyOrder(427)]
+        [SerializeField] private float snowPick = 1f;
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Snow"), EnableIf(nameof(HasSeasons)), PropertyOrder(428), LabelText("Set Snow")]
+        private void SnowSet() => Run($"gm.snow {F(snowPick)}");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Snow"), EnableIf(nameof(HasSeasons)), PropertyOrder(428.1f), LabelText("Always Winter Here")]
+        private void ClimateWinter() => Run("gm.season climate winter");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Snow"), EnableIf(nameof(HasSeasons)), PropertyOrder(428.2f), LabelText("Climate Auto")]
+        private void ClimateAuto() => Run("gm.season climate auto");
+
+        [TabGroup(Tabs, WorldTab), EnableIf(nameof(HasSeasons)), PropertyRange(-30f, 45f), LabelText("Air Temperature (C)"), PropertyOrder(428.5f)]
+        [SerializeField] private float temperaturePick = 34f;
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Air"), EnableIf(nameof(HasSeasons)), PropertyOrder(428.6f), LabelText("Hold Temperature")]
+        private void TemperatureHold() => Run($"gm.season temp {F(temperaturePick)}");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Air"), EnableIf(nameof(HasSeasons)), PropertyOrder(428.7f), LabelText("Weather's Temperature")]
+        private void TemperatureAuto() => Run("gm.season temp auto");
+
+        [TabGroup(Tabs, WorldTab), EnableIf(nameof(HasSeasons)), LabelText("Weather Spell"), PropertyOrder(428.8f)]
+        [SerializeField] private string spellPick = "storm";
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Spell"), EnableIf(nameof(HasSeasons)), PropertyOrder(428.9f), LabelText("Hold Spell")]
+        private void SpellHold() => Run($"gm.season spell {spellPick}");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Spell"), EnableIf(nameof(HasSeasons)), PropertyOrder(428.91f), LabelText("Seed's Spell")]
+        private void SpellAuto() => Run("gm.season spell auto");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Spell"), EnableIf(nameof(HasSeasons)), PropertyOrder(428.92f), LabelText("The Week")]
+        private void SpellWeek() => Run("gm.season week");
+
+        // ---------------------------------------------------------------- Townsfolk on Sky Concord (owner's DAY list item 18)
+
+        private static bool HasTown => KryticalNova.Townsfolk.TownsfolkGm.HasServer;
+
+        [TabGroup(Tabs, WorldTab), Title("Townsfolk"), ShowInInspector, DisplayAsString, HideLabel, PropertyOrder(430)]
+        [InfoBox("The time of day above moves them too (they follow the world's clock).")]
+        private static string TownStatus => KryticalNova.Townsfolk.TownsfolkGm.Status;
+
+        [TabGroup(Tabs, WorldTab), ShowInInspector, ToggleLeft, LabelText("Townsfolk Labels"), PropertyOrder(431)]
+        private bool TownLabels
+        {
+            get => KryticalNova.Townsfolk.TownsfolkGm.Labels;
+            set { if (value != TownLabels) Run(value ? "gm.town.debug true" : "gm.town.debug false"); }
+        }
+
+        [TabGroup(Tabs, WorldTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(HasTown)), PropertyOrder(432)]
+        private void TownCap(int day = 48, int night = 20) => Run($"gm.town.cap {day} {night}");
+
+        [TabGroup(Tabs, WorldTab), Button(ButtonStyle.CompactBox, Expanded = true), EnableIf(nameof(HasTown)), PropertyOrder(433)]
+        private void TownSpawn([PropertyRange(1, 10)] int personality = 2, [MinValue(1)] int count = 5) => Run($"gm.town.spawn {personality} {count}");
+
+        [TabGroup(Tabs, WorldTab), Button(ButtonStyle.CompactBox), EnableIf(nameof(HasTown)), PropertyOrder(434), LabelText("Clear Townsfolk")]
+        private void TownClear() => Run("gm.town.clear");
 
         [TabGroup(Tabs, WorldTab), ShowInInspector, ToggleLeft, EnableIf(nameof(HasWorld)), LabelText("Pause Clock"), PropertyOrder(405)]
         private bool TimePaused
@@ -1389,6 +1524,29 @@ namespace KryticalNova.EditorTools.GM
         [ButtonGroup(Tabs + "/" + MountsTab + "/Ride"), EnableIf(nameof(IsReady)), LabelText("Ride / Get Off"), PropertyOrder(865)]
         private void RideMount() => Run("gm.mount.ride");
 
+        // the Mount Companion (day list item 19, phases 1-2)
+        [ButtonGroup(Tabs + "/" + MountsTab + "/Ride"), EnableIf(nameof(IsReady)), LabelText("Call / Send Home"), PropertyOrder(866)]
+        private void CallMount() => Run("gm.mount.call");
+
+        [TabGroup(Tabs, MountsTab), PropertyRange(0f, 100f), EnableIf(nameof(IsReady)), LabelText("Companion Hurt %"), PropertyOrder(867)]
+        [InfoBox("The companion out beside the player: take a share of its HP (0 HP knocks it out: it goes home and rests), heal it, or make it rest.")]
+        [SerializeField] private float companionHurt = 40f;
+
+        [ButtonGroup(Tabs + "/" + MountsTab + "/Companion"), EnableIf(nameof(IsReady)), LabelText("Hurt"), PropertyOrder(868)]
+        private void HurtCompanion() => Run($"gm.mount.hurt {companionHurt.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
+
+        [ButtonGroup(Tabs + "/" + MountsTab + "/Companion"), EnableIf(nameof(IsReady)), LabelText("Heal To Full"), PropertyOrder(869)]
+        private void HealCompanion() => Run("gm.mount.heal");
+
+        [ButtonGroup(Tabs + "/" + MountsTab + "/Companion"), EnableIf(nameof(IsReady)), LabelText("Rest 5 min"), PropertyOrder(869)]
+        private void RestCompanion() => Run("gm.mount.rest 300");
+
+        [ButtonGroup(Tabs + "/" + MountsTab + "/Companion"), EnableIf(nameof(IsReady)), LabelText("End Rest"), PropertyOrder(869)]
+        private void EndRestCompanion() => Run("gm.mount.rest 0");
+
+        [ButtonGroup(Tabs + "/" + MountsTab + "/Companion"), EnableIf(nameof(IsReady)), LabelText("Give 5 Mount Stims"), PropertyOrder(869)]
+        private void GiveMountStims() => Run("item.give Mount_Stim 5");
+
         [TabGroup(Tabs, MountsTab), PropertyRange(0f, 100f), EnableIf(nameof(IsReady)), LabelText("Growth %"), PropertyOrder(870)]
         [InfoBox("Three stages, one per model: it evolves at 50 and at 100.")]
         [SerializeField] private float mountGrowth = 50f;
@@ -1648,6 +1806,18 @@ namespace KryticalNova.EditorTools.GM
         private enum SerumKind { Strength, Vitality, Agility, Spirit, Strike, Ward }
 
         private static string SlotArgument(ForgeSlot slot) => slot == ForgeSlot.FirstInPack ? string.Empty : " " + slot.ToString().ToLowerInvariant();
+
+        [TabGroup(Tabs, ItemsTab), Title("Max Everything"), Button("Max Everything..."), GUIColor(1f, 0.75f, 0.4f), EnableIf(nameof(IsReady)), PropertyOrder(533.5f)]
+        [InfoBox("gm.maxall: max level, skills, Ascension and Standings, every mount and pet at 100 %, 3 days of Autopilot and Autoward, max Serums, " +
+                 "the character's own Rare (clean) and Epic (Temper cap, Fusion 12) gear into Pack, Vault, Deep Vault, forge materials x999, every Pass x50, " +
+                 "every crafting item, 2,000,000 Creds, 50 Chroma and Prism Cells. Adds on top. Any GM, live or test server. Asks first.", InfoMessageType.Warning)]
+        private void MaxEverything()
+        {
+            if (EditorUtility.DisplayDialog("Max Everything",
+                    "gm.maxall changes the whole targeted character: max level, skills and ladders, every mount and pet, gear, items and " +
+                    "2,000,000 Creds, on top of what it has. It works on the live server too and is written to gm.log.", "Max Everything", "Cancel"))
+                Run("gm.maxall confirm");
+        }
 
         [ButtonGroup(Tabs + "/" + ItemsTab + "/Kits"), Title("Kits"), EnableIf(nameof(IsReady)), LabelText("Everything (gear, Temper items, pets)"), PropertyOrder(534)]
         private void KitAll() => Run("gm.kit all");

@@ -16,6 +16,7 @@ Shader "KryticalNova/Grass Blades"
     #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
     #include "Assets/_Game/Environment/Vegetation/Shaders/KNWind.hlsl"
     #include "GrassCommon.hlsl"
+    #include "Assets/_Game/Rendering/Shaders/Include/KNSeason.hlsl"
 
     StructuredBuffer<GrassInstance> _Instances;
     uint   _InstanceOffset;     // this draw's region in the shared instance buffer
@@ -32,6 +33,8 @@ Shader "KryticalNova/Grass Blades"
     TEXTURE2D(_KN_GrassTrample);
     SAMPLER(sampler_KN_GrassTrample);
     float4 _KN_GrassTrampleRect;    // xy world XZ of its corner, z 1 / its width in metres, w 1 while there is a map
+    // While a swing push is alive (day list item 20) _KN_GrassTrample is the trample map with the swings already added by the Swing pass
+    // of GrassTrample.compute: still one texel per vertex, nothing else for the blades to do.
 
     struct GrassVertexOut
     {
@@ -124,6 +127,9 @@ Shader "KryticalNova/Grass Blades"
         float lenSq = dot(moved, moved);
         pos.y -= min(lenSq / max(heightWS * 2.0, 0.05), heightWS * 0.6);
 
+        // Season snow: blades shorter than its depth are buried, deep flat cover presses them down; a footprint lets them stand.
+        pos.y = root.y + (pos.y - root.y) * KNSeasonGrassHeight(root, heightWS);
+
         // Kept lawns end in a straight cut: nothing leans, sways or is pushed across the edge.
         int lawn;
         KNLawnDistance(root.xz, lawn);
@@ -166,7 +172,8 @@ Shader "KryticalNova/Grass Blades"
         col *= 1.0 + (rand - 0.5) * _GrassParams.y;
         // Fake AO grounds the blades in the terrain.
         col *= lerp(_GrassParams.z, 1.0, pow(height01, 0.6));
-        return col;
+        // The season's colour, frost on the tips and snow under cover (nothing without a presenter).
+        return KNSeasonGrassColour(col, height01, rootWS);
     }
 
     float3 UnpackDebug(uint d) { return float3((d >> 16) & 255u, (d >> 8) & 255u, d & 255u) / 255.0; }

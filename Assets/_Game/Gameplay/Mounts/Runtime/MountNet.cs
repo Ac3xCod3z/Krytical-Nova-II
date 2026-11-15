@@ -99,6 +99,8 @@ namespace KryticalNova.Mounts
     {
         public int version = 1;
         public int selected;
+        /// <summary>The Mount Companion's stance (day list item 19): 0 = FREE. An added field, no migration.</summary>
+        public int stance;
         public MountSaveEntry[] mounts = new MountSaveEntry[0];
     }
 
@@ -108,5 +110,12 @@ namespace KryticalNova.Mounts
         public int id;
         public uint xp;
         public uint hunger;
+        // The Mount Companion (day list item 19): added fields whose missing value (0) means full HP and not resting, so no migration.
+        /// <summary>Companion HP lost, permille (0 = full), as of <see cref="hpAt"/>.</summary>
+        public int hpLost;
+        /// <summary>UTC seconds <see cref="hpLost"/> holds from; the regen at home counts after it.</summary>
+        public long hpAt;
+        /// <summary>UTC seconds a knocked-out mount rests until; 0 = not resting.</summary>
+        public long restUntil;
     }
 }

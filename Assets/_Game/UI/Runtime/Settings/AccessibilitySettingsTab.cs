@@ -11,6 +11,7 @@ namespace KryticalNova.UI
     /// </summary>
     public sealed class AccessibilitySettingsTab
     {
+        private static readonly string[] TemperatureNames = { "Fahrenheit (°F)", "Celsius (°C)" };
         private static readonly string[] ColourBlindNames = { "Off", "Protanopia (red)", "Deuteranopia (green)", "Tritanopia (blue)" };
 
         /// <summary>Raised when the player asks to see the first-time setup again.</summary>
@@ -32,6 +33,10 @@ namespace KryticalNova.UI
                 value => AccessibilityPreferences.ColourBlind = (ColourBlindMode)value);
             SettingsRows.Slider(page, "Correction strength", 0f, 1f, () => AccessibilityPreferences.ColourBlindStrength,
                 value => AccessibilityPreferences.ColourBlindStrength = value, out _, amount => UnityEngine.Mathf.RoundToInt(amount * 100f) + " %");
+
+            SettingsRows.Header(page, "UNITS");
+            SettingsRows.Choice(page, "Temperature", TemperatureNames, () => KryticalNova.Core.TemperatureUnits.Celsius ? 1 : 0,
+                value => KryticalNova.Core.TemperatureUnits.Celsius = value == 1);
 
             SettingsRows.Header(page, "FIRST-TIME SETUP");
             var again = new Button(() => FirstRunRequested?.Invoke()) { text = "SHOW THE WARNING AND DISPLAY SETUP AGAIN" };

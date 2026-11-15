@@ -39,7 +39,9 @@ namespace KryticalNova.UI
 
         private VisualElement root, window, viewport, content, playerIcon;
         private Label zoneLabel, coordsLabel;
-        private Button openButton, closeButton, centerButton;
+        private Button openButton, closeButton, centerButton, mapTab, calendarTab;
+        private MapCalendarView calendar;
+        private bool calendarOpen;
         private ZoneMinimapData data;
         private float nextInitAttempt;
         private bool initialized;
@@ -82,6 +84,9 @@ namespace KryticalNova.UI
             openButton = root.Q<Button>("open-map");
             closeButton = window.Q<Button>("close-world-map");
             centerButton = window.Q<Button>("world-map-center");
+            mapTab = window.Q<Button>("world-map-tab-map");
+            calendarTab = window.Q<Button>("world-map-tab-calendar");
+            calendar = new MapCalendarView(window.Q("world-map-calendar"), root.Q<Label>("minimap-date"));
 
             playerIcon = new VisualElement { pickingMode = PickingMode.Ignore };
             playerIcon.AddToClassList("world-map-player");
@@ -96,6 +101,8 @@ namespace KryticalNova.UI
             if (openButton != null) openButton.clicked += Toggle;
             closeButton.clicked += Close;
             centerButton.clicked += CenterOnPlayer;
+            if (mapTab != null) mapTab.clicked += ShowMapPage;
+            if (calendarTab != null) calendarTab.clicked += ShowCalendarPage;
             viewport.RegisterCallback<WheelEvent>(OnWheel);
             viewport.RegisterCallback<PointerDownEvent>(OnPointerDown);
             viewport.RegisterCallback<PointerMoveEvent>(OnPointerMove);
@@ -116,6 +123,8 @@ namespace KryticalNova.UI
             if (openButton != null) openButton.clicked -= Toggle;
             closeButton.clicked -= Close;
             centerButton.clicked -= CenterOnPlayer;
+            if (mapTab != null) mapTab.clicked -= ShowMapPage;
+            if (calendarTab != null) calendarTab.clicked -= ShowCalendarPage;
             viewport.UnregisterCallback<WheelEvent>(OnWheel);
             viewport.UnregisterCallback<PointerDownEvent>(OnPointerDown);
             viewport.UnregisterCallback<PointerMoveEvent>(OnPointerMove);
@@ -140,7 +149,7 @@ namespace KryticalNova.UI
             bool hasMap = data != null && data.map != null;
             content.style.backgroundImage = hasMap ? Background.FromTexture2D(data.map) : StyleKeyword.None;
             zoneLabel.text = SceneManager.GetActiveScene().name.Replace('_', ' ').ToUpperInvariant();
-            if (!hasMap) Close();
+            if (!hasMap && !calendarOpen) Close();
         }
 
         // ------------------------------------------------------------------ open / close
@@ -154,7 +163,9 @@ namespace KryticalNova.UI
         private void SetOpen(bool open)
         {
             if (!initialized || open == IsOpen) return;
-            if (open && (data == null || data.map == null)) return; // this zone has no baked map
+            bool hasMap = data != null && data.map != null;
+            if (open && !hasMap && calendarTab == null) return; // this zone has no baked map
+            if (open && !hasMap) SetCalendarOpen(true);            // no map here: the Calendar page still opens
             window.style.display = open ? DisplayStyle.Flex : DisplayStyle.None;
             window.EnableInClassList("visible", open);
             if (!open) { ReleasePan(); hoverLabel?.Hide(); return; }
@@ -171,6 +182,7 @@ namespace KryticalNova.UI
                 if (Application.isPlaying && Time.unscaledTime >= nextInitAttempt) TryInitialize();
                 return;
             }
+            calendar?.Tick(IsOpen && calendarOpen);   // the minimap's date line too, once a second
             var keyboard = Keyboard.current;
             if (keyboard == null || IsTyping()) return;
             if (KeyBindings.Pressed(KeyBindings.Map)) Toggle();
@@ -183,6 +195,25 @@ namespace KryticalNova.UI
             for (VisualElement e = focused; e != null; e = e.parent)
                 if (e is TextField) return true;
             return false;
+        }
+
+        // ------------------------------------------------------------------ pages: Map / Calendar
+
+        private void ShowMapPage()
+        {
+            if (data == null || data.map == null) return;   // no map in this zone: stay on the Calendar
+            SetCalendarOpen(false);
+        }
+
+        private void ShowCalendarPage() => SetCalendarOpen(true);
+
+        private void SetCalendarOpen(bool open)
+        {
+            calendarOpen = open;
+            window.EnableInClassList("calendar-open", open);
+            mapTab?.EnableInClassList("selected", !open);
+            calendarTab?.EnableInClassList("selected", open);
+            if (open) { ReleasePan(); hoverLabel?.Hide(); }
         }
 
         // ------------------------------------------------------------------ zoom & pan

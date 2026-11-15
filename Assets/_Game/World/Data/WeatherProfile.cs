@@ -83,6 +83,8 @@ namespace KryticalNova.World
         [Range(0f, 1f)] public float mist = 0f;
         [Tooltip("Average lightning strikes per minute. 0 = none.")]
         [Range(0f, 30f)] public float lightningPerMinute = 0f;
+        [Tooltip("Degrees this weather adds to the season's air temperature (seasons, owner 14 Nov: clear days warmer, storms and blizzards colder).")]
+        [Range(-15f, 15f)] public float temperatureOffset = 0f;
 
         [Header("Post")]
         [Range(-100f, 100f)] public float saturation = 0f;

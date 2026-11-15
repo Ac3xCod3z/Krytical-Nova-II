@@ -1,0 +1,232 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c45237a80dea4f6e8d03f26eb4ce59c8, type: 3}
+  m_Name: SeasonSettings
+  m_EditorClassIdentifier: KryticalNova.World::KryticalNova.World.SeasonSettings
+  yearStartYear: 2026
+  yearStartMonth: 1
+  yearStartDay: 5
+  seasonLengthDays: 14
+  turnHourOffset: 0
+  seasonOffsetDays: 0
+  transitionHours: 6
+  gmBlendSeconds: 20
+  spring: {fileID: 11400000, guid: a4ccd1d13eb747929dcd4221b2bf19ee, type: 2}
+  summer: {fileID: 11400000, guid: bff42fcb16d145d5af8084656c81b4e6, type: 2}
+  autumn: {fileID: 11400000, guid: 4642b135aa034ddbac214122d5b17756, type: 2}
+  winter: {fileID: 11400000, guid: 6e598e38f15b4dd588219477fe512456, type: 2}
+  lightSnowIntensity: 0.5
+  heavySnowIntensity: 1
+  lightBuildMinutes: 40
+  lightCap: 0.35
+  heavyBuildMinutes: 8
+  heavyCap: 1
+  snowDepthMetres: 0.4
+  snowFullBelowDegrees: 35
+  snowNoneAboveDegrees: 55
+  snowLiftByTier:
+  - 0
+  - 1
+  - 1
+  - 1
+  snowBelowTemperature: 0.5
+  thawMinutesPerDegree: 240
+  sunThawBonus: 0.6
+  rainMeltFactor: 3
+  warmestClock: 0.625
+  dayWobble: 2.5
+  temperatureStep: 0.5
+  weatherSeed: 20261114
+  spellBlockDays: 64
+  alwaysWinterFloor: 0.6
+  alwaysWinterRegions:
+  - Sunderpeak
+  snowColor: {r: 0.44, g: 0.48, b: 0.56, a: 1}
+  roofBias: 0.1
+  snowEdgeSoftness: 0.08
+  trackRimDarkness: 0.25
+  grassHeightUnderSnow: 0.35
+  leafTurnSpread: 0.25
+  driftSize: 18
+  driftAmount: 0.4
+  rippleAmount: 0.12
+  underCanopyThinning: 0.65
+  windwardPile: 0.6
+  pileReach: 2.5
+  slopeThinning: 0.5
+  roofMiddle: 0.15
+  sunFacingThaw: 0.25
+  shelterMetres: 160
+  shelterTexelsByTier: 00000000000100000002000000020000i
+  shelterShapesMax: 256
+  roadNameContains:
+  - Road
+  - Street
+  - Pavement
+  - Sidewalk
+  - Path
+  - Pathway
+  - Footpath
+  - Walkway
+  - Boardwalk
+  - Plaza
+  - Crossing
+  - Curb
+  - Kerb
+  - Ground Tile
+  bridgeNameContains:
+  - Bridge
+  bridgeMaxHeight: 4
+  roadSnowShare: 0.15
+  slushColor: {r: 0.62, g: 0.6, b: 0.6, a: 1}
+  roadMaxHeight: 1
+  printMaxDepth: 0.12
+  pathHalfWidth: 0.32
+  pathPress: 0.8
+  strideMetres: 0.8
+  springGrassBy: 0.4
+  winterGrassHeight: 0.45
+  thawGrass: {r: 0.66, g: 0.54, b: 0.34, a: 1}
+  springGreen: {r: 0.85, g: 1.18, b: 0.72, a: 1}
+  budColor: {r: 0.62, g: 0.82, b: 0.42, a: 1}
+  blossomShares: {x: 0.05, y: 0.22, z: 0.5}
+  petalDrift: 0.8
+  heatHazeFromTo: {x: 27, y: 34}
+  heatHazeByTier:
+  - 0
+  - 0.6
+  - 1
+  - 1
+  heatHazeDistance: {x: 25, y: 90}
+  goldenGrassDays: {x: 3, y: 7}
+  goldenGrass: {r: 1.12, g: 0.92, b: 0.52, a: 1}
+  hotSunWarmth: {r: 1.06, g: 1, b: 0.9, a: 1}
+  motesMaterial: {fileID: 2100000, guid: 7c6c915a086dc97459aaf5d1ca6b3b34, type: 2}
+  motesByTier: 00000000280000005a0000008c000000i
+  firefliesByTier: 000000001e000000460000006e000000i
+  fireflyTemperature: 14
+  motesColor: {r: 1, g: 0.93, b: 0.72, a: 0.5}
+  motesSize: 0.05
+  motesLifetime: 7
+  motesBox: {x: 26, y: 7, z: 26}
+  fireflyColor: {r: 0.78, g: 1, b: 0.35, a: 1}
+  fireflySize: 0.11
+  fireflyLifetime: 5
+  fireflyBox: {x: 22, y: 1.8, z: 22}
+  fireflyHeight: -2.2
+  autumnTurnBy: 0.45
+  autumnDropFrom: 0.5
+  bareCanopy: 0.08
+  springLeafOutBy: 0.35
+  autumnDull: {r: 0.86, g: 0.78, b: 0.42, a: 1}
+  autumnDullBy: 0.7
+  leafKinds:
+  - name: Maple
+    prefabNameContains:
+    - SM_Gen_Env_Tree_01
+    evergreen: 0
+    peak: {r: 0.8, g: 0.14, b: 0.07, a: 1}
+    late: {r: 0.52, g: 0.12, b: 0.08, a: 1}
+    blossoms: 0
+    blossom: {r: 0.98, g: 0.78, b: 0.86, a: 1}
+  - name: Birch
+    prefabNameContains:
+    - SM_Gen_Env_Tree_02
+    evergreen: 0
+    peak: {r: 0.95, g: 0.78, b: 0.18, a: 1}
+    late: {r: 0.72, g: 0.55, b: 0.2, a: 1}
+    blossoms: 0
+    blossom: {r: 0.98, g: 0.78, b: 0.86, a: 1}
+  - name: Oak
+    prefabNameContains:
+    - SM_Gen_Env_Tree_03
+    evergreen: 0
+    peak: {r: 0.72, g: 0.4, b: 0.13, a: 1}
+    late: {r: 0.45, g: 0.28, b: 0.12, a: 1}
+    blossoms: 0
+    blossom: {r: 0.98, g: 0.78, b: 0.86, a: 1}
+  - name: Pine
+    prefabNameContains:
+    - Pine
+    - Fir
+    - Spruce
+    - Conifer
+    evergreen: 1
+    peak: {r: 0.3, g: 0.5, b: 0.3, a: 1}
+    late: {r: 0.3, g: 0.5, b: 0.3, a: 1}
+    blossoms: 0
+    blossom: {r: 0.98, g: 0.78, b: 0.86, a: 1}
+  - name: Emberleaf
+    prefabNameContains:
+    - SM_Env_Tree_01
+    evergreen: 0
+    peak: {r: 0.98, g: 0.5, b: 0.1, a: 1}
+    late: {r: 0.62, g: 0.3, b: 0.1, a: 1}
+    blossoms: 1
+    blossom: {r: 0.98, g: 0.7, b: 0.82, a: 1}
+  - name: Duskleaf
+    prefabNameContains:
+    - SM_Env_Tree_02
+    evergreen: 0
+    peak: {r: 0.62, g: 0.12, b: 0.3, a: 1}
+    late: {r: 0.4, g: 0.12, b: 0.2, a: 1}
+    blossoms: 1
+    blossom: {r: 0.86, g: 0.66, b: 0.92, a: 1}
+  - name: Gildleaf
+    prefabNameContains: []
+    evergreen: 0
+    peak: {r: 0.9, g: 0.66, b: 0.12, a: 1}
+    late: {r: 0.62, g: 0.44, b: 0.14, a: 1}
+    blossoms: 1
+    blossom: {r: 0.97, g: 0.95, b: 0.92, a: 1}
+  - name: Cypress
+    prefabNameContains:
+    - SM_Env_Tree_03
+    evergreen: 1
+    peak: {r: 0.3, g: 0.5, b: 0.3, a: 1}
+    late: {r: 0.3, g: 0.5, b: 0.3, a: 1}
+    blossoms: 0
+    blossom: {r: 0.98, g: 0.78, b: 0.86, a: 1}
+  fallLeavesByTier:
+  - 0
+  - 3
+  - 6
+  - 8
+  turnedLeafMinBrightness: 0.3
+  leafDropSureness: 0.4
+  litterByTier:
+  - 0
+  - 0.7
+  - 1
+  - 1
+  litterColorA: {r: 0.42, g: 0.2, b: 0.06, a: 1}
+  litterColorB: {r: 0.6, g: 0.4, b: 0.1, a: 1}
+  litterMinShown: 0.02
+  litterSweepWind: {x: 9, y: 16}
+  litterSweepSeconds: 2
+  litterRebuildSeconds: 20
+  litterBlownLeaves: 1.5
+  flowerStep: 0.1
+  trackCompute: {fileID: 7200000, guid: 0e8cd7c1956f40138e9f6f00dece65ab, type: 3}
+  trackMetres: 24
+  trackTexelsByTier: 00010000000200000004000000040000i
+  printWalkersByTier: 040000000c0000001800000020000000i
+  bootPrint: {x: 0.3, y: 0.12}
+  pawPrint: {x: 0.16, y: 0.14}
+  trackFillSeconds: 120
+  freshSnowFill: 4
+  trackMinCover: 0.02
+  precipitationByTier:
+  - 0.4
+  - 0.7
+  - 1
+  - 1.3

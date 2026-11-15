@@ -211,6 +211,7 @@ namespace KryticalNova.Hostiles.Entities
             if (!m_Awake || result.IsEvaded || result.IsReflected || m_Entity == null || !m_Entity.IsAlive) return;
             float amount = Mathf.Round(result.DamageDealt);
             if (amount <= 0f) return;
+            if (result.NoThreat) return;   // a Mount Companion's strike (item 19 phase 3): no threat, so it never draws aggro
             int ghostId = attacker != null && GhostIdOfBody != null ? GhostIdOfBody(attacker.transform) : 0;
             Event(BrainEventKind.Damaged, ghostId, amount);
         }

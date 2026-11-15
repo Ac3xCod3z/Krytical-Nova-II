@@ -432,9 +432,32 @@ namespace KryticalNova.Items.Visuals
             if (wrapPart.IsValid && bodyShape.masculineFeminine > 50f
                 && resolved.TryGetValue(BodyRegion.Torso, out var torso) && torso.usesWrap)
                 resolved[BodyRegion.Wrap] = wrapPart;
+            // Parts this character never wears (townsfolk and vendors: no weapon mounts, holsters or sheaths; owner 14 Nov 2026).
+            if (excludedRegions != 0)
+                for (int r = 0; r < 64; r++)
+                    if ((excludedRegions & (1UL << r)) != 0) resolved.Remove((BodyRegion)r);
             partList.Clear();
             partList.AddRange(resolved.Values); // region order => deterministic bone order for sharing
         }
+
+        private ulong excludedRegions;
+
+        /// <summary>The merged mesh is left readable for whoever reads it next (the townsfolk's LOD baker), who then frees its CPU copy.</summary>
+        public bool KeepMeshReadable { get; set; }
+
+        /// <summary>
+        /// Regions this character never wears, whatever its recipe or gear says (townsfolk and vendors leave out weapon mounts):
+        /// they are left out of the merged mesh. Set before the parts are applied; the next rebuild uses it.
+        /// </summary>
+        public void ExcludeRegions(IReadOnlyList<BodyRegion> regions)
+        {
+            excludedRegions = 0;
+            if (regions == null) return;
+            foreach (BodyRegion r in regions) if ((int)r < 64) excludedRegions |= 1UL << (int)r;
+        }
+
+        /// <summary>Whether <paramref name="region"/> is left out (see <see cref="ExcludeRegions"/>).</summary>
+        public bool Excludes(BodyRegion region) => (int)region < 64 && (excludedRegions & (1UL << (int)region)) != 0;
 
         private static bool IsRobotHeadPiece(SidekickPartRef part)
         {
@@ -452,6 +475,7 @@ namespace KryticalNova.Items.Visuals
         {
             ClearDebugRenderers();
             SplitCloth(partList);
+            merger.KeepReadable = KeepMeshReadable;
             var mesh = merger.Merge(mergeList, bodyShape, boneBuffer, name + "_Merged", idleFace,
                 liveFaceShapes != null ? liveFaceShapes : blink ? (IReadOnlyList<string>)FaceBlinker.LiveShapes : null, bareBody);
             if (mesh == null) return;

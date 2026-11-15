@@ -52,7 +52,9 @@ namespace KryticalNova.Hostiles.Entities
                 {
                     if (events[i].Tick != now) continue;
                     // a hit, or IHostileBrain.Aggro (M5.5c), engages the same tick
-                    if ((events[i].Kind == BrainEventKind.Damaged || events[i].Kind == BrainEventKind.Aggro) && events[i].GhostId != 0) damaged = true;
+                    // a taunt engages too (the TANK companion's, phase 4 of day list 19)
+                    if ((events[i].Kind == BrainEventKind.Damaged || events[i].Kind == BrainEventKind.Aggro || events[i].Kind == BrainEventKind.Taunt)
+                        && events[i].GhostId != 0) damaged = true;
                     if (events[i].Kind == BrainEventKind.Killed) killed = true;
                     if (events[i].Kind == BrainEventKind.Calm) calm = true;
                 }

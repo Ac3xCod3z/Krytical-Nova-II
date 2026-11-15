@@ -305,7 +305,9 @@ namespace KryticalNova.World
                 : Mathf.Repeat((dayCount + time01) / Mathf.Max(1f, env.DayCycle.lunarCycleDays), 1f);
             rainbowOverride = gmRainbow;
             haloOverride = gmHalo;
-            Apply(env.DayCycle, time01, env.Weather, flash, dt);
+            // Seasons (owner's DAY list item 21): the sun's path is warped for short winter days inside the same one-hour day; lamps and the
+            // night light read the presented (warped) time. With no season known the warp changes nothing.
+            Apply(env.DayCycle, SeasonView.SunTime(time01), env.Weather, flash, dt);
         }
 
         /// <summary>

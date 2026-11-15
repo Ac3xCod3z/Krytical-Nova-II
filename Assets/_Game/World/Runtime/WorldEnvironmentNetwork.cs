@@ -92,6 +92,8 @@ namespace KryticalNova.World
 
         // Per-frame evaluation (read by WorldClock and presentation).
         public float TimeOfDay01 { get; private set; }
+        /// <summary>The world clock's day number now (seasons: weather spells run over days).</summary>
+        public long CalendarDay => state.CalendarDay(Now);
         public WeatherBlend Weather { get; private set; } = WeatherBlend.Clear();
         public WeatherProfile FromWeather { get; private set; }
         public WeatherProfile ToWeather { get; private set; }
@@ -184,6 +186,12 @@ namespace KryticalNova.World
             lastNow = now;
             lastLocalNow = Time.timeAsDouble;
 
+            // a new weather spell (seasons) rolls the weather again at once
+            if (SeasonWeather.Reroll && HasWorldAuthority)
+            {
+                SeasonWeather.Reroll = false;
+                if (autoWeather && !weatherLocked) nextWeatherChangeTime = Math.Min(nextWeatherChangeTime, now);
+            }
             if (HasWorldAuthority && autoWeather && !weatherLocked && now >= nextWeatherChangeTime)
                 AdvanceWeather(now);
 
@@ -319,22 +327,15 @@ namespace KryticalNova.World
         private void AdvanceWeather(double now)
         {
             var current = weatherCatalog != null ? weatherCatalog.Get(state.ToWeather) : null;
-            if (current == null || current.next.Count == 0)
+            if (current == null || (current.next.Count == 0 && (SeasonWeather.Extra == null || SeasonWeather.Extra.Count == 0)))
             {
                 ScheduleNext(now, current, 0f);
                 return;
             }
 
-            float total = 0f;
-            foreach (var n in current.next) if (n.profile != null) total += n.weight;
-            float pick = (float)rng.NextDouble() * total;
-            WeatherProfile chosen = current;
-            foreach (var n in current.next)
-            {
-                if (n.profile == null) continue;
-                pick -= n.weight;
-                if (pick <= 0f) { chosen = n.profile; break; }
-            }
+            // One weighted roll over the Next list. Seasons (owner's DAY list item 21) scale the weights and add their own choices through
+            // SeasonWeather; with no season it is the same pick as before.
+            WeatherProfile chosen = SeasonRules.Pick(current.next, SeasonWeather.Extra, SeasonWeather.Scale, (float)rng.NextDouble()) ?? current;
 
             int index = weatherCatalog.IndexOf(chosen);
             if (index < 0 || index == state.ToWeather)
@@ -393,6 +394,26 @@ namespace KryticalNova.World
             state.CycleEpoch = now;
             Commit();
             return true;
+        }
+
+        /// <summary>
+        /// Shows a sky event now on every client (item 24 GM commands: sky.comet, sky.shower...): only the kind and the moment travel
+        /// with the world's state, each client draws it from <see cref="SkyCalendar"/>. <see cref="SkyEventKind.None"/> clears it. Authority only.
+        /// </summary>
+        public bool ForceSkyEvent(SkyEventKind kind)
+        {
+            if (!HasWorldAuthority) return false;
+            state.SkyForce = (byte)kind;
+            state.SkyForceAt = Now;
+            Commit();
+            return true;
+        }
+
+        /// <summary>The GM-forced sky event and its age in real seconds (age -1 when none).</summary>
+        public SkyEventKind ForcedSkyEvent(out double age)
+        {
+            age = state.SkyForce == 0 ? -1 : Now - state.SkyForceAt;
+            return (SkyEventKind)state.SkyForce;
         }
 
         /// <summary>Changes real seconds per day while keeping the current time of day. Authority only.</summary>

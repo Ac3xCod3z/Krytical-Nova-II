@@ -67,6 +67,7 @@ namespace KryticalNova.EditorTools.Economy
                     (Consumables + "Flux_Flask.asset", 600L),
                     (Consumables + "Pet_Ration.asset", 50L),
                     (Consumables + "Mount_Feed.asset", 50L), // placeholder price (owner, 25 Oct 2026: tune later)
+                    (Consumables + "Mount_Stim.asset", 60L), // day list item 19, PROPOSED placeholder price beside Mount Feed
                     (Consumables + "Respec_Chip.asset", 5_000L), // placeholder prices (wave 3b, owner 12 Nov 2026: tune later)
                     (Consumables + "Memory_Wipe.asset", 5_000L),
                 },

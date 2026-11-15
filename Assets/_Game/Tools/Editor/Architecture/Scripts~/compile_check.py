@@ -13,7 +13,7 @@ Use it to check a refactor in a worktree while the owner's Editor stays open on 
     python ".../compile_check.py" --defines "KN_TEST_LANE;KN_DEV_BOTS"   extra scripting defines, as a build's
                                                extraScriptingDefines add them (with --server for a server build's set)
     python ".../compile_check.py" --ecs-library C:/path/to/clone   where the Entities / Netcode packages and their built DLLs are
-    python ".../compile_check.py" --maxcpu 2   build with at most 2 MSBuild nodes
+    python ".../compile_check.py" --maxcpu 2   build with at most 2 MSBuild nodes (default 4; nodes exit with the build)
     python ".../compile_check.py" --each       one dotnet run per assembly, the old slower way (same output)
     python ".../compile_check.py" --restore-only   restore only: must fail with "not compiled" (a test of the guard)
 It prints the errors and exits 1 when any assembly fails. Warnings are not shown.
@@ -58,16 +58,52 @@ MAXCPU = arg("--maxcpu")   # e.g. 2: fewer MSBuild nodes, so a compile shares th
 
 
 def main_folder():
+    """Where Unity's generated projects and Library live for a worktree that has none of its own. The DOTS clone is itself a
+    git worktree of the NGO repo, so git's first worktree is the NGO folder, which has no Entities assemblies; a worktree of
+    the DOTS game uses the DOTS clone instead (owner, 14 Nov 2026: Library-less item worktrees failed the commit hook)."""
     out = subprocess.run(["git", "-C", CHECKOUT, "worktree", "list", "--porcelain"], capture_output=True, text=True).stdout
-    first = next((l[9:] for l in out.splitlines() if l.startswith("worktree ")), CHECKOUT)
-    return os.path.normpath(first)
+    trees = [os.path.normpath(l[9:]) for l in out.splitlines() if l.startswith("worktree ")]
+    def has_ecs(t):
+        return os.path.exists(os.path.join(t, "KryticalNova.Runtime.csproj")) and             os.path.isdir(os.path.join(t, "Library", "PackageCache")) and             any(n.startswith("com.unity.entities") for n in os.listdir(os.path.join(t, "Library", "PackageCache")))
+    if os.path.isdir(os.path.join(CHECKOUT, "Assets", "_Game", "Networking", "Entities")):   # a DOTS-game checkout
+        for t in trees:
+            if t != os.path.normpath(CHECKOUT) and has_ecs(t):
+                return t
+    return trees[0] if trees else CHECKOUT
 
 
 # a checkout with Unity's own generated projects (the DOTS clone) uses them: the main folder's may be older and miss a vendor reference
 PROJECTS = os.path.normpath(arg("--projects", CHECKOUT if os.path.exists(os.path.join(CHECKOUT, "KryticalNova.Runtime.csproj")) else main_folder()))
 ECS_LIB = os.path.normpath(arg("--ecs-library", CHECKOUT if os.path.isdir(os.path.join(CHECKOUT, "Library", "ScriptAssemblies")) else PROJECTS))
+
+# ONE COMPILE AT A TIME on this PC (owner, 14 Nov 2026: "don't allow them to compile at the same time"). Every compile_check
+# (and so every kn_check) takes this machine-wide lock first and waits its turn; parallel runs also clashed in NuGet restore.
+import msvcrt, atexit
+_LOCK_PATH = os.path.join(os.environ.get("TEMP", CHECKOUT), "kn-compile-check.lock")
+_lock_file = open(_LOCK_PATH, "a+")
+_waited = 0
+while True:
+    try:
+        _lock_file.seek(0)
+        msvcrt.locking(_lock_file.fileno(), msvcrt.LK_NBLCK, 1)
+        break
+    except OSError:
+        if _waited % 30 == 0:
+            print(f"waiting for another compile on this PC to finish ({_waited} s)", flush=True)
+        time.sleep(1)
+        _waited += 1
+def _unlock():
+    try:
+        _lock_file.seek(0); msvcrt.locking(_lock_file.fileno(), msvcrt.LK_UNLCK, 1)
+    except OSError:
+        pass
+atexit.register(_unlock)
+
 GAME = os.path.join(CHECKOUT, "Assets", "_Game")
-OUT = os.path.join(CHECKOUT, "Temp", "compile-check")
+# outside the checkout (owner, 14 Nov 2026): an open Editor on this checkout watches and locks its Temp folder, so the build
+# output there failed with locked files (CS2012) while the shared Editor stayed open
+OUT = os.path.join(os.environ.get("TEMP", os.path.join(CHECKOUT, "Temp")), "kn-compile-check",
+                   re.sub(r"[^A-Za-z0-9]+", "-", os.path.normpath(CHECKOUT)).strip("-")[-60:])
 os.makedirs(OUT, exist_ok=True)
 
 
@@ -269,7 +305,10 @@ if SERVER:   # the server build has no Editor or test assemblies, nor the ones m
         return (".Editor" not in name and ".Tests" not in name
                 and "!UNITY_SERVER" not in asmdefs.get(name, {}).get("defineConstraints", []))
     built = [p for p in built if on_server(p)]
-BUILD = ["-nologo", "-v", "q", "-clp:ErrorsOnly;NoSummary", "-p:WarningLevel=0"] + ([f"-maxcpucount:{MAXCPU}"] if MAXCPU else [])
+# -nodeReuse:false (owner, 14 Nov 2026): reused MSBuild nodes stayed alive ~15 min after every check, 16 of them holding
+# ~3.7 GB, which kept Unity under its RAM floor. They now exit with the build; at most 4 nodes unless --maxcpu says otherwise.
+BUILD = ["-nologo", "-v", "q", "-clp:ErrorsOnly;NoSummary", "-p:WarningLevel=0", "-nodeReuse:false",
+         f"-maxcpucount:{MAXCPU or 4}"]
 ERROR_PROJECT = re.compile(r"\[([^\]]+?\.csproj)[^\]]*\]$")
 failed, errors = [], []
 if "--each" in args:   # the old way, one dotnet run per assembly: slower, for when the single run misbehaves

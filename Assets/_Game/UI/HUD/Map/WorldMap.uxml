@@ -12,11 +12,15 @@
             <ui:Label text="WORLD MAP" class="heading world-map-title" />
             <ui:Label name="key-map" text="[M]" class="muted header-key" />
             <ui:Label name="world-map-zone" text="" class="accent world-map-zone" />
+            <ui:Button name="world-map-tab-map" text="MAP" class="world-map-tab selected" />
+            <ui:Button name="world-map-tab-calendar" text="CALENDAR" class="world-map-tab" />
             <ui:VisualElement class="header-spacer" picking-mode="Ignore" />
             <ui:Button name="world-map-center" text="CENTRE" class="world-map-center" />
             <ui:Button name="close-world-map" class="close"><ui:VisualElement class="kn-close-glyph" picking-mode="Ignore" /></ui:Button>
         </ui:VisualElement>
 
+        <!-- The Calendar page (MapCalendarView builds it in code): date, moon, sky events, coming up, 7-day forecast. -->
+        <ui:VisualElement name="world-map-calendar" class="world-map-calendar" />
         <ui:VisualElement name="world-map-viewport" class="world-map-viewport">
             <ui:VisualElement name="world-map-content" class="world-map-content" picking-mode="Ignore">
                 <ui:VisualElement class="world-map-grid" picking-mode="Ignore" />
@@ -26,7 +30,7 @@
             <ui:Label text="N" class="world-map-north" picking-mode="Ignore" />
         </ui:VisualElement>
 
-        <ui:VisualElement class="row world-map-footer">
+        <ui:VisualElement name="world-map-footer" class="row world-map-footer">
             <ui:Label name="world-map-coords" text="X 0  ·  Z 0" class="world-map-coords" />
             <ui:VisualElement class="header-spacer" picking-mode="Ignore" />
             <ui:VisualElement class="world-map-legend-icon legend-you" picking-mode="Ignore" /><ui:Label text="You" class="world-map-legend" />
@@ -36,6 +40,6 @@
             <ui:VisualElement class="world-map-legend-icon legend-poi" picking-mode="Ignore" /><ui:Label text="Place" class="world-map-legend" />
             <ui:VisualElement class="world-map-legend-icon legend-waypoint" picking-mode="Ignore" /><ui:Label text="Marker" class="world-map-legend" />
         </ui:VisualElement>
-        <ui:Label text="Scroll: zoom  ·  Drag: pan  ·  Right-click: place / remove your marker  ·  Resize: Settings ▸ HUD Layout" class="help world-map-help" />
+        <ui:Label text="Scroll: zoom  ·  Drag: pan  ·  Right-click: place / remove your marker  ·  Resize: Settings ▸ HUD Layout" name="world-map-help" class="help world-map-help" />
     </ui:VisualElement>
 </ui:UXML>

@@ -1,6 +1,6 @@
 # Seasons plan
 
-**Status: proposed 13 Nov 2026, waiting for the owner's review.** Research and design notes only. No code is written
+**Status: code built 14 Nov 2026 (b18-coder-21, branch `b18/21-seasons`); the first Play run (shader compile, GIFs, perf) is owed.** Was: proposed 13 Nov 2026, waiting for the owner's review. Research and design notes only. No code is written
 until the owner has read this and answered the picks at the end (owner's DAY list, 13 Nov: "18-21: research + design
 notes for the owner's review only; code comes after he reviews").
 
@@ -348,6 +348,9 @@ Questions as multiple choice, the recommended option first. Answers are recorded
    the Sunderpeak maps plus any mountain field zones as always winter (owner names the list); b) snow only on roofs,
    grass and props first, the ground later; c) a) for the shader, no always-winter maps until they are dressed.
 
+Owner's answers (13 Nov 2026, `owner-answers-18-24.md`): 1 a) less daylight inside the same one-hour day; 2 a) frosted, leaves
+kept; 3 a) Mondays 00:00 UTC, Winter from 23 Nov; 4 a) the Terrain Lit copy, and always-winter = the Sunderpeak maps only.
+
 ## Done when (the owner's words)
 
 GM season switch changes weather, foliage and day length on two clients, snow piles up and melts, footprints show, an
@@ -355,4 +358,75 @@ always-snowy zone keeps its snow, fps log holds the target.
 
 ## As built
 
-(Empty: nothing is built yet.)
+Built 14 Nov 2026 in one PR (all six steps' code; the Unity checks are one Play turn later).
+
+- **Calendar and rules:** `World/Runtime/Seasons/SeasonRules.cs` (pure): `At` (season from Unix seconds), `NextTurnUnix`, `Blend`,
+  `SunTime` / `IsNight` / `Sunrise` (the daylight warp), `SnowRate` / `SnowCover`, `Pick` (the weather pick with the season's
+  weights and extra choices; with none it is the pick of before). Numbers: `World/Data/SeasonSettings.cs` +
+  `World/Resources/SeasonSettings.asset`; `SeasonProfile` + `World/Data/Assets/Seasons/SP_Spring|Summer|Autumn|Winter.asset`
+  (the table of section 3, with Winter's extra choices Snow 1 and Overcast 0.5 so Winter snows even after a clear sky:
+  today only Overcast leads to Snow).
+- **Server:** `World/Entities/Runtime/SeasonSync.cs`: `SeasonServerSystem` (four looks a second; UTC fixed onto the
+  shared clock once; GM `Hold`, `Auto`, `SetSnow`, `SetClimate`; fills `SeasonWeather` for `WorldEnvironmentNetwork.AdvanceWeather`,
+  the one seam in NGO-era code), `SeasonStateRpc` (48 bytes: the plan's 43 plus the calendar season, the snow floor),
+  `SeasonClientSystem` into `SeasonView.Client`. The weather pick uses the season that shows more (not blended weights).
+  The always-winter list is `SeasonSettings.alwaysWinterRegions` (region or scene-name prefix; "Sunderpeak"), not a
+  `ZoneEntry` field: the Sunderpeak maps are not in the Zone Catalog yet.
+- **Client:** `World/Runtime/Presentation/SeasonPresenter.cs` (own bootstrap, every machine, never placed in a scene);
+  `Rendering/Runtime/Seasons/SnowTrackMap.cs` + `Rendering/Shaders/Seasons/SnowTrack.compute`; the shaders as in the
+  Rendering Bible 6d "Seasons and snow". `EnvironmentPresenter` and `WorldClock` read `SeasonView.SunTime`.
+- **GM:** `Tools/Debug/SeasonCommands.cs` (`gm.season status|spring|summer|autumn|winter|auto [blend s]|climate auto|winter|temperate`,
+  `gm.snow <0-1>`), the GM window's Season group (World tab), the control page's Season panel.
+- **Tests:** `World/Tests/Editor/SeasonRulesTests.cs` (evals 1-5 and the settings asset), `World/Entities/Tests/Editor/SeasonSyncTests.cs`
+  (eval 6, server + two clients + a late joiner).
+- **Not built / open:** autumn leaf particles (`WindLeavesController`), the season's wind multiplier, interiors marked
+  "No Snow", the publish bundle check of eval 8, and snow on Synty-shaded surfaces (see the Unity turn below).
+
+## Unity turn (14 Nov 2026)
+
+- [x] Every season shader compiles clean (KN Terrain Lit, Comic Toon Lit, Foliage Wind, Grass Blades, `SnowTrack.compute`), with no
+  warnings; `M_TerrainMatte` draws with KN Terrain Lit in Zone01 (no pink ground).
+- [x] EditMode: `SeasonRulesTests` 7/7, `SeasonSyncTests` 1/1, `LauncherNewsGateTests` 9/9.
+- [x] Play, Zone01: the client gets the server's season at once (Autumn, day 6 of 14, matching the calendar); `gm.season` holds each
+  season; Winter's sun 07:30-16:30, Summer's 04:30-19:30; snow piles up under falling snow (one re-anchor when it starts, then a steady
+  rate), footprints press green tracks through full cover, the cover melts in patches; `gm.season climate winter` gives the client the
+  always-winter look. Clips in `G:\My Drive\KryticalNova\AI Outputs\build17\seasons21` (21-1 to 21-4, MP4 + GIF).
+- [x] Snow colour lowered from 0.9 to 0.60 / 0.65 / 0.74: at 0.9 the lit snow blew out to a flat cream with no shadow.
+- [x] Perf (Editor, 120 frames each, season on against off, twice): GPU difference -0.5 ms on Low and +0.7 ms on High, inside the
+  Editor's own ±1 ms noise. The exact <= 0.5 ms reading waits for a built-player performance log.
+- [ ] **Coverage gap found:** Zone01 draws with Synty shaders (`Synty/Generic_Basic` on 2,873 renderers, `Synty/Polygon_Triplanar` on
+  896); Comic Toon Lit is on one combat dummy and no Foliage Wind trees stand there. So in Zone01 only the terrain (and GPU grass) takes
+  snow and season colour; roads, roofs, props and trees do not. Needs the owner's pick of how to reach Synty materials (asked of the
+  Master).
+- [ ] A second client in Play (the two-client sync is proven in EditMode by `SeasonSyncTests`).
+
+## Owner requests 14 Nov 2026: snow build-up, footprints, fall colours
+
+- [x] Snow builds from the weather (`SeasonRules.SnowTrendOf`, numbers in `SeasonSettings`): light snow (intensity 0.5) builds over 40
+  minutes toward a 0.35 cap, a blizzard (1.0) in 8 minutes to 1; in between blended; flurries slower still; light snow on deeper snow holds
+  it. The cap travels in the synced state (`SnowCeiling`, same RPC, now 56 B). Tests: `SnowBuildUp_*`, `SnowMelt_*`.
+- [x] Slope rule: full under 35 degrees, none past 55 (`SnowSlopeShape` feeds `KNSnowSlope`; test `SnowSlope_*`).
+- [x] Depth: 0.4 m at full cover; the terrain rises by it in every pass (World Effects Low = colour only), grass shorter than the depth is
+  buried, footprints dent it. Comic Toon Lit surfaces get the slope rule as colour (hard-edged meshes would crack if lifted).
+- [x] Footprints instead of the trail: `SnowPrintWatcher` (one component on the presenter) watches the nearest walkers' feet and adds a
+  boot or paw print when a foot plants; `SnowTrack.compute` stamps them. Walkers per tier 4 / 12 / 24 / 32; map 24 m, up to 1024 texels.
+- [x] Fall foliage: `SeasonRules.FoliageAt` (turn by 45 % of Autumn, thin from 50 %, bare 8 % at its end, bare through Winter, back by
+  35 % of Spring, dull by 70 %); a palette per tree kind (`leafKinds`, rendering layer bits 8-11 via Tag Tree Kinds), evergreens kept;
+  fallen leaves clip in every Foliage Wind pass. `gm.season progress`. Tests: `Foliage_*`.
+- [x] Falling leaves: the existing wind-leaves emitters, times the season's falling share and the tier (Low none).
+- [ ] Unity turn: run Tag Tree Kinds once, shader compile, tests, MP4s (light against heavy build-up, footprints walking, early and late
+  Autumn with mixed colours, leaves blowing), perf note.
+- [ ] Winter: deciduous trees are now bare through Winter (owner, 14 Nov: "leaves almost all gone prior to winter"), replacing the 13 Nov
+  "frosted, leaves kept" answer; flagged to the Master.
+
+## Part 2 (owner 14 Nov, coder 21-2): real-life seasons, code landed on PR #280 (not yet seen in Unity)
+- [x] A. Temperature: season mean + day swing (coldest before dawn, warmest 15:00) + spell + weather offset + daily wobble, sent in 0.5 C steps; snow builds at or below 0.5 C, holds dry below 0, thaws above 0 (per degree, sun x1.6, rain x3). `gm.season temp <C>|auto`.
+- [x] B/J. Weather spells: per-season tables in SP_*.asset (Spring Showers/Mixed/Bright/Storm, Summer Heatwave/Dry/Mixed/Wet/Storm, Autumn Mixed/Wet/Crisp/Storm, Winter Snowy/Blizzard/Cold Clear/Thaw), rolled per in-game day from `weatherSeed` + map name; new worst tier `WP_Storm` (catalog index 11). `gm.season spell <name>|auto`, `gm.season week`. 0.4 m stays the ceiling.
+- [x] C. Drifts: wavy drift field, ripples, thinner on slopes; shelter map (canopies thin, windward piles against walls, roads), 160 m round the camera, off on Low.
+- [x] D. Prints every stride (0.8 m, alternating feet; the walk clip no longer decides); deeper than 0.12 m a ploughed path that presses the raised snow down.
+- [x] K. Town roads: renderers whose material/mesh name matches `roadNameContains` get rendering layer bit 6 at runtime and a road box in the shelter map: 15 % of the snow, packed, slushy.
+- [x] F. Spring: grass brown and short after the snow -> green and full by 40 %; buds; blossom on Emberleaf (pink), Gildleaf (white), Duskleaf (lilac); petals drift via the leaf emitters.
+- [x] G (part). Golden grass on dry runs (3-7 days) in Summer; `SeasonPresenter.HeatHaze` published for the haze pass.
+- [ ] G. Heat haze half-res screen pass (renderer feature, tiered, off on Low), dust/pollen motes, dusk fireflies, warmer sun on hot afternoons.
+- [ ] E/H. Synty Shader Graph copies + Move/Put Back builder; fall check on town trees. Roof middles a bit deeper.
+- [ ] I. One Unity showcase turn (clips per season and stage, Zone01 + a field map, perf Low/High), Encyclopedia, launcher news.

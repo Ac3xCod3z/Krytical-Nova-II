@@ -238,8 +238,8 @@ stance row (FREE lit; the other three greyed in phases 1-2). The detail goes in 
   companion entries so it can chase and strike the companion body. Strikes on it are rolled by the existing
   `HostileStrikeBridge` rules.
 - **Phase 5, XP and items.** A kill with the companion out in a combat stance and having helped (hit, healed or taunted)
-  gives the selected mount 1.5x the kill XP (PROPOSED; riding stays 1x), like the pets' rule of XP from kills. The
-  Double Mount XP item: reuse the Rider Booster (9503) rather than add a second item (the owner picks then).
+  gives the selected mount 1.5x the kill XP (riding stays 1x), like the pets' rule of XP from kills. The
+  Double Mount XP item: reuse the Rider Booster (9503) rather than add a second item. Built 14 Nov 2026, see "Phase 5 as built".
 
 ## 6. Performance budget
 
@@ -328,7 +328,9 @@ Phase 2:
   knock-out, saves.
 - [ ] 5. Mount Stim (item, handler, Apothecary, icon) + the window's HP bar and rest timer. Evals: Stim, item checks,
   performance. **Owner tests phase 2 on two clients and approves.** Then the Encyclopedia update.
-- [ ] 6-8. Phases 3, 4, 5, each planned in detail here first and approved before code.
+- [x] 6. Phase 3, DPS and HEALER (owner 13 Nov: "we can move on to phase 3"); see As built.
+- [x] 7. Phase 4, TANK (the Master's go, 14 Nov, after the owner merged phase 3; built from section 5's outline, the detail is in its As built).
+- [ ] 8. Phase 5, planned in detail here first and approved before code.
 
 ## The owner's picks
 
@@ -354,4 +356,121 @@ Mount Stim, an old save loads unchanged, the perf log holds the target, and the 
 
 ## As built
 
-(Empty until a step lands.)
+Phases 1-2, 13 Nov 2026 (b18-coder-12, branch `b18/19-mount-companion`). Picks: the recommended (a) of 1-4 (no owner
+answer differed). What landed and where it differs from the plan above:
+
+- **Rules:** `Mounts/Runtime/CompanionRules.cs` (HP, regen by the clock, knock-out, rest, Stim, rest spot) and `CompanionFollower` (the
+  server's trail follow, catch-up, min gap, warp: too far / teleport / stuck, one warp per cooldown). Every number in `MountSettings`
+  ("Companion" headers), importance in `RelevancySettings.importanceCompanion` (40).
+- **State:** `PlayerMounts` holds out / stance / per-box HP lost, `hpAt` and `restUntil` (UTC seconds); hunger drains at
+  `CompanionHunger` while out; calls while riding get off first and form as the feet land; the Ride key, another box, death, starving
+  and a forget send it home. Save: `MountSaveEntry.hpLost / hpAt / restUntil`, `MountSave.stance`, added fields, version stays 1.
+- **Net:** `MountOpKind.Companion = 3`, `Stance = 4` through `MountOpRpc`; the owner's HP and rest through `MountCompanionBookRpc`
+  (`IBodyMountCompanion`, `IMountCompanionLink` in Core). The player ghost is unchanged (`PlayerMountTag` has no `Out` byte: the
+  phase is already OnFoot while out, so no view draws a mount under the rider; the window learns "out" from the companion book).
+- **Ghost:** `MountCompanionGhost` (`Mounts/Entities`, builder Krytical Nova ▸ Mounts ▸ Build Companion Ghost): `CompanionView`
+  (owner ghost id, box, stage, speed step, state, stance, HP permille, a warp counter instead of a 4-entry ring); place and facing on
+  `LocalTransform`. On going home / a knock-out it stays `companionVanishSeconds` with that state so every view plays the vanish.
+- **Body (phase 2):** `CompanionBody`, a hidden trigger capsule per companion, made by `CompanionServerSystem` (no pooled prefab yet).
+  It is an `IStandIn`: `CombatHostility` judges it as its owner, so only the owner's enemies' area skills (`CollectAreaTargets`) hit it;
+  it is not in `CombatTargetRegistry`, so clicks and Hostiles never reach it (pick 2 a).
+- **View:** `CompanionClientSystem` + `CompanionPresenter`: the stage model, idle / walk / run at the ghost's speed, feet on the real
+  ground by a downward ray, the mount's materialise look on call, warp, home and knock-out.
+- **Key:** **Y** (`KeyBindings.Companion`), not B: B is the emote wheel and Y was the only free letter. Rebindable.
+- **Item:** Mount Stim 9014 (`UtilityItemGenerator`), Apothecary 60 Creds (`VendorStockBuilder`), `MountStimUse` handler.
+- **GM:** `gm.mount.call`, `gm.mount.hurt <%>`, `gm.mount.heal`, `gm.mount.rest <s>`; GM Tools Mounts tab buttons.
+- **Not built yet (follow-ups):** the HP bar over the companion for everyone (the owner sees HP in the Mount window), the owner's
+  name-plate mount line, summon / vanish sounds and a knock-out stagger, the `KnTestWorld` two-client test and the 30-companion perf run,
+  pooled bodies and a Burst follow (perf phase).
+
+Phase 3, 13-14 Nov 2026 (b18-coder-20, branch `b18/19-companion-phase3`): the DPS and HEALER stances, PvE only. The owner said
+"we can move on to phase 3"; the outline in section 5 was followed. What landed and where it differs:
+
+- **Rules:** `Mounts/Runtime/CompanionFightRules.cs`: which stances are built (FREE, DPS, HEALER; TANK is phase 4), the PvP fallback
+  (`Effective`: a combat stance acts as FREE while the owner is in an always-PvP zone, a duel or a Crossfire battlefield, with a line
+  to the owner when that starts and ends), the DPS strike (`Strike`: the owner's own roll on that Hostile x `companionDpsDamageShare`
+  x (1 + `companionDpsDamageBuff`), no reflect, `DamageResult.NoThreat`), the HEALER pulse, the strike spot and reach. Numbers:
+  `MountSettings` header "Companion fight" (`CompanionFight` -> `CompanionFightTuning`).
+- **Target logic:** `Mounts/Entities/Runtime/CompanionFightPick.cs`, Autopilot's `Fight / Pick / Allowed` cut to the companion's
+  range (12 m of the owner): the owner's own target (`CombatState.TargetGhostId`) first, else the Hostile it already fights while that
+  one is still after the owner, else the nearest Hostile after the owner (`HostileTarget.GhostId`), else none: it never starts a
+  fight alone. Autopilot's grey / red / Bruiser / tagged filters are not needed: it only joins fights its owner is already in.
+  It runs for every companion at once in `CompanionPickJob` (Burst `IJobFor`) every `companionFightSeconds` (0.25 s); while no
+  companion is in a combat stance nothing is queried and no job runs.
+- **DPS:** `CompanionServerSystem` runs it to the strike spot (`CompanionFollower.StepToward`, straight, the owner's trail forgotten
+  while it fights; the follow's warp still brings it back past 30 m) and strikes every 1.6 s in reach. The strike is dealt in the
+  owner's name, so the kill, the tag and the XP are theirs; `EcsHostileBrain.OnDamaged` skips threat for `NoThreat`, so it never
+  draws aggro, and Hostiles never target it. It never heals.
+- **HEALER:** no damage; every 2 s while the owner fights a Hostile (or one is after them) and is hurt, `PlayerResources.Heal` of
+  1.5 % of the owner's max HP. Heals put no threat on a Hostile in this game (no `Healed` brain event is sent), so it never draws
+  aggro either. It is a heal over time from the companion, not a buff icon in the owner's buff row (follow-up if wanted).
+- **Views:** `CompanionView` gains `Strikes` and `Pulses` counters, `FightGhostId` and `ActingStance`. Each strike lunges the model
+  0.6 m toward the Hostile and back (the mounts have no attack clip) with the swing's feel (its trail; the whoosh on the owner's
+  screen; item 20's grass push); each pulse plays the heal feel (`IGameFeelSink.Consumed`) on the owner. From the counters only, so
+  every view plays each once. The hit goes on the owner's `HitEvent` ring (`HitRecordServerSystem.RecordFor`, labelled with the
+  mount's name) and the owner's own hit number (`HitNumbers.Send`).
+- **Window and save:** the DPS and HEALER buttons are on (TANK says "coming later"); the stance is now restored from the save (it was
+  saved but loaded as FREE in phases 1-2); a saved stance that is not built loads as FREE.
+- **Tests:** `CompanionFightTests` (11: pick order, never alone, range and death, the Burst job equals the rule, stances and PvP, the
+  strike, the heal, the spot and the run, settings = defaults) and `PlayerMountsCompanionTests.Stances_...` (TANK refused, kept
+  across a relog).
+- **Follow-ups:** a buff icon for HEALER in the owner's buff row; mount attack clips (the lunge stands in); the companion's own HP
+  bar over it for everyone (from phase 2); Hostiles still never strike the companion (phase 4 TANK makes them).
+
+### Phase 4 as built (14 Nov 2026, b18-coder-19p3)
+
+- **Taunt:** in the TANK stance the companion runs to its spot in front of the Hostile it fights (the phase 3 pick; a Hostile after the
+  companion itself now counts as after the owner, `CompanionSeek.SelfGhostId`) and every `companionTankTauntSeconds` (6) writes a
+  `BrainEventKind.Taunt` for its own ghost id on that Hostile and on every Hostile after its owner within `companionTankTauntRadius` (8 m)
+  of it (`CompanionFightPick.Tauntable`). It deals no damage and does not heal.
+- **Threat fix in Hostiles:** a taunt lifted the taunter to exactly 110 % of the top threat, and the switch rule needs more than 110 %, so a
+  taunt never turned a Hostile. `HostileThreatSystem` now aims a Hostile at a sensed taunter at once (a taunter it cannot sense only gets
+  the threat), and `HostileDecideSystem` lets a taunt engage like a hit. Nothing sent taunts before, so no other behaviour changes.
+- **Sense and strikes:** `CompanionSenseFeedSystem` (Burst) puts every companion that is out and acting as TANK into the Hostiles' sense
+  world after the players, flagged Ignored (never picked by sight). A Hostile whose target it is chases and swings at it like at a player;
+  the swing is rolled by `HostileStrikeRules.TryRollOnStandIn` (the same reach, multiplier and stats, no wall rule, no reflect) in the
+  strike bridge and applied by the blow queue to the companion's hidden body, which `StandInTargets` (Player.Entities.Presentation)
+  names for its ghost. DPS, HEALER, FREE, a companion going home and a knocked-out one are not in the sense world, so a Hostile falls back
+  to its next threat.
+- **Defence buff:** `CompanionBody.TakenScale` = (1 - the TANK defence buff) / its HP multiplier, both growing with the mount (see "Stances grow with the mount" below) while it acts as TANK, else 1
+  (`CompanionFightRules.TakenScale`); a TANK in PvP acts as FREE, so a player's hit is never lessened.
+- **Toughness (owner, 14 Nov: "its defense buff should allow it to be tougher"; superseded the same day by "Stances grow with the mount" below):** the buff was applied, but at 0.4 a new mount held a level 40 Colossus about 9 s against an owner in the gear that level expects (the Play proof's Tester had no gear and no spent points, 885 HP, so 2 s there). At 0.7 (`MountSettings.companionTankDefenceBuff`): about 17 s new, 29 s full-grown; the Colossus swings every 1.15 s (0.8 s clips + 0.35 s cooldown) and deals about 190 a second before the buff. `CompanionTankToughnessTests` works it out from the real assets with the one damage formula and holds it to 15-25 s for a new mount.
+- **Views:** `CompanionView.Taunts` counts its taunts; every view rears the model up (0.45 m, 18 degrees, 0.5 s) with the swing feel.
+- **Window:** TANK is on in the Mount window with its tooltip; a saved TANK loads as TANK.
+- **Tests:** `CompanionFightTests` (TANK keeps a taunted Hostile, the taunt rule, the defence scale, the sense entry, settings = defaults),
+  `PlayerMountsCompanionTests` (TANK taken and kept, the body takes less), `ThreatTests` (a taunt takes the target from the top threat and
+  its strikes follow, an unsensed taunt only adds threat, a taunter that leaves gives the target back, a taunt engages an idle Hostile),
+  `StandInTargetsTests`. The Play probe (`KN_PLAYHERE_COMPANION_FIGHT=1`) has a TANK part after HEALER.
+- **Left:** a second-client check; a taunt sound of its own (it uses the swing feel); the companion's own threat entry stays in a Hostile's
+  table of six until it decays.
+
+### Stances grow with the mount (owner, 14 Nov 2026: "all of the stances need to have its stats raised during its progression kind of like how pets stats work")
+
+- Each stance number has its value at 0 % and at 100 % of the mount's growth in `MountSettings` (`companionDpsDamageShareByGrowth`
+  0.35 -> 0.61, which with the 15 % buff is about 40 % -> 70 % of the owner's strike; `companionHealerHealShareByGrowth` 1.5 % -> 3 % every
+  2 s; `companionTankDefenceBuffByGrowth` 0.65 -> 0.7 (owner: about 15 s from day one); `companionTankHpMultiplierByGrowth` x1 -> x2). `CompanionFightTuning.AtGrowth` lerps
+  them; `PlayerMounts.CompanionFightNow` is the tuning at the selected mount's growth, read by the server system for the strike, the pulse and
+  the TANK cost of a blow.
+- TANK's HP multiplier: HP is kept as a share of the max, so x2 HP is a blow costing half the share (`CompanionFightRules.TakenScale` =
+  (1 - buff) / multiplier); switching stance never changes the HP shown.
+- Against a level 40 Colossus and a level 40 owner in the gear that level expects: a mount holds about 15 s at 0 % growth, 32 s at 50 % and 58 s at 100 %
+  (`CompanionTankToughnessTests` prints both). This replaces the earlier flat 0.7 buff.
+- The ride stats (the two main stats up to their max, the riding speeds) do not change with any stance (`CompanionStanceGrowthTests`).
+- The Mount window's stance tooltips show the numbers of the selected mount's growth (`CompanionFightRules.StanceTip`).
+
+## Phase 5 as built (14 Nov 2026, helped kills)
+
+The owner's picks (14 Nov 2026): a flat 1.5x; "helped" = the companion struck, taunted or (HEALER) pulsed a heal on its owner
+during that fight within the 10 s before the kill, so all three combat stances earn it; it multiplies with the Rider Booster
+(1.5 x 2 = 3x); no new item, the Rider Booster stays the only mount-EXP item.
+
+- `CompanionServerSystem` (server) notes each help on the owner's `PlayerMounts.ServerNoteCompanionHelp(body, acting)`: DPS just
+  before each strike lands (so the killing blow counts), TANK for every Hostile a taunt reaches, HEALER after each pulse for the
+  Hostile its owner fights. The note is keyed by the Hostile's `HostileNet` and stamped with the server's `Time.time`.
+- `CompanionHelpLog` (Mounts runtime, pure) keeps the last 16 helps in fixed arrays (no garbage); FREE notes nothing
+  (`CompanionHelpRules.Counts`), and a combat stance acts as FREE in PvP, so PvP never earns it.
+- `PlayerMounts.OnHostileKill`, the only mount kill-EXP path, takes the note (used up) and pays
+  `MountRules.KillXpUnits(tuning, boosterBonus, companionMultiplier)`: the kill EXP times 1.5 first, then the boosters.
+- Numbers: `MountSettings` "Companion XP" (`companionHelpedKillXpMultiplier` 1.5, `companionHelpSeconds` 10).
+- Tests: `CompanionHelpedKillTests` (each stance 1.5x, FREE none, none after 10 s, 3x with the Rider, another Hostile none,
+  the log keeps the newest, the asset's numbers). Server decides; client presentation is untouched.

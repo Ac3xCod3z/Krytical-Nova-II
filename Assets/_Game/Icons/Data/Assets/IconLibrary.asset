@@ -4963,3 +4963,8 @@ MonoBehaviour:
     set: Cyberpunk/Medicine
     number: 19
     chosen: 0
+  - kind: 2
+    target: Mount_Stim
+    set: Cyberpunk/Medicine
+    number: 20
+    chosen: 0

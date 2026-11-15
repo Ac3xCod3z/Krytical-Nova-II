@@ -146,7 +146,7 @@ namespace KryticalNova.DevTools
                 "APPEARANCE   gm.weave [off]   (opens the Holoweaver here; Weaves and dyes then work with no NPC near) · gm.dye · gm.weave.unlock <all|item> · gm.weave.clear · gm.weave.list · gm.restyle <stylist|reshaper|coach|off> · gm.passes [n]   (Chroma Cells, Prism Cells, Restyle, Training and Name Change Passes)",
                 "CRAFTING     gm.craft [off]   (opens the Fabricator here; crafting then works with no NPC near) · gm.craftkit [times]   (the materials of every recipe) · gm.dossier   (the three Dossiers) · gm.zenith [all]   (the Zenith Dossiers of the player's faction, or all nine)",
                 "XP BOOSTERS  gm.boosters [n]   (n of each: Field, Companion, Rider, Convoy) · gm.boost   (what is running) · gm.boost.clear",
-                "MOUNTS       gm.mount · gm.mount.give [brambleback|1-4] · gm.mount.ride · gm.mount.growth <0-100> · gm.mount.hunger <0-100> · gm.mount.feed · gm.mount.xp <n> · gm.mount.forget <mount>   (the selected mount; evolves at 50 and 100)",
+                "MOUNTS       gm.mount · gm.mount.give [brambleback|1-4] · gm.mount.ride · gm.mount.growth <0-100> · gm.mount.hunger <0-100> · gm.mount.feed · gm.mount.xp <n> · gm.mount.forget <mount> · gm.mount.call · gm.mount.hurt <%> · gm.mount.heal · gm.mount.rest <s>   (the selected mount; evolves at 50 and 100)",
                 "PETS         gm.pet · gm.pet.growth <0-100> · gm.pet.hunger <0-100> · gm.pet.feed · gm.pet.xp <n> · gm.pet.event <win|loss> · gm.pet.say <1-7|moment> · gm.pet.anims · gm.pet.anim <#>   (# = its number in gm.pet.anims)",
                 "EFFECTS      gm.fx.hit [normal|elemental|crit|shatter|backlash] [light|heavy] · gm.fx.pvpcrit [splash|frame|faction|default]   (shown on this screen; nothing is hit)",
                 "SAVING       gm.save · gm.save.where · gm.save.wipe confirm",
@@ -161,7 +161,7 @@ namespace KryticalNova.DevTools
                 "SKY          sky.rainbow [0-1|off] · sky.moonphase <new|first|full|last|0-1|off> · sky.moon.next · sky.halo [sun|moon|both|off] · sky.shimmer <x|off> · sky.flare <x|off> · sky.lightning · sky.status · sky.reset",
                 "ITEMS        item.give <id|name> [n] · item.list [slot] · item.clear   (stims: Pill_Vitality, Pill_Chi, Pill_DualHarmony)",
                 "GEAR         gm.gear <slot> <level> <rarity> [class] · gm.loadout [class]   (e.g. gm.gear weapon 45 rare carbine) · gm.gearset [level] [rarity] [temper] [wear]   (one whole set, e.g. gm.gearset 112 epic 60 wear)",
-                "KITS         gm.kit gear [level] [rarity] · gm.kit temper [n] · gm.kit pets · gm.kit autoward · gm.kit all   (gear: every piece that fits, 112 Epic unless told)",
+                "KITS         gm.kit gear [level] [rarity] · gm.kit temper [n] · gm.kit pets · gm.kit autoward · gm.kit all   (gear: every piece that fits, 112 Epic unless told) · gm.maxall confirm   (max everything, GM only)",
                 "FORGE        gm.forge [off]   (opens it here; the forge then works with no Armorer near) · gm.forgekit [n] · gm.temper <%> [slot] · gm.temper.all <%> [worn|pack|all] · gm.fuse <0-12> [slot] · gm.tune <0-25> [slot]",
                 "RENOWN       gm.renown [n] · gm.renown.set <n>   (the only way Renown enters the game for now) · gm.ascension [0-96] · gm.standing <1-4|track|all> <0-12> · gm.standing.wear <1-4|track|none>   (1 vanguard, 2 bulwark, 3 ironblood, 4 mindwell) · gm.herald [off]",
             });
@@ -178,7 +178,7 @@ namespace KryticalNova.DevTools
         }
 
         [Command("gm.maxlevel", "Jump to the maximum level.")]
-        private static string MaxLevel()
+        internal static string MaxLevel()
         {
             if (!TryGet<PlayerCharacterProgression>(out var prog, out var error)) return error;
             prog.SetLevel(prog.MaxLevel);
@@ -681,7 +681,7 @@ namespace KryticalNova.DevTools
         }
 
         [Command("gm.skills.max", "Unlock every skill (books included) and set every combat and movement skill to its max rank, free.")]
-        private static string MaxAllSkills()
+        internal static string MaxAllSkills()
         {
             if (!TryGet<PlayerCombatSkills>(out var skills, out var error)) return error;
             skills.GmSetAllRanksToMax();

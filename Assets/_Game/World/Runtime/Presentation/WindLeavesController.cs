@@ -69,6 +69,19 @@ namespace KryticalNova.World
             float strength = Mathf.Clamp01(Mathf.InverseLerp(minWindSpeed, fullWindSpeed, speed));
             // Gusts kick a few extra leaves loose; rain/snow wash them out.
             float rate = maxRatePerEmitter * strength * (0.5f + w.gust) * (1f - Mathf.Clamp01(w.rain + w.snow) * 0.7f);
+            // Autumn (owner, 14 Nov 2026): leaves come down off the trees and blow across the ground even in a light wind, many more
+            // in a strong one; how many is the season's falling share times the World Effects tier (Low none).
+            float fall = SeasonPresenter.FallingLeaves;
+            if (fall > 0.001f)
+                rate = Mathf.Max(rate, maxRatePerEmitter * fall * (0.35f + 0.65f * strength) * (0.6f + w.gust));
+            // owner 15 Nov (T4): a gust sweeping the litter off the ground sends it up into these leaves
+            float blown = SeasonPresenter.LitterBlown;
+            if (blown > 0.001f)
+            {
+                rate += maxRatePerEmitter * blown;
+                fall = Mathf.Max(fall, blown);
+            }
+            int cap = Mathf.Min(maxParticlesPerEmitter * (1 + Mathf.CeilToInt(fall)), 400);
             Vector2 dir = speed > 0.01f ? w.wind / speed : Vector2.up;
 
             for (int i = 0; i < emitters.Length; i++)
@@ -76,6 +89,8 @@ namespace KryticalNova.World
                 var ps = emitters[i];
                 var emission = ps.emission;
                 emission.rateOverTimeMultiplier = rate;
+                var main = ps.main;
+                if (main.maxParticles != cap) main.maxParticles = cap;
                 if (rate <= 0f || Time.time < nextMove[i]) continue;
 
                 nextMove[i] = Time.time + relocateSeconds;

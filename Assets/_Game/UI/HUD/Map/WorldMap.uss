@@ -211,3 +211,97 @@
     -unity-background-image-tint-color: rgb(255, 201, 60);
 }
 .world-map-help { margin-top: 4px; font-size: 10px; }
+
+/* ------------------------------------------------------------------ the Calendar page (MapCalendarView) */
+
+.world-map-tab { min-height: 24px; height: 24px; margin: 0 0 0 8px; padding: 0 10px; font-size: 11px; opacity: 0.6; }
+.world-map-tab.selected { opacity: 1; border-color: rgb(114, 222, 196); color: rgb(114, 222, 196); }
+.world-map-calendar { display: none; width: 500px; height: 500px; margin: 8px auto 6px auto; }
+.world-map.calendar-open .world-map-calendar { display: flex; }
+.world-map.calendar-open .world-map-viewport,
+.world-map.calendar-open .world-map-footer,
+.world-map.calendar-open .world-map-help,
+.world-map.calendar-open .world-map-center { display: none; }
+
+.calendar-scroll { flex-grow: 1; }
+.calendar-box {
+    margin: 0 0 6px 0;
+    padding: 6px 8px;
+    background-color: rgba(6, 12, 18, 0.92);
+    border-width: 1px;
+    border-color: rgba(114, 222, 196, 0.45);
+    border-radius: 2px;
+}
+.calendar-heading {
+    font-size: 11px;
+    margin: 0 0 4px 0;
+    color: rgb(114, 222, 196);
+    -unity-font-definition: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Fonts/Orbitron/Orbitron-ExtraBold.ttf");
+}
+.calendar-date {
+    font-size: 16px;
+    color: rgb(236, 206, 140);
+    text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.9);
+    -unity-font-definition: url("/Assets/Synty/InterfaceSciFiSoldierHUD/Fonts/Orbitron/Orbitron-ExtraBold.ttf");
+}
+.calendar-sub { font-size: 11px; color: rgb(190, 204, 214); white-space: normal; }
+.calendar-strong { font-size: 12px; -unity-font-style: bold; color: rgb(236, 206, 140); }
+.calendar-season-bar { height: 6px; margin: 4px 0; background-color: rgba(114, 222, 196, 0.15); border-width: 1px; border-color: rgba(114, 222, 196, 0.5); }
+.calendar-season-fill { height: 100%; background-color: rgb(114, 222, 196); }
+
+.calendar-row { flex-direction: row; }
+.calendar-moon { flex-grow: 1; flex-basis: 0; margin-right: 6px; }
+.calendar-tonight { flex-grow: 1; flex-basis: 0; }
+.calendar-moon-line { flex-direction: row; align-items: center; }
+.calendar-moon-glyph { width: 40px; height: 40px; margin-right: 8px; flex-shrink: 0; }
+.calendar-moon-text { flex-shrink: 1; flex-grow: 1; }
+
+.calendar-grid-row { flex-direction: row; align-items: stretch; margin-bottom: 2px; }
+.calendar-grid-tag { width: 34px; font-size: 9px; -unity-text-align: middle-center; color: rgb(114, 222, 196); }
+.calendar-cell {
+    flex-grow: 1; flex-basis: 0; height: 46px; margin: 0 1px; padding: 1px;
+    align-items: center;
+    background-color: rgba(20, 30, 42, 0.9);
+    border-width: 1px; border-color: rgba(114, 222, 196, 0.2);
+}
+.calendar-cell.today { border-color: rgb(236, 206, 140); border-width: 2px; background-color: rgba(60, 50, 24, 0.9); }
+.calendar-cell.past { opacity: 0.45; }
+.calendar-cell-time { font-size: 9px; color: rgb(170, 186, 200); margin: 0; padding: 0; }
+.calendar-cell-moon { width: 16px; height: 16px; }
+.calendar-cell-dots { flex-direction: row; height: 8px; margin-top: 2px; }
+.calendar-dot { width: 7px; height: 7px; margin: 0 1px; border-radius: 4px; border-width: 1px; border-color: rgba(0, 0, 0, 0.8); }
+.calendar-dot-emberfall { background-color: rgb(255, 140, 60); }
+.calendar-dot-palewanderer { background-color: rgb(170, 210, 255); }
+.calendar-dot-eclipse { background-color: rgb(190, 140, 255); }
+.calendar-dot-aurora { background-color: rgb(120, 255, 170); }
+.calendar-dot-nebula { background-color: rgb(255, 140, 200); }
+.calendar-legend { flex-direction: row; align-items: center; flex-wrap: wrap; margin-top: 4px; }
+.calendar-legend-text { font-size: 10px; margin: 0 8px 0 2px; color: rgb(170, 186, 200); }
+
+.calendar-event { flex-direction: row; justify-content: space-between; padding: 2px 0; border-bottom-width: 1px; border-color: rgba(114, 222, 196, 0.12); }
+.calendar-event-name { font-size: 11px; -unity-font-style: bold; color: rgb(236, 206, 140); }
+.calendar-event-emberfall { color: rgb(255, 160, 90); }
+.calendar-event-palewanderer { color: rgb(170, 210, 255); }
+.calendar-event-eclipse { color: rgb(200, 160, 255); }
+.calendar-event-aurora { color: rgb(120, 255, 170); }
+.calendar-event-time { font-size: 11px; color: rgb(190, 204, 214); }
+
+.calendar-forecast { flex-direction: row; }
+.calendar-fc {
+    flex-grow: 1; flex-basis: 0; margin: 0 1px; padding: 3px 2px;
+    align-items: center;
+    background-color: rgba(20, 30, 42, 0.9);
+    border-width: 1px; border-color: rgba(114, 222, 196, 0.25);
+}
+.calendar-fc-when { font-size: 10px; color: rgb(114, 222, 196); -unity-font-style: bold; }
+.calendar-fc-look { font-size: 10px; -unity-font-style: bold; color: rgb(236, 206, 140); margin-top: 2px; }
+.calendar-fc-spell { font-size: 9px; color: rgb(170, 186, 200); white-space: normal; -unity-text-align: middle-center; }
+.calendar-fc-temp { font-size: 12px; -unity-font-style: bold; color: rgb(236, 236, 236); margin: 2px 0; }
+.calendar-fc-chance { font-size: 9px; color: rgb(170, 186, 200); }
+.calendar-fc.look-rain .calendar-fc-look { color: rgb(120, 180, 255); }
+.calendar-fc.look-snow .calendar-fc-look { color: rgb(230, 240, 255); }
+.calendar-fc.look-blizzard .calendar-fc-look { color: rgb(200, 220, 255); }
+.calendar-fc.look-storm .calendar-fc-look { color: rgb(200, 160, 255); }
+.calendar-fc.look-heat .calendar-fc-look { color: rgb(255, 150, 80); }
+.calendar-fc.look-heat { border-color: rgba(255, 150, 80, 0.6); }
+.calendar-fc.look-blizzard, .calendar-fc.look-snow { border-color: rgba(220, 235, 255, 0.5); }

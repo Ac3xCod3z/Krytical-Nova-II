@@ -186,3 +186,6 @@ Not yet verified:
 The ambience and thunder `AudioClip` fields are empty until sounds are added.
 
 **TODO(GM):** the day is 1 real hour since 2026-10-10 (it was a 24-minute testing value). The GM mod should wrap `WorldEnvironmentNetwork.SetTimeOfDay / SetDayLength / SetTimeScale / ForceWeather / SetWeatherLocked` with permission checks.
+
+## Item 24, a unique sky (2026-11-14)
+The sky events (star map, constellations, nebula, shooting stars, meteor shower, comet, second sun, eclipse, aurora) are a layer of their own over this plan's sky: `SkyCalendar` + `SkyEventSettings` (data), `SkyEventPresenter` + `SkyEvents.shader` (client-only overlay). The sky shader and presenter of this plan are not edited for them. As built: `Design/Rendering-Bible.md` section 5, "A unique sky: sky events".

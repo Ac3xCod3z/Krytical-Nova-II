@@ -208,6 +208,10 @@ Driven by `EnvironmentPresenter` (`Assets/_Game/World/Runtime/Presentation/`). T
 | `_KN_Interactors[8]`, `_KN_InteractorCount` | xyz feet, w radius of the 8 `FoliageInteractor`s nearest the camera (bushes and town grass patches part round them; GPU grass only without a trample map) |
 | `_KN_TrampleSources[32]`, `_KN_TrampleSourceCount` | xyz feet, w radius of up to 32 `FoliageInteractor`s near the camera: who presses the grass's trample map |
 | `_KN_GrassTrample`, `_KN_GrassTrampleRect` | the trample map (rg push, b press, a height of who pressed) and where it lies: xy corner in world XZ, z 1 / width in metres, w 1 while there is a map |
+| `_KN_SwingPushes[32]`, `_KN_SwingPushCount`, `_KN_SwingSpring` | the swing pushes (14 Nov 2026, `FoliagePushes`): four `float4` each, up to 8 (World Effects Low 4); the spring's rate, damping, rise and the most a blade is bent |
+| (no swing global) | while a swing push is alive, `_KN_GrassTrample` is a third texture: the trample map with the swings added by the Swing pass (same channels), so blades still read one texel; a second fetch measured 1.5-2.5 ms GPU in tall grass (14 Nov 2026) |
+| `_KN_SeasonParams`, `_KN_SeasonGrass`, `_KN_SeasonLeafFrom`, `_KN_SeasonLeafTo`, `_KN_SeasonMisc`, `_KN_SnowColor` | the season (14 Nov 2026, `SeasonPresenter`, `Rendering/Shaders/Include/KNSeason.hlsl`): x snow cover, y frost, z roof bias, w 1 while a presenter publishes (0 = every shader draws exactly as before seasons); grass colour and tip frost; the leaf colours blended from and to; the blend, per-tree spread, snow edge softness and grass height under snow; the flat snow colour and a footprint's rim darkness |
+| `_KN_SnowTrack`, `_KN_SnowTrackRect` | the snow track map (`SnowTrackMap`, R16 press, 64 m round the camera, 128-512 texels by World Effects) and where it lies; released below 2 % cover |
 
 ### Sun
 - **Art treatment**: the centre is washed out by its own light (`_SunGlare*`), light bleeds over ink lines
@@ -268,6 +272,57 @@ Peak strength is `rainbowPeak` 0.25, so it stays subtle. Preview it with `previe
 `sky.rainbow`, `sky.moonphase`, `sky.moon.next`, `sky.halo`, `sky.shimmer`, `sky.flare`, `sky.lightning`, `sky.status`,
 `sky.reset` (`Assets/_Game/Tools/Debug/SkyCommands.cs`, and the World tab of the GM Tools window). These are local
 presentation overrides only.
+
+### A unique sky: sky events (item 24, 14 Nov 2026)
+Owner picks 1A glint stars, 2A stars only (changed 14 Nov from 2B: no constellation lines), all three nebulas 3A Soul Tide, 3B Ember Rose and 3C Veil Ribbon (changed 14 Nov from 3A only), 4B amber second sun, 5A pearl
+corona eclipse, 6A green-teal aurora. **The custom sun's files keep a zero diff** (owner: "My custom sun better not change"):
+`StylizedSky.shader`, `SkyCommon.hlsl`, `M_StylizedSky.mat`, `T_Sun.png`, the lens flare, `DayCycleProfile`, `DC_Default`,
+`EnvironmentPresenter`, the sun shafts / glow halo / lettering features and the render settings are not edited.
+- **What draws it:** `SkyEventPresenter` (client only, made at run time, execution order 70, after the presenter's 50) evaluates
+  `SkyCalendar` (world seed + calendar day + presented time + GM force) and draws one far overlay dome with
+  `SkyEvents.shader` for the game camera only (`Graphics.RenderMesh`, queue Transparent-499: after the skybox, before every
+  transparent; on the far plane like the skybox; no shadows, no light or reflection probes). Premultiplied: the eclipse's
+  deep-blue wash, then the star map, the nebula, streaks, comet and aurora added, then the second sun and the moon disc laid
+  over, then the corona added. Stars sit behind clouds (one cloud sample from `SkyCommon.hlsl`, read only).
+- **Nebulas:** a nebula shows on 3 of the 8 nights of the moon cycle; each nebula night picks one of `SkyEventSettings.nebulas`
+  (Soul Tide, Ember Rose, Veil Ribbon; texture, size, brightness, weight each) with `SkyCalendar.PickNebula` (a weighted hash of
+  the world seed and the night: every client agrees with no network data). Baked as `T_Nebula_SoulTide/EmberRose/VeilRibbon.png`.
+  `sky.nebula.look <n>` shows one look on this client only, for proof shots.
+- **Constellations:** stars only. The star map's alpha is 1 and the shader reads only its colour (no lines, no fade-in). Two
+  rings (owner's Play notes, 14 Nov): the even ones through the zenith, the odd ones 55 degrees south; at least 45 degrees of empty
+  sky between any two outlines (`StarCharts.MinGapDegrees`, tested at the real pole).
+- **Behind the night moon:** stars, nebula and comet are multiplied by `1 - MoonCover` (the moon art's own disc, `_MoonDisc` copied
+  from the sky material, on the moon's billboard); streaks and aurora stay in front, as they would be.
+- **Night moon size:** `SkyEventSettings.moonScale` (1.6). After `EnvironmentPresenter` writes `_KN_BodyTexParams` each frame,
+  `SkyEventPresenter.ScaleNightMoon` writes it back with only y = tan(moonTextureSize x moonScale), rebuilt from the day cycle (never
+  compounding). In the custom sky y is read only by the moon (art billboard, rim clouds); the sun reads x. The moon's light,
+  direction and phase are not touched.
+- **Streaks:** `SkyNow.MaxStreaks` 24 slots (`_KN_StreakA` / `_KN_StreakB`). The CPU (`SkyEventPresenter.StreakShape`) works out each streak's head and tail end and
+  their fades; the shader draws a line that widens and brightens toward the head (linear taper, soft at the tail end, so the whole trail reads) and a head glow, skipping
+  pixels far from a streak. Lone shooting stars: one every `shootingStarGapSeconds` (60-180 s), never two at once, 21 degrees, 0.35 degrees wide,
+  `streakColor` HDR. The Emberfall: up to `showerStreaksPerMinute` 480 at the peak (about 22 at once), `showerStreakSeconds` 2.8, 40-degree streaks
+  0.5 degrees wide falling from a high radiant (75 degrees, so they cross the sky above the rooftops), `showerHeadColor` (white-blue) and `showerTrailColor` (blue), HDR so Bloom glows them.
+- **Old dot stars:** the client sets `RenderSettings.skybox` to a runtime copy of the sky material with only `_StarBrightness`
+  at 0. The material asset is unchanged.
+- **Second sun:** the custom sun's art (`_KN_SunTex`, T_Sun) through a copy of its drawing code (`SkyBodyCommon.hlsl`:
+  BodyUV, StylizeBody, DiffuseBody), styled with the sky material's own numbers, tinted `sun2Color`, sized `sun2Degrees`,
+  `sun2Brightness`. It is colour on the overlay only: no Light, no shadows, no ambient, fog, reflection or APV change. Never at
+  night: the calendar gates it to 06:00-18:00 with a `sun2DayFade` fade, and the presenter also multiplies it by our sun's height.
+- **Eclipse:** the moon is a real body on its own great circle through the sun (`eclipsePathDegrees`): it rises opposite the sun,
+  crosses the sky one way and sets opposite it again (`SkyCalendar.EclipseMoonAngle`: steady across the bite, smoothly faster beyond,
+  `eclipseApproachSeconds` each side; never faded). Sun disc = `eclipseMoonSize` of the sun art, moon = that x `eclipseMoonScale`
+  (1.5); the cover is the discs' real overlap (`DiscCover`). The pearl corona at totality, the sky
+  washed to `eclipseSkyColor` by `eclipseDarkness`. The world dims at run time toward the day cycle's midnight values (key light
+  intensity and colour, ambient, fog colour), eased with the cover, by `eclipseDarkness` (0.85). The presenter rewrites the light
+  and fog every frame and the ambient on its timer; `SkyEventPresenter` only blends on top while the cover is above 0 and puts the
+  presenter's own ambient back, so after an eclipse the world is exactly as the presenter made it.
+- **Cost:** one star-map, one cloud and one sun-art sample per sky pixel; nebula, comet, aurora and eclipse are uniform branches;
+  no new keywords (variants unchanged). Budget 0.3 ms.
+- **World Effects** (Settings, Graphics; `WorldEffectsRuntime`): streaks drawn at once `streaksByWorldEffects` (Low 8, Medium 14,
+  High and Ultra 24; only The Emberfall uses more than one); the aurora off on Low (`auroraOnLow`). Stars, nebula, comet, second sun and eclipse stay on every tier.
+- **Data:** `SkyEventSettings` (`Resources/KN/SkyEvents`, made by Krytical Nova ▸ World ▸ Sky ▸ Bake Star Map, which also holds
+  the overlay shader so builds include it). GM: `sky.meteor`, `sky.shower`, `sky.comet`, `sky.nebula`, `sky.sun2`,
+  `sky.eclipse`, `sky.aurora`, `sky.events`, `sky.events.clear` (server side, every client sees them).
 
 ### Cloud-edge glow
 Clouds crossing the sun or moon get a bright rim (`_BodyRimGlow`), HDR for the sun.
@@ -431,6 +486,11 @@ farther away than the original 0.065 / 0.1.
       alone (a bridge over a lawn). The numbers are on `GrassRuleSet` (Trample map). Outside Play, and with
       `trample` off, a blade asks the 8 nearest `_KN_Interactors` instead, as it used to. Fill tufts take no part
       (`playerBend` 0), and grass past the map's edge does not bend.
+    - **Swings push it** (14 Nov 2026, `Plans/swing-grass-push-plan.md`): a pool of up to 8 short-lived pushes (an arc, a finisher's
+      arc, an area skill's running ring, a big hit's wave, a Hostile's arc by body size) is worked out once per texel by the `Swing`
+      kernel of `GrassTrample.compute` into a second, stateless map, only while one is alive; each blade reads one more texel and springs
+      back with them (a damped spring that passes upright once, gone in about half a second). Budget: 0.1 ms (brief PERFORMANCE FIRST);
+      World Effects Low keeps 4 at once.
     - Colour is a root→tip gradient with per-clump, patch and wetness variation and fake AO.
     - Lighting is the comic cel band and dots on upward-biased normals.
     - It casts no shadows but receives them.
@@ -484,6 +544,23 @@ farther away than the original 0.065 / 0.1.
   - The old flat `Water` object keeps the collider and NavMesh modifiers with its renderer off.
   - Rebuild with **Krytical Nova > Zone > Rebuild Water**.
   - The water needs the depth and opaque textures, which are now on for the PC and Mobile URP assets.
+
+### Seasons and snow (14 Nov 2026, day list item 21; `../Plans/seasons-plan.md`)
+
+- One file, `Rendering/Shaders/Include/KNSeason.hlsl`, holds the season globals and four functions, called from inside the
+  shaders that already draw the world: `KNSeasonGround` (ground: `KryticalNova/Terrain Lit`, a project copy of URP Terrain
+  Lit, now the shader of `M_TerrainMatte`), `KNSeasonSurface` (Comic Toon Lit: roofs and ledges whiten a little sooner,
+  walls never; a renderer whose rendering layer has bit 7 "No Snow" gets none), `KNSeasonFoliage` (Foliage Wind: the
+  green of the shared atlas turns per tree, frost and snow on the canopy's top) and `KNSeasonGrassColour` /
+  `KNSeasonGrassHeight` (grass: tint, frosted tips, white blades pressed down under deep cover).
+- No new pass, no keyword: a uniform branch on the cover, ALU value noise for the ragged edge (no texture), one texel of the
+  track map where there is snow. With no presenter publishing, every function returns what it was given.
+- The URP add pass (layers 5-8) and the distant basemap keep URP's own shaders, so they show no snow: keep terrains to
+  four layers and the basemap distance long on snowy maps.
+- Short winter days: the clock still runs one real hour a day; `SeasonView.SunTime` warps the presented time so the sun's
+  path, the sky gradients, the lamps and the night light follow 07:30-16:30 in Winter.
+- Rain and snow particle rates follow World Effects (`SeasonSettings.precipitationByTier`: Low 0.4, Medium 0.7, High 1,
+  Ultra 1.3).
 
 ## 6d-2. Upscalers: DLSS and FSR 2 (10 Oct 2026)
 
@@ -793,6 +870,7 @@ corner, and a tail on the side the speaker is. Every number is a `--bubble-*` va
 | Menus' page turn | nothing while a screen is at rest; during a turn one picture of the screen and one mesh drawn by one camera for 0.7 s | not measured against a budget yet |
 | Comic marks and words | nothing created in a fight, 0 B GC a hit, < 1 ms a frame in a crowd | measured in the Editor at 30 hits a second by other players: +0.6 ms mean frame, 0 effects created, 0 B allocated by the layer's own calls; the pool is filled when a scene starts (about 86 MB of sleeping comic effects by the Editor's count) |
 | Glow Halo | < 0.5 ms GPU, < 0.3 ms CPU with 40 glowing weapons | measured 0.22 ms GPU / 0.18 ms CPU with 42 halos (flame, lightning, sparks) at 925×1067 in the Editor, 0.07 / 0.06 ms with 2; the flood runs at half res inside the glowing things' screen rectangle only; nothing glowing = no pass |
+| Seasons and snow | < 0.5 ms together (owner, 13 Nov 2026) | ground snow + tracks < 0.15 ms GPU, roofs < 0.05, grass and foliage < 0.05, track compute < 0.05 only while there is snow (256², 512 KB of maps), CPU < 0.02 ms and 0 B GC; to be measured Low and High in the first Play run |
 
 Measure with the Frame Debugger and Profiler (GPU module) in a build, not the Editor. Look for each feature's
 `ProfilingSampler` name ("Comic Style", "Sun Shafts", "Glow Halo", "Comic Lettering").
@@ -1167,6 +1245,7 @@ nothing baked, and they are generated (`FrontEndBuilder`), so tune the numbers t
 
 ## Changelog
 
+- **2026-11-14 (branch `b18/24-unique-sky`)**: A unique sky (section 5, "A unique sky: sky events"): star map, eight constellations (stars only), three nebulas picked per night, shooting stars, The Emberfall, The Pale Wanderer, the amber second sun (custom sun art, no light) and the eclipse with its run-time world dim, on a client-only overlay dome; the old dot stars off through a runtime material copy; the custom sun's files unchanged.
 - **2026-10-18 (branch `perf/batching-pass`)**: the batching pass (section 7, "Batching"): the Batching Report and
   `gm.batching`, shadow bands on Low and Medium, switches to measure them and the Resident Drawer's occlusion culling,
   a background measuring build for DX11 against DX12, the starting preset picked from the hardware, the Player 2

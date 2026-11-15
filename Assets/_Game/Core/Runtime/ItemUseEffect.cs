@@ -33,6 +33,8 @@ namespace KryticalNova.Core
         Respec = 12,
         /// <summary>Hands back every skill point placed, Run and Jump too; Skill Chip skills stay unlocked (a Memory Wipe; owner, 12 Nov 2026).</summary>
         MemoryWipe = 13,
+        /// <summary>Heals the selected mount's companion HP, never the player (a Mount Stim; day list item 19).</summary>
+        HealMount = 14,
     }
 
     /// <summary>

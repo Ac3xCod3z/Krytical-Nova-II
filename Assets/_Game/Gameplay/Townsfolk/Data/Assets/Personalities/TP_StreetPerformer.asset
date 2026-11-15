@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e17679d995474ac7bfb663bceae118f0, type: 3}
+  m_Name: TP_StreetPerformer
+  m_EditorClassIdentifier: KryticalNova.Townsfolk.Entities::KryticalNova.Townsfolk.TownsfolkPersonality
+  id: 9
+  displayName: Street Performer
+  notes: 'DRAFT (owner edits): Plays at a perform spot for a long stretch; packs up in rain.'
+  walkSpeed: {x: 1, y: 1}
+  jogs: 0
+  jogSpeed: {x: 3.2, y: 3.8}
+  stopChance: 1
+  staySeconds: {x: 300, y: 600}
+  likes:
+  - kind: 8
+    weight: 1
+  crowdingDislike: 1
+  needsLight: 0
+  likesPlayersNear: 0
+  chatsWith: []
+  chatChance: 0
+  declinesInvites: 0
+  outChance: {x: 0, y: 0.7, z: 0.8, w: 0.2}
+  shifts: []
+  rain: 4
+  reaction:
+    glanceSeconds: 2
+    greetChance: 0.3
+    stepAsideMetres: 0
+    watchRunners: 0
+    playsToPlayers: 1
+  barks:
+  - text: A coin for the song, traveller?
+    clip: {fileID: 0}
+  - text: This one's for the sky!
+    clip: {fileID: 0}

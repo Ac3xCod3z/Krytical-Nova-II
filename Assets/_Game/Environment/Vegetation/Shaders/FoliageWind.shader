@@ -61,6 +61,7 @@ Shader "KryticalNova/Foliage Wind"
             #include "KNFoliageCommon.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
             #include "Assets/_Game/Rendering/Shaders/Comic/ComicHalftone.hlsl"
+            #include "Assets/_Game/Rendering/Shaders/Include/KNSeason.hlsl"
 
             half _ComicShadowThreshold;
             half _ComicShadowSoftness;
@@ -120,11 +121,15 @@ Shader "KryticalNova/Foliage Wind"
             #if defined(_ALPHATEST_ON)
                 clip(albedoAlpha.a * _BaseColor.a - _Cutoff);
             #endif
+                // the season: late in Autumn the leaves fall, clump by clump (the same test in every pass)
+                if (KNSeasonLeafGone(albedoAlpha.rgb, input.positionWS, float3(UNITY_MATRIX_M[0][3], UNITY_MATRIX_M[1][3], UNITY_MATRIX_M[2][3]), asuint(unity_RenderingLayer.x))) clip(-1);
                 half3 albedo = albedoAlpha.rgb * input.tint;
 
                 half3 normalWS = normalize(input.normalWS);
                 // Two-sided blades: light the back face like the front.
                 normalWS = isFrontFace ? normalWS : lerp(-normalWS, normalWS, _NormalUp);
+                // The season: leaves turn per tree, frost and snow on the canopy (owner DAY list item 21; nothing without a presenter).
+                albedo = KNSeasonFoliage(albedo, normalWS, input.positionWS, float3(UNITY_MATRIX_M[0][3], UNITY_MATRIX_M[1][3], UNITY_MATRIX_M[2][3]), asuint(unity_RenderingLayer.x));
 
                 float4 shadowCoord = TransformWorldToShadowCoord(input.positionWS);
                 half4 shadowMask = half4(1, 1, 1, 1);
@@ -195,12 +200,13 @@ Shader "KryticalNova/Foliage Wind"
 
             #include "KNFoliageCommon.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
+            #include "Assets/_Game/Rendering/Shaders/Include/KNSeason.hlsl"
 
             float3 _LightDirection;
             float3 _LightPosition;
 
             struct Attributes { float4 positionOS : POSITION; float3 normalOS : NORMAL; float2 uv : TEXCOORD0; UNITY_VERTEX_INPUT_INSTANCE_ID };
-            struct Varyings { float4 positionCS : SV_POSITION; float2 uv : TEXCOORD0; UNITY_VERTEX_INPUT_INSTANCE_ID };
+            struct Varyings { float4 positionCS : SV_POSITION; float2 uv : TEXCOORD0; float3 positionWS : TEXCOORD1; UNITY_VERTEX_INPUT_INSTANCE_ID };
 
             Varyings ShadowVert(Attributes input)
             {
@@ -215,6 +221,7 @@ Shader "KryticalNova/Foliage Wind"
                 float3 lightDir = _LightDirection;
             #endif
                 output.positionCS = ApplyShadowClamping(TransformWorldToHClip(ApplyShadowBias(positionWS, normalWS, lightDir)));
+                output.positionWS = positionWS;
                 output.uv = TRANSFORM_TEX(input.uv, _BaseMap);
                 return output;
             }
@@ -225,6 +232,10 @@ Shader "KryticalNova/Foliage Wind"
             #if defined(_ALPHATEST_ON)
                 clip(SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv).a * _BaseColor.a - _Cutoff);
             #endif
+                {   // the season's fallen leaves cast no shadow and write no depth
+                    half3 seasonAlbedo = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv).rgb;
+                    if (KNSeasonLeafGone(seasonAlbedo, input.positionWS, float3(UNITY_MATRIX_M[0][3], UNITY_MATRIX_M[1][3], UNITY_MATRIX_M[2][3]), asuint(unity_RenderingLayer.x))) clip(-1);
+                }
                 return 0;
             }
             ENDHLSL
@@ -246,9 +257,10 @@ Shader "KryticalNova/Foliage Wind"
             #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DOTS.hlsl"
 
             #include "KNFoliageCommon.hlsl"
+            #include "Assets/_Game/Rendering/Shaders/Include/KNSeason.hlsl"
 
             struct Attributes { float4 positionOS : POSITION; float2 uv : TEXCOORD0; UNITY_VERTEX_INPUT_INSTANCE_ID };
-            struct Varyings { float4 positionCS : SV_POSITION; float2 uv : TEXCOORD0; UNITY_VERTEX_INPUT_INSTANCE_ID UNITY_VERTEX_OUTPUT_STEREO };
+            struct Varyings { float4 positionCS : SV_POSITION; float2 uv : TEXCOORD0; float3 positionWS : TEXCOORD1; UNITY_VERTEX_INPUT_INSTANCE_ID UNITY_VERTEX_OUTPUT_STEREO };
 
             Varyings DepthVert(Attributes input)
             {
@@ -258,6 +270,7 @@ Shader "KryticalNova/Foliage Wind"
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
                 float3 positionWS = KNFoliageDisplace(input.positionOS.xyz, TransformObjectToWorld(input.positionOS.xyz));
                 output.positionCS = TransformWorldToHClip(positionWS);
+                output.positionWS = positionWS;
                 output.uv = TRANSFORM_TEX(input.uv, _BaseMap);
                 return output;
             }
@@ -268,6 +281,10 @@ Shader "KryticalNova/Foliage Wind"
             #if defined(_ALPHATEST_ON)
                 clip(SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv).a * _BaseColor.a - _Cutoff);
             #endif
+                {   // the season's fallen leaves cast no shadow and write no depth
+                    half3 seasonAlbedo = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv).rgb;
+                    if (KNSeasonLeafGone(seasonAlbedo, input.positionWS, float3(UNITY_MATRIX_M[0][3], UNITY_MATRIX_M[1][3], UNITY_MATRIX_M[2][3]), asuint(unity_RenderingLayer.x))) clip(-1);
+                }
                 return input.positionCS.z;
             }
             ENDHLSL
@@ -293,9 +310,10 @@ Shader "KryticalNova/Foliage Wind"
 
             #include "KNFoliageCommon.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+            #include "Assets/_Game/Rendering/Shaders/Include/KNSeason.hlsl"
 
             struct Attributes { float4 positionOS : POSITION; float3 normalOS : NORMAL; float2 uv : TEXCOORD0; UNITY_VERTEX_INPUT_INSTANCE_ID };
-            struct Varyings { float4 positionCS : SV_POSITION; float2 uv : TEXCOORD0; half3 normalWS : TEXCOORD1; UNITY_VERTEX_INPUT_INSTANCE_ID UNITY_VERTEX_OUTPUT_STEREO };
+            struct Varyings { float4 positionCS : SV_POSITION; float2 uv : TEXCOORD0; half3 normalWS : TEXCOORD1; float3 positionWS : TEXCOORD2; UNITY_VERTEX_INPUT_INSTANCE_ID UNITY_VERTEX_OUTPUT_STEREO };
 
             Varyings DepthNormalsVert(Attributes input)
             {
@@ -306,6 +324,7 @@ Shader "KryticalNova/Foliage Wind"
                 float3 positionWS = KNFoliageDisplace(input.positionOS.xyz, TransformObjectToWorld(input.positionOS.xyz));
                 output.positionCS = TransformWorldToHClip(positionWS);
                 output.normalWS = KNFoliageNormal(TransformObjectToWorldNormal(input.normalOS));
+                output.positionWS = positionWS;
                 output.uv = TRANSFORM_TEX(input.uv, _BaseMap);
                 return output;
             }
@@ -322,6 +341,10 @@ Shader "KryticalNova/Foliage Wind"
             #if defined(_ALPHATEST_ON)
                 clip(SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv).a * _BaseColor.a - _Cutoff);
             #endif
+                {   // the season's fallen leaves cast no shadow and write no depth
+                    half3 seasonAlbedo = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv).rgb;
+                    if (KNSeasonLeafGone(seasonAlbedo, input.positionWS, float3(UNITY_MATRIX_M[0][3], UNITY_MATRIX_M[1][3], UNITY_MATRIX_M[2][3]), asuint(unity_RenderingLayer.x))) clip(-1);
+                }
                 float3 normalWS = normalize(input.normalWS);
                 normalWS = isFrontFace ? normalWS : lerp(-normalWS, normalWS, _NormalUp);
             #if defined(_GBUFFER_NORMALS_OCT)

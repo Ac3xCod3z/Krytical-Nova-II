@@ -121,7 +121,10 @@ def check_organization():
     known = {k["path"]: k for k in load_json(KNOWN).get("organization", [])}
     found = {p for p, _ in errors}
     new = [(p, m) for p, m in errors if p not in known]
-    gone = sorted(p for p in known if p not in found)
+    # A known finding about a folder git never holds (Unity's own caches, "not in git") is simply absent in a fresh worktree:
+    # absent there is not "fixed" (owner, 14 Nov 2026: it failed every commit made from a new item worktree).
+    gone = sorted(p for p in known if p not in found
+                  and not ("not in git" in known[p].get("why", "") and not os.path.exists(os.path.join(CHECKOUT, p))))
     lines = [f"NEW {p}: {m}" for p, m in new]
     lines += [f"GONE {p}: fixed, so take it off known-findings.json" for p in gone]
     lines.append(f"{len(errors)} error(s) ({len(errors) - len(new)} known), {len(warnings)} warning(s)")

@@ -1,0 +1,733 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad18d30723ef41408981e34ba4ba48b5, type: 3}
+  m_Name: Area_SkyConcord
+  m_EditorClassIdentifier: KryticalNova.Townsfolk.Entities::KryticalNova.Townsfolk.TownLifeArea
+  rootName: Concord 040 (sky preview)
+  radius: 160
+  deckHeight: 0
+  seed: 1472
+  dayCap: 0
+  nightCap: 0
+  cast: {fileID: 11400000, guid: df519e89f50954f48ac4c81b54ac3c06, type: 2}
+  mix:
+  - personality: {fileID: 11400000, guid: d66be07a44eb3f44a891d0da86f1624b, type: 2}
+    day: 14
+    night: 5
+  - personality: {fileID: 11400000, guid: e098032eb6651314b91e7f17a59c0fe6, type: 2}
+    day: 13
+    night: 4
+  - personality: {fileID: 11400000, guid: ff1227051e568a948885e8c1d640f9b7, type: 2}
+    day: 13
+    night: 0
+  - personality: {fileID: 11400000, guid: 105b392e5d2a6e142823ce8fc6d34b11, type: 2}
+    day: 10
+    night: 2
+  - personality: {fileID: 11400000, guid: 51f1b69246f215541b8b39453b9ebb49, type: 2}
+    day: 7
+    night: 0
+  - personality: {fileID: 11400000, guid: 2f525e255770ca340adbc8db17eafafd, type: 2}
+    day: 7
+    night: 7
+  - personality: {fileID: 11400000, guid: bba684ae286d45243b20f0809772b002, type: 2}
+    day: 5
+    night: 0
+  - personality: {fileID: 11400000, guid: b2441972f384cf5419756102bba75d17, type: 2}
+    day: 5
+    night: 5
+  - personality: {fileID: 11400000, guid: 875d604a480b4ec4b9d3f6d8d8e5c7e5, type: 2}
+    day: 3
+    night: 10
+  - personality: {fileID: 11400000, guid: de79a1d57afaf054d99f224d73e995fb, type: 2}
+    day: 3
+    night: 2
+  spots:
+  - label: Vaultkeeper front
+    kind: 3
+    at: {x: -57, y: 49}
+    yaw: 0
+    slots: 2
+    spacing: 1.2
+    flags: 1
+    openFrom: 8
+    openTo: 20
+    onlyFor: {fileID: 0}
+  - label: Broker front
+    kind: 3
+    at: {x: -60.5, y: 24.5}
+    yaw: 270
+    slots: 2
+    spacing: 1.2
+    flags: 1
+    openFrom: 8
+    openTo: 20
+    onlyFor: {fileID: 0}
+  - label: Apothecary front
+    kind: 3
+    at: {x: -58.6, y: -57}
+    yaw: 0
+    slots: 2
+    spacing: 1.2
+    flags: 1
+    openFrom: 8
+    openTo: 20
+    onlyFor: {fileID: 0}
+  - label: Fabricator front
+    kind: 3
+    at: {x: 53.5, y: -23.8}
+    yaw: 90
+    slots: 2
+    spacing: 1.2
+    flags: 1
+    openFrom: 8
+    openTo: 20
+    onlyFor: {fileID: 0}
+  - label: Fixer front
+    kind: 3
+    at: {x: 53.5, y: -2.8}
+    yaw: 90
+    slots: 2
+    spacing: 1.2
+    flags: 1
+    openFrom: 8
+    openTo: 20
+    onlyFor: {fileID: 0}
+  - label: Armorer front
+    kind: 3
+    at: {x: 53.5, y: 18.2}
+    yaw: 90
+    slots: 2
+    spacing: 1.2
+    flags: 1
+    openFrom: 8
+    openTo: 20
+    onlyFor: {fileID: 0}
+  - label: Herald front
+    kind: 3
+    at: {x: 54, y: 52.9}
+    yaw: 90
+    slots: 2
+    spacing: 1.2
+    flags: 1
+    openFrom: 8
+    openTo: 20
+    onlyFor: {fileID: 0}
+  - label: Holoweaver front
+    kind: 3
+    at: {x: 53.5, y: -60.4}
+    yaw: 90
+    slots: 2
+    spacing: 1.2
+    flags: 1
+    openFrom: 8
+    openTo: 20
+    onlyFor: {fileID: 0}
+  - label: Store Clerk front
+    kind: 3
+    at: {x: 54, y: -48.9}
+    yaw: 90
+    slots: 2
+    spacing: 1.2
+    flags: 1
+    openFrom: 8
+    openTo: 20
+    onlyFor: {fileID: 0}
+  - label: Wayfinder front
+    kind: 3
+    at: {x: 17, y: -63}
+    yaw: 180
+    slots: 2
+    spacing: 1.2
+    flags: 0
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: Fabricator work
+    kind: 7
+    at: {x: 56, y: -27}
+    yaw: 270
+    slots: 1
+    spacing: 1
+    flags: 1
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 11400000, guid: d66be07a44eb3f44a891d0da86f1624b, type: 2}
+  - label: Fixer work
+    kind: 7
+    at: {x: 56, y: -6}
+    yaw: 270
+    slots: 1
+    spacing: 1
+    flags: 1
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 11400000, guid: d66be07a44eb3f44a891d0da86f1624b, type: 2}
+  - label: Armorer work
+    kind: 7
+    at: {x: 56, y: 21.5}
+    yaw: 270
+    slots: 1
+    spacing: 1
+    flags: 1
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 11400000, guid: d66be07a44eb3f44a891d0da86f1624b, type: 2}
+  - label: Store work
+    kind: 7
+    at: {x: 56, y: -45.5}
+    yaw: 270
+    slots: 1
+    spacing: 1
+    flags: 1
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 11400000, guid: d66be07a44eb3f44a891d0da86f1624b, type: 2}
+  - label: Broker work
+    kind: 7
+    at: {x: -62, y: 28}
+    yaw: 90
+    slots: 1
+    spacing: 1
+    flags: 1
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 11400000, guid: d66be07a44eb3f44a891d0da86f1624b, type: 2}
+  - label: Apothecary work
+    kind: 7
+    at: {x: -55, y: -60}
+    yaw: 180
+    slots: 1
+    spacing: 1
+    flags: 1
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 11400000, guid: d66be07a44eb3f44a891d0da86f1624b, type: 2}
+  - label: Vault work
+    kind: 7
+    at: {x: -53, y: 52}
+    yaw: 180
+    slots: 1
+    spacing: 1
+    flags: 1
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 11400000, guid: d66be07a44eb3f44a891d0da86f1624b, type: 2}
+  - label: Wayfinder work
+    kind: 7
+    at: {x: 13.5, y: -66}
+    yaw: 180
+    slots: 1
+    spacing: 1
+    flags: 0
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 11400000, guid: d66be07a44eb3f44a891d0da86f1624b, type: 2}
+  - label: Plaza circle
+    kind: 5
+    at: {x: 0, y: 0}
+    yaw: 0
+    slots: 4
+    spacing: 1.1
+    flags: 2
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: North circle
+    kind: 5
+    at: {x: 0, y: 32}
+    yaw: 30
+    slots: 3
+    spacing: 1
+    flags: 2
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: West circle
+    kind: 5
+    at: {x: -28, y: 8}
+    yaw: 0
+    slots: 3
+    spacing: 1
+    flags: 0
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: East circle
+    kind: 5
+    at: {x: 28, y: -8}
+    yaw: 0
+    slots: 3
+    spacing: 1
+    flags: 0
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: South circle
+    kind: 5
+    at: {x: -10, y: -38}
+    yaw: 15
+    slots: 3
+    spacing: 1
+    flags: 2
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: Market circle
+    kind: 5
+    at: {x: 38, y: 34}
+    yaw: 0
+    slots: 3
+    spacing: 1
+    flags: 0
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: Plaza bench W
+    kind: 1
+    at: {x: -12, y: -18}
+    yaw: 90
+    slots: 2
+    spacing: 0.8
+    flags: 2
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: Plaza bench E
+    kind: 1
+    at: {x: 12, y: 18}
+    yaw: 270
+    slots: 2
+    spacing: 0.8
+    flags: 2
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: West bench
+    kind: 1
+    at: {x: -36, y: -4}
+    yaw: 90
+    slots: 2
+    spacing: 0.8
+    flags: 0
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: East bench
+    kind: 1
+    at: {x: 36, y: 4}
+    yaw: 270
+    slots: 2
+    spacing: 0.8
+    flags: 0
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: South bench
+    kind: 1
+    at: {x: 0, y: -26}
+    yaw: 0
+    slots: 2
+    spacing: 0.8
+    flags: 2
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: North bench
+    kind: 1
+    at: {x: 0, y: 24}
+    yaw: 180
+    slots: 2
+    spacing: 0.8
+    flags: 2
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: Vault wall
+    kind: 4
+    at: {x: -50, y: 40}
+    yaw: 90
+    slots: 2
+    spacing: 1.2
+    flags: 10
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: Broker wall
+    kind: 4
+    at: {x: -50, y: 12}
+    yaw: 90
+    slots: 2
+    spacing: 1.2
+    flags: 8
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: Apothecary wall
+    kind: 4
+    at: {x: -48, y: -46}
+    yaw: 90
+    slots: 2
+    spacing: 1.2
+    flags: 1
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: Armorer wall
+    kind: 4
+    at: {x: 50, y: 8}
+    yaw: 270
+    slots: 2
+    spacing: 1.2
+    flags: 10
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: Store wall
+    kind: 4
+    at: {x: 50, y: -36}
+    yaw: 270
+    slots: 2
+    spacing: 1.2
+    flags: 1
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: Herald wall
+    kind: 4
+    at: {x: 48, y: 44}
+    yaw: 270
+    slots: 2
+    spacing: 1.2
+    flags: 2
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: North rail
+    kind: 6
+    at: {x: 0, y: 72}
+    yaw: 0
+    slots: 3
+    spacing: 1.5
+    flags: 4
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: East rail
+    kind: 6
+    at: {x: 72, y: 0}
+    yaw: 90
+    slots: 3
+    spacing: 1.5
+    flags: 4
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: West rail
+    kind: 6
+    at: {x: -72, y: 0}
+    yaw: 270
+    slots: 3
+    spacing: 1.5
+    flags: 6
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: South-west rail
+    kind: 6
+    at: {x: -40, y: -68}
+    yaw: 200
+    slots: 3
+    spacing: 1.5
+    flags: 4
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: North-east rail
+    kind: 6
+    at: {x: 45, y: 66}
+    yaw: 30
+    slots: 3
+    spacing: 1.5
+    flags: 4
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: Plaza stage
+    kind: 8
+    at: {x: 6, y: 8}
+    yaw: 180
+    slots: 1
+    spacing: 1
+    flags: 2
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 11400000, guid: de79a1d57afaf054d99f224d73e995fb, type: 2}
+  - label: Plaza stage crowd
+    kind: 6
+    at: {x: 6, y: 3}
+    yaw: 0
+    slots: 4
+    spacing: 1.2
+    flags: 2
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: West stage
+    kind: 8
+    at: {x: -24, y: -18}
+    yaw: 90
+    slots: 1
+    spacing: 1
+    flags: 0
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 11400000, guid: de79a1d57afaf054d99f224d73e995fb, type: 2}
+  - label: West stage crowd
+    kind: 6
+    at: {x: -19, y: -18}
+    yaw: 270
+    slots: 3
+    spacing: 1.2
+    flags: 0
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: Lift post W
+    kind: 9
+    at: {x: -4, y: -54}
+    yaw: 0
+    slots: 1
+    spacing: 1
+    flags: 2
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 11400000, guid: 2f525e255770ca340adbc8db17eafafd, type: 2}
+  - label: Lift post E
+    kind: 9
+    at: {x: 4, y: -54}
+    yaw: 0
+    slots: 1
+    spacing: 1
+    flags: 2
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 11400000, guid: 2f525e255770ca340adbc8db17eafafd, type: 2}
+  - label: Hall post
+    kind: 9
+    at: {x: 0, y: 44}
+    yaw: 180
+    slots: 1
+    spacing: 1
+    flags: 2
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 11400000, guid: 2f525e255770ca340adbc8db17eafafd, type: 2}
+  - label: West post
+    kind: 9
+    at: {x: -44, y: 0}
+    yaw: 90
+    slots: 1
+    spacing: 1
+    flags: 0
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 11400000, guid: 2f525e255770ca340adbc8db17eafafd, type: 2}
+  - label: East post
+    kind: 9
+    at: {x: 44, y: 0}
+    yaw: 270
+    slots: 1
+    spacing: 1
+    flags: 0
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 11400000, guid: 2f525e255770ca340adbc8db17eafafd, type: 2}
+  - label: Lift gate
+    kind: 10
+    at: {x: 0, y: -50}
+    yaw: 180
+    slots: 2
+    spacing: 2
+    flags: 2
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: East canopy
+    kind: 11
+    at: {x: 54, y: -12}
+    yaw: 90
+    slots: 3
+    spacing: 1.2
+    flags: 1
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: West canopy
+    kind: 11
+    at: {x: -56, y: 0}
+    yaw: 270
+    slots: 3
+    spacing: 1.2
+    flags: 1
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: North-west door
+    kind: 12
+    at: {x: -60, y: 40}
+    yaw: 0
+    slots: 1
+    spacing: 1.2
+    flags: 0
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: South-west door
+    kind: 12
+    at: {x: -60, y: -40}
+    yaw: 0
+    slots: 1
+    spacing: 1.2
+    flags: 0
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: North-east door
+    kind: 12
+    at: {x: 60, y: 35}
+    yaw: 0
+    slots: 1
+    spacing: 1.2
+    flags: 0
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: South-east door
+    kind: 12
+    at: {x: 60, y: -35}
+    yaw: 0
+    slots: 1
+    spacing: 1.2
+    flags: 0
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: Hall door
+    kind: 12
+    at: {x: 0, y: 50}
+    yaw: 0
+    slots: 1
+    spacing: 1.2
+    flags: 0
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: Lift door W
+    kind: 12
+    at: {x: -20, y: -60}
+    yaw: 0
+    slots: 1
+    spacing: 1.2
+    flags: 0
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: Lift door E
+    kind: 12
+    at: {x: 20, y: -60}
+    yaw: 0
+    slots: 1
+    spacing: 1.2
+    flags: 0
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: Jog 1
+    kind: 13
+    at: {x: 0, y: 42}
+    yaw: 90
+    slots: 1
+    spacing: 1.2
+    flags: 0
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: Jog 2
+    kind: 13
+    at: {x: 29.698484, y: 29.698484}
+    yaw: 135
+    slots: 1
+    spacing: 1.2
+    flags: 0
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: Jog 3
+    kind: 13
+    at: {x: 42, y: -0.0000018358783}
+    yaw: 180
+    slots: 1
+    spacing: 1.2
+    flags: 0
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: Jog 4
+    kind: 13
+    at: {x: 29.698484, y: -29.698484}
+    yaw: 225
+    slots: 1
+    spacing: 1.2
+    flags: 0
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: Jog 5
+    kind: 13
+    at: {x: -0.0000036717565, y: -42}
+    yaw: 270
+    slots: 1
+    spacing: 1.2
+    flags: 0
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: Jog 6
+    kind: 13
+    at: {x: -29.69849, y: -29.698479}
+    yaw: 315
+    slots: 1
+    spacing: 1.2
+    flags: 0
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: Jog 7
+    kind: 13
+    at: {x: -42, y: 0.000000500845}
+    yaw: 360
+    slots: 1
+    spacing: 1.2
+    flags: 0
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}
+  - label: Jog 8
+    kind: 13
+    at: {x: -29.698475, y: 29.698494}
+    yaw: 405.00003
+    slots: 1
+    spacing: 1.2
+    flags: 0
+    openFrom: 0
+    openTo: 0
+    onlyFor: {fileID: 0}

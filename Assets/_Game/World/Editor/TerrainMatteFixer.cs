@@ -15,7 +15,8 @@ namespace KryticalNova.EditorTools
     {
         private const string MaterialFolder = "Assets/_Game/World/Terrain/Materials";
         private const string MaterialPath = MaterialFolder + "/M_TerrainMatte.mat";
-        private const string TerrainLitShader = "Universal Render Pipeline/Terrain/Lit";
+        // The project copy of URP Terrain Lit with the season snow (owner DAY list item 21; Rendering/Shaders/Terrain/KNTerrainLit.shader).
+        private const string TerrainLitShader = "KryticalNova/Terrain Lit";
         private const float MatteSmoothness = 0.05f;
 
         public static void Run()

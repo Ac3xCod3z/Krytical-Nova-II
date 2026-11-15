@@ -37,6 +37,18 @@ namespace KryticalNova.Mounts
         public static uint KillXpUnits(in MountTuning tuning, float boosterBonus) =>
             KryticalNova.Progression.ExperienceBoostRules.Boosted(tuning.KillXp, boosterBonus);
 
+        /// <summary>
+        /// The same with the companion's share (phase 5, owner 14 Nov 2026): the kill EXP times <paramref name="companionMultiplier"/>
+        /// (1.5 when the companion helped, see <see cref="CompanionHelpRules"/>) first, then the boosters, so they multiply (1.5 x 2 = 3).
+        /// </summary>
+        public static uint KillXpUnits(in MountTuning tuning, float boosterBonus, float companionMultiplier)
+        {
+            uint units = companionMultiplier > 1f
+                ? (uint)Math.Min(uint.MaxValue, Math.Round(tuning.KillXp * (double)companionMultiplier))
+                : tuning.KillXp;
+            return KryticalNova.Progression.ExperienceBoostRules.Boosted(units, boosterBonus);
+        }
+
         /// <summary>Boxes in the Mount window: the four mounts of the game.</summary>
         public const int Slots = 4;
         public const int GrowthSteps = 100;

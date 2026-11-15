@@ -443,6 +443,8 @@ namespace KryticalNova.World
             rig.system.gameObject.SetActive(false);
         }
 
+        private float effectsScale = 1f;
+
         private void LateUpdate()
         {
             var env = WorldEnvironmentNetwork.Instance;
@@ -456,6 +458,8 @@ namespace KryticalNova.World
             }
 
             var w = env.Weather;
+            var seasons = SeasonSettings.Instance;
+            effectsScale = seasons != null ? seasons.PrecipitationScale(KryticalNova.Rendering.WorldEffectsRuntime.Quality) : 1f;
             Vector3 camPos = cam.position;
             Vector3 forward = cam.forward;
             forward.y = 0f;
@@ -650,13 +654,15 @@ namespace KryticalNova.World
                 rig.system.transform.position = new Vector3(centre.x, emitterY, centre.z);
             }
 
-            if (Mathf.Abs(intensity - rig.appliedIntensity) > 0.005f)
+            // World Effects (Settings, Graphics) scales how many drops and flakes fall: Low fewer, Ultra more (owner's DAY list item 21).
+            float rate = intensity * effectsScale;
+            if (Mathf.Abs(rate - rig.appliedIntensity) > 0.005f)
             {
-                rig.appliedIntensity = intensity;
+                rig.appliedIntensity = rate;
                 for (int i = 0; i < rig.all.Length; i++)
                 {
                     var emission = rig.all[i].emission;
-                    emission.rateOverTimeMultiplier = rig.baseRates[i] * intensity;
+                    emission.rateOverTimeMultiplier = rig.baseRates[i] * rate;
                 }
             }
 

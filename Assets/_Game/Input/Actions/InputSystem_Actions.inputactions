@@ -713,6 +713,15 @@
                     "initialStateCheck": false
                 },
                 {
+                    "name": "Companion",
+                    "type": "Button",
+                    "id": "a9cdc56e-b09f-495b-a3d3-52b9592503ea",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
                     "name": "Guide",
                     "type": "Button",
                     "id": "772bd0a0-88a1-4bfe-9388-01300000000e",
@@ -905,6 +914,17 @@
                     "processors": "",
                     "groups": "Keyboard&Mouse",
                     "action": "Ride",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "8203aa73-d225-46f4-8d8a-45031dad54ff",
+                    "path": "<Keyboard>/y",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "Companion",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
