@@ -388,6 +388,26 @@ namespace KryticalNova.World
             return true;
         }
 
+        /// <summary>
+        /// Shows a sky event now on every client (item 24 GM commands: sky.comet, sky.shower...): only the kind and the moment travel
+        /// with the world's state, each client draws it from <see cref="SkyCalendar"/>. <see cref="SkyEventKind.None"/> clears it. Authority only.
+        /// </summary>
+        public bool ForceSkyEvent(SkyEventKind kind)
+        {
+            if (!HasWorldAuthority) return false;
+            state.SkyForce = (byte)kind;
+            state.SkyForceAt = Now;
+            Commit();
+            return true;
+        }
+
+        /// <summary>The GM-forced sky event and its age in real seconds (age -1 when none).</summary>
+        public SkyEventKind ForcedSkyEvent(out double age)
+        {
+            age = state.SkyForce == 0 ? -1 : Now - state.SkyForceAt;
+            return (SkyEventKind)state.SkyForce;
+        }
+
         /// <summary>Changes real seconds per day while keeping the current time of day. Authority only.</summary>
         public bool SetDayLength(float seconds)
         {

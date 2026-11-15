@@ -38,6 +38,10 @@ namespace KryticalNova.World
         public float FromWindSpeed;
         public float ToWindSpeed;
 
+        /// <summary>A sky event a GM forced (<see cref="SkyEventKind"/>; 0 = none) and the clock time it began (item 24).</summary>
+        public byte SkyForce;
+        public double SkyForceAt;
+
         public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
         {
             serializer.SerializeValue(ref CycleEpoch);
@@ -54,6 +58,8 @@ namespace KryticalNova.World
             serializer.SerializeValue(ref ToWindHeading);
             serializer.SerializeValue(ref FromWindSpeed);
             serializer.SerializeValue(ref ToWindSpeed);
+            serializer.SerializeValue(ref SkyForce);
+            serializer.SerializeValue(ref SkyForceAt);
         }
 
         public float TimeOfDay01(double now)
@@ -98,6 +104,7 @@ namespace KryticalNova.World
             double delta = newNow - oldNow;
             CycleEpoch += delta;
             TransitionStart += delta;
+            SkyForceAt += delta;
         }
 
         public bool Equals(WorldEnvironmentState o) =>
@@ -106,7 +113,8 @@ namespace KryticalNova.World
             FromWeather == o.FromWeather && ToWeather == o.ToWeather &&
             TransitionStart.Equals(o.TransitionStart) && TransitionSeconds.Equals(o.TransitionSeconds) && Seed == o.Seed &&
             FromWindHeading.Equals(o.FromWindHeading) && ToWindHeading.Equals(o.ToWindHeading) &&
-            FromWindSpeed.Equals(o.FromWindSpeed) && ToWindSpeed.Equals(o.ToWindSpeed);
+            FromWindSpeed.Equals(o.FromWindSpeed) && ToWindSpeed.Equals(o.ToWindSpeed) &&
+            SkyForce == o.SkyForce && SkyForceAt.Equals(o.SkyForceAt);
 
         public override bool Equals(object obj) => obj is WorldEnvironmentState o && Equals(o);
 

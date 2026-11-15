@@ -809,6 +809,41 @@ namespace KryticalNova.EditorTools.GM
         [ButtonGroup(Tabs + "/" + WorldTab + "/Presets"), EnableIf(nameof(HasWorld)), PropertyOrder(404)]
         private void Midnight() => Run("time.midnight");
 
+        // ---------------------------------------------------------------- Sky events (owner's NIGHT list item 24): shown to every player at once
+
+        [TabGroup(Tabs, WorldTab), Title("Sky Events"), ShowInInspector, DisplayAsString, HideLabel, PropertyOrder(404.1f)]
+        private static string SkyEventsHint => "Night events need Midnight first; the eclipse needs Noon. Each lasts a few minutes for everyone.";
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/SkyNight"), EnableIf(nameof(HasWorld)), LabelText("Shooting Stars"), PropertyOrder(404.2f)]
+        private void SkyMeteor() => Run("sky.meteor");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/SkyNight"), EnableIf(nameof(HasWorld)), LabelText("The Emberfall"), PropertyOrder(404.2f)]
+        private void SkyShower() => Run("sky.shower");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/SkyNight"), EnableIf(nameof(HasWorld)), LabelText("The Pale Wanderer"), PropertyOrder(404.2f)]
+        private void SkyComet() => Run("sky.comet");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/SkyNight"), EnableIf(nameof(HasWorld)), LabelText("Nebula"), PropertyOrder(404.2f)]
+        private void SkyNebula() => Run("sky.nebula");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/SkyNight"), EnableIf(nameof(HasWorld)), LabelText("Aurora"), PropertyOrder(404.2f)]
+        private void SkyAurora() => Run("sky.aurora");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/SkyDay"), EnableIf(nameof(HasWorld)), LabelText("Second Sun"), PropertyOrder(404.3f)]
+        private void SkySun2() => Run("sky.sun2");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/SkyDay"), EnableIf(nameof(HasWorld)), LabelText("Eclipse"), PropertyOrder(404.3f)]
+        private void SkyEclipse() => Run("sky.eclipse");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/SkyDay"), EnableIf(nameof(HasWorld)), LabelText("Migration"), PropertyOrder(404.3f)]
+        private void SkyMigration() => Run("sky.migration");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/SkyDay"), EnableIf(nameof(HasWorld)), LabelText("Status"), PropertyOrder(404.3f)]
+        private void SkyEventsStatus() => Run("sky.events");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/SkyDay"), EnableIf(nameof(HasWorld)), LabelText("Clear"), PropertyOrder(404.3f)]
+        private void SkyClear() => Run("sky.events.clear");
+
         // ---------------------------------------------------------------- Crossfire, the hourly war (owner's DAY list item 17)
 
         private static bool HasCrossfire => KryticalNova.Crossfire.CrossfireView.HasServer;
