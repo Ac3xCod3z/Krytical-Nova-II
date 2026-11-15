@@ -21,6 +21,7 @@ namespace KryticalNova.Player.Entities.Tests
         {
             Assert.AreEqual(SendToOwnerType.SendToOwner, SendTypeOf(typeof(ServerOrder)));
             Assert.AreEqual(SendToOwnerType.SendToOwner, SendTypeOf(typeof(WaterPlan)));
+            Assert.AreEqual(SendToOwnerType.SendToOwner, SendTypeOf(typeof(KnockPlan)));   // observers: the interpolated pose
         }
 
         [Test]
@@ -31,7 +32,7 @@ namespace KryticalNova.Player.Entities.Tests
             Assert.AreEqual(SendToOwnerType.All, SendTypeOf(typeof(PlayerPose)));
             Assert.AreEqual(SendToOwnerType.All, SendTypeOf(typeof(MotionPlan)));
             Assert.AreEqual(SendToOwnerType.All, SendTypeOf(typeof(VaultPlan)));
-            Assert.AreEqual(SendToOwnerType.All, SendTypeOf(typeof(KnockPlan)));
+            Assert.AreEqual(SendToOwnerType.All, SendTypeOf(typeof(DeathState)));      // every view plays the death
         }
     }
 }
