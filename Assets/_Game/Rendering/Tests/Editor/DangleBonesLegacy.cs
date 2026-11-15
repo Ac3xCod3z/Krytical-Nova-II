@@ -22,9 +22,15 @@ namespace KryticalNova.Rendering.Tests
     /// server.
     /// </para>
     /// </summary>
-    [DisallowMultipleComponent]
-    public sealed class DangleBonesLegacy : MonoBehaviour
+    public sealed class DangleBonesLegacy
     {
+        private readonly Transform transform;
+        private readonly GameObject gameObject;
+        public bool enabled;
+
+        public DangleBonesLegacy(GameObject character) { gameObject = character; transform = character.transform; }
+
+        private T GetComponentInParent<T>() where T : Component => gameObject.GetComponentInParent<T>();
         /// <summary>How one kind of dangle piece moves, picked by the bone name's slot prefix.</summary>
         [Serializable]
         public struct Profile
@@ -138,18 +144,6 @@ namespace KryticalNova.Rendering.Tests
         /// appearance after every merge; adds the component where it is missing. Does nothing on a machine that draws
         /// nothing (a dedicated server).
         /// </summary>
-        public static DangleBonesLegacy Bind(GameObject character, IReadOnlyList<SkinnedMeshRenderer> renderers)
-        {
-            if (character == null || Application.isBatchMode) return null;
-            if (!character.TryGetComponent(out DangleBonesLegacy dangle))
-            {
-                if (!HasDangle(renderers)) return null; // no component for characters that never wear a loose piece
-                dangle = character.AddComponent<DangleBonesLegacy>();
-            }
-            dangle.Rebind(renderers);
-            return dangle;
-        }
-
         private static bool HasDangle(IReadOnlyList<SkinnedMeshRenderer> renderers)
         {
             if (renderers == null) return false;

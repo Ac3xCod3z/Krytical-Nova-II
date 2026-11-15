@@ -139,7 +139,7 @@ namespace KryticalNova.Rendering.Tests
         {
             var oldBody = Build(kind, scale);
             var newBody = Build(kind, scale);
-            var legacy = oldBody.root.AddComponent<DangleBonesLegacy>();
+            var legacy = new DangleBonesLegacy(oldBody.root);
             legacy.Rebind(new[] { oldBody.smr });
             var jobbed = newBody.root.AddComponent<DangleBones>();
             jobbed.Rebind(new[] { newBody.smr });
