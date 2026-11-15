@@ -26,6 +26,7 @@ namespace KryticalNova.EditorTools
         public const string LibraryPath = "Assets/_Game/Gameplay/Items/Data/Assets/DropModelLibrary.asset";
         public const string WorldDropPath = "Assets/_Game/Gameplay/Items/Prefabs/WorldDrop.prefab";
         private const string BuffChipHolder = "Chip_Aegis";
+        private const string CatalogPath = "Assets/_Game/Gameplay/Items/Data/Assets/ItemCatalog.asset";
         private const float BobAmplitude = 0.08f;   // WorldDrop.Update bobs the visual this far up and down
 
         /// <summary>First sizes (largest side, metres) and tilts (degrees off upright for long things). Key = row name.</summary>
@@ -103,9 +104,12 @@ namespace KryticalNova.EditorTools
 
             var items = new List<DropModelLibrary.ItemRow>();
             var unmapped = new List<string>();
-            foreach (string guid in AssetDatabase.FindAssets("t:ItemDefinition", new[] { "Assets/_Game/Gameplay/Items/Data/Assets" }))
+            // Only the items the game knows (the catalog): an item asset left out of it can never drop, and on the
+            // ground it would have no name (its label reads the catalog).
+            var catalog = AssetDatabase.LoadAssetAtPath<ItemCatalog>(CatalogPath);
+            if (catalog == null) { Debug.LogError($"[DropModels] No item catalog at {CatalogPath}."); return; }
+            foreach (ItemDefinition item in catalog.Items)
             {
-                var item = AssetDatabase.LoadAssetAtPath<ItemDefinition>(AssetDatabase.GUIDToAssetPath(guid));
                 if (item == null || item.itemId == 0 || LootRules.IsCreds(item.itemId)) continue;
                 string key = KeyFor(item);
                 if (key != null && index.TryGetValue(key, out int model)) items.Add(new DropModelLibrary.ItemRow { itemId = item.itemId, model = (byte)model });
