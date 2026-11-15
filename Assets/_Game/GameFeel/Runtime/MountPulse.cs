@@ -26,20 +26,38 @@ namespace KryticalNova.GameFeel
         private Color colour;
         private Vector3 shakeApplied;
         private Light pop;
+        private readonly System.Collections.Generic.List<MountPulseShed> sheds = new System.Collections.Generic.List<MountPulseShed>(2);
+        /// <summary>How long a shed of particles stays (the old destroy time).</summary>
+        public const float ShedSeconds = 1.6f;
 
         public static void Play(Transform mount, float glow, float shake, float seconds, Color colour, GameObject particles, float particleScale)
         {
             if (mount == null) return;
             if (!mount.TryGetComponent(out MountPulse pulse)) pulse = mount.gameObject.AddComponent<MountPulse>();
             pulse.Begin(glow, shake, seconds > 0f ? seconds : DefaultSeconds, colour);
-            if (particles != null)
+            if (particles != null) pulse.Shed(particles, particleScale, Time.time);
+        }
+
+        /// <summary>
+        /// Shed off the body: from its middle, riding with it, gone after the pulse plus their own fall (<see cref="ShedSeconds"/>).
+        /// A copy whose shed is over is reused (perf night chunk 5: was a new copy made and destroyed per landing); a new one is made
+        /// only while every copy is still falling. Returns the copy (tests).
+        /// </summary>
+        public MountPulseShed Shed(GameObject particles, float particleScale, float now)
+        {
+            Transform mount = transform;
+            Vector3 middle = mount.position + Vector3.up * 0.6f;
+            MountPulseShed shed = null;
+            for (int i = sheds.Count - 1; i >= 0; i--)
             {
-                // Shed off the body: from its middle, riding with it, gone after the pulse plus their own fall.
-                Vector3 middle = mount.position + Vector3.up * 0.6f;
-                GameObject shed = Instantiate(particles, middle, mount.rotation, mount);
-                shed.transform.localScale = Vector3.one * Mathf.Max(0.05f, particleScale);
-                Destroy(shed, 1.6f);
+                if (sheds[i] == null) { sheds.RemoveAt(i); continue; }   // destroyed from outside
+                if (shed == null && sheds[i].Prefab == particles && sheds[i].IsFree(now)) shed = sheds[i];
             }
+            if (shed == null) { shed = MountPulseShed.Make(particles, middle, mount.rotation, mount); sheds.Add(shed); }
+            else shed.Restart(middle, mount.rotation);
+            shed.transform.localScale = Vector3.one * Mathf.Max(0.05f, particleScale);
+            shed.Live(now, ShedSeconds);
+            return shed;
         }
 
         private void Begin(float glowTimes, float shakeMetres, float length, Color glowColour)
