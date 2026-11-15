@@ -95,7 +95,8 @@
         "Cadence combos: on the beat, one-hit and two-hit skills can't crit; a Redline three-hit on the beat crits with all three hits.",
         "Shared Stances give Squad mates half their strength.",
         "Stims can be used at any time, also during a charge; each kind has its own short cooldown.",
-        "The Cadence beat ring around you is gone: the beat now lives on the Mini Deck. Its arc can be switched off in Settings > Audio (Beat arc on the Mini Deck in a fight)."
+        "The Cadence beat ring around you is gone: the beat now lives on the Mini Deck. Its arc can be switched off in Settings > Audio (Beat arc on the Mini Deck in a fight).",
+        "Max Everything (gm.maxall) now gives only the top gear set of each bracket the character can wear, not every set: at level 112 the Rare 75 and Rare 110 sets and the Epic 112 set, in its own faction, lineage and class line."
       ]
     },
     {

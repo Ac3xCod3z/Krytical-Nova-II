@@ -10,7 +10,7 @@ namespace KryticalNova.Tests
 {
     /// <summary>
     /// gm.maxall (owner's night list item 22): any GM may run it (with the word confirm, live or test server), it gives the caller's own faction / lineage / class line of
-    /// Rare and Epic gear (Rare clean, Epic at the Temper cap and Fusion 12), places one-cell pieces Pack -> Vault -> Deep Vault in order,
+    /// Rare and Epic gear, only the top set of each bracket it can wear (owner 15 Nov 2026; Rare clean, Epic at the Temper cap and Fusion 12), places one-cell pieces Pack -> Vault -> Deep Vault in order,
     /// and puts pets at 100 % growth, fed.
     /// </summary>
     public class MaxAllRulesTests
@@ -72,8 +72,87 @@ namespace KryticalNova.Tests
                 pack = slot == EquipSlot.Weapon || slot == EquipSlot.Ring || slot == EquipSlot.Amulet ? string.Empty : pack, weaponClass = cls,
             };
 
-        static List<GearDictionary.Entry> Pick(List<GearDictionary.Entry> entries) =>
-            MaxAllRules.PickGear(entries, FactionId.Hegemony, BodyFit.Humanoid, "SCFI_SOLD", WeaponClassId.Monoblade);
+        static List<GearDictionary.Entry> Pick(List<GearDictionary.Entry> entries, int level = 112, System.Func<ushort, int> bandOf = null) =>
+            MaxAllRules.PickGear(entries, bandOf, level, FactionId.Hegemony, BodyFit.Humanoid, "SCFI_SOLD", WeaponClassId.Monoblade);
+
+        // The real ladder's brackets (GearStatTable bands): Rare I, Rare II and Epic, each its own line per slot.
+        const int RareI = 2, RareII = 3, EpicBand = 4;
+        static readonly byte[] RareILevels = { 45, 55, 65, 75 }, RareIILevels = { 85, 95, 105, 110 }, EpicLevels = { 100, 103, 106, 109, 112 };
+        static readonly EquipSlot[] LadderSlots =
+            { EquipSlot.Weapon, EquipSlot.Armor, EquipSlot.Gloves, EquipSlot.Boots, EquipSlot.Ring, EquipSlot.Amulet, EquipSlot.Cape };
+
+        /// <summary>Every tier of every bracket for every slot (weapons of the caller's class), and which band each line is.</summary>
+        static List<GearDictionary.Entry> Ladder(Dictionary<ushort, int> bands)
+        {
+            var entries = new List<GearDictionary.Entry>();
+            ushort lineId = 0;
+            foreach (EquipSlot slot in LadderSlots)
+                foreach ((int band, ItemRarity rarity, byte[] levels) in new[]
+                         { (RareI, ItemRarity.Rare, RareILevels), (RareII, ItemRarity.Rare, RareIILevels), (EpicBand, ItemRarity.Epic, EpicLevels) })
+                {
+                    bands[++lineId] = band;
+                    foreach (byte level in levels)
+                    {
+                        GearDictionary.Entry entry = Entry(slot, rarity, level, cls: WeaponClassId.Monoblade);
+                        entry.lineId = lineId;
+                        entries.Add(entry);
+                    }
+                }
+            return entries;
+        }
+
+        /// <summary>The item level picked for each slot and bracket, as "Armor R75 R110 E112" (bracket order).</summary>
+        static string Levels(List<GearDictionary.Entry> picked, EquipSlot slot)
+        {
+            var parts = new List<string> { slot.ToString() };
+            foreach (GearDictionary.Entry e in picked)
+                if (e.slot == slot) parts.Add((e.rarity == ItemRarity.Epic ? "E" : "R") + e.itemLevel);
+            return string.Join(" ", parts);
+        }
+
+        static List<GearDictionary.Entry> PickLadderAt(int level)
+        {
+            var bands = new Dictionary<ushort, int>();
+            List<GearDictionary.Entry> ladder = Ladder(bands);
+            return Pick(ladder, level, id => bands.TryGetValue(id, out int b) ? b : -1);
+        }
+
+        [Test]
+        public void TopSet_AtLevel112_Rare75_Rare110_Epic112_PerSlot()
+        {
+            List<GearDictionary.Entry> picked = PickLadderAt(112);
+            Assert.AreEqual(LadderSlots.Length * 3, picked.Count);
+            foreach (EquipSlot slot in LadderSlots) Assert.AreEqual(slot + " R75 R110 E112", Levels(picked, slot));
+        }
+
+        [Test]
+        public void TopSet_AtLevel110_EpicIs109()
+        {
+            List<GearDictionary.Entry> picked = PickLadderAt(110);
+            Assert.AreEqual(LadderSlots.Length * 3, picked.Count);
+            foreach (EquipSlot slot in LadderSlots) Assert.AreEqual(slot + " R75 R110 E109", Levels(picked, slot));
+        }
+
+        [Test]
+        public void TopSet_AtLevel75_OnlyRare75()
+        {
+            List<GearDictionary.Entry> picked = PickLadderAt(75);
+            Assert.AreEqual(LadderSlots.Length, picked.Count);
+            foreach (EquipSlot slot in LadderSlots) Assert.AreEqual(slot + " R75", Levels(picked, slot));
+        }
+
+        [Test]
+        public void TopSet_AtLevel40_Nothing()
+        {
+            Assert.AreEqual(0, PickLadderAt(40).Count);
+        }
+
+        [Test]
+        public void TopSet_AtLevel100_Rare75_Rare95_Epic100()
+        {
+            List<GearDictionary.Entry> picked = PickLadderAt(100);
+            foreach (EquipSlot slot in LadderSlots) Assert.AreEqual(slot + " R75 R95 E100", Levels(picked, slot));
+        }
 
         [Test]
         public void Gear_OnlyRareAndEpic()
@@ -90,7 +169,7 @@ namespace KryticalNova.Tests
         }
 
         [Test]
-        public void Gear_EveryLevelOfEverySlot_OnePieceEach()
+        public void Gear_NoBand_OneTopPiecePerSlotAndRarity()
         {
             var entries = new List<GearDictionary.Entry>();
             foreach (EquipSlot slot in new[] { EquipSlot.Armor, EquipSlot.Gloves, EquipSlot.Boots, EquipSlot.Ring, EquipSlot.Amulet, EquipSlot.Cape })
@@ -100,7 +179,12 @@ namespace KryticalNova.Tests
                     entries.Add(Entry(slot, ItemRarity.Rare, level)); // a second look of the same tier: not given twice
                     entries.Add(Entry(slot, ItemRarity.Epic, level));
                 }
-            Assert.AreEqual(6 * 3 * 2, Pick(entries).Count);
+            List<GearDictionary.Entry> picked = Pick(entries); // lines with no band: each rarity is one bracket
+            Assert.AreEqual(6 * 2, picked.Count);
+            Assert.IsTrue(picked.TrueForAll(e => e.itemLevel == 90));
+            List<GearDictionary.Entry> at60 = Pick(entries, 60); // the level-90 tier cannot be worn yet: the 60 is the top
+            Assert.AreEqual(6 * 2, at60.Count);
+            Assert.IsTrue(at60.TrueForAll(e => e.itemLevel == 60));
         }
 
         [Test]

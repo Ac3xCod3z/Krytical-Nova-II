@@ -1809,7 +1809,7 @@ namespace KryticalNova.EditorTools.GM
 
         [TabGroup(Tabs, ItemsTab), Title("Max Everything"), Button("Max Everything..."), GUIColor(1f, 0.75f, 0.4f), EnableIf(nameof(IsReady)), PropertyOrder(533.5f)]
         [InfoBox("gm.maxall: max level, skills, Ascension and Standings, every mount and pet at 100 %, 3 days of Autopilot and Autoward, max Serums, " +
-                 "the character's own Rare (clean) and Epic (Temper cap, Fusion 12) gear into Pack, Vault, Deep Vault, forge materials x999, every Pass x50, " +
+                 "the character's own top gear set of each bracket (at 112: Rare 75 and Rare 110 clean, Epic 112 at the Temper cap and Fusion 12) into Pack, Vault, Deep Vault, forge materials x999, every Pass x50, " +
                  "every crafting item, 2,000,000 Creds, 50 Chroma and Prism Cells. Adds on top. Any GM, live or test server. Asks first.", InfoMessageType.Warning)]
         private void MaxEverything()
         {
