@@ -69,7 +69,54 @@ namespace KryticalNova.Combat.Entities
             public HitProxy Proxy;
         }
 
-        protected override void OnCreate() => RequireForUpdate<NetworkTime>();
+        protected override void OnCreate()
+        {
+            RequireForUpdate<NetworkTime>();
+            m_Grid = new MeleeBystanderGrid();
+            m_PoolRings = new NativeList<PositionHistory>(64, Allocator.Persistent);
+            m_Picks = new NativeList<int>(64, Allocator.Persistent);
+        }
+
+        protected override void OnDestroy()
+        {
+            m_Grid?.Dispose();
+            if (m_PoolRings.IsCreated) m_PoolRings.Dispose();
+            if (m_Picks.IsCreated) m_Picks.Dispose();
+        }
+
+        // Every body a swing could strike this tick (the old per-swing gathering, done once): players in registry order, then the
+        // non-player targets; each one's position ring and its place in the grid.
+        readonly System.Collections.Generic.List<Struck> m_Pool = new System.Collections.Generic.List<Struck>();
+        readonly System.Collections.Generic.List<GhostBodyEntry> m_PoolEntry = new System.Collections.Generic.List<GhostBodyEntry>();
+        readonly System.Collections.Generic.List<int> m_Kept = new System.Collections.Generic.List<int>();
+        NativeList<PositionHistory> m_PoolRings;
+        NativeList<int> m_Picks;
+        MeleeBystanderGrid m_Grid;
+
+        void BuildPool(EntityManager em)
+        {
+            m_Pool.Clear();
+            m_PoolEntry.Clear();
+            m_PoolRings.Clear();
+            m_Grid.Clear();
+            foreach (GhostBodyEntry e in GhostBodyRegistry.Entries)
+                if (ReferenceEquals(e.World, World) && e.Body != null && em.Exists(e.Ghost)
+                    && em.HasComponent<PositionHistory>(e.Ghost) && e.Body.TryGetComponent(out IDamageable _))
+                    AddToPool(new Struck { Body = e.Body, Ghost = e.Ghost, Proxy = HitProxy.Player }, e, em.GetComponentData<PositionHistory>(e.Ghost));
+            foreach (CombatTargetEntry e in CombatTargetRegistry.Entries)
+                if (ReferenceEquals(e.World, World) && em.Exists(e.Ghost) && em.HasComponent<PositionHistory>(e.Ghost)
+                    && em.HasComponent<CombatTarget>(e.Ghost) && e.Body.TryGetComponent(out IDamageable _))
+                    AddToPool(new Struck { Body = e.Body, Ghost = e.Ghost, Proxy = em.GetComponentData<CombatTarget>(e.Ghost).Proxy }, null,
+                        em.GetComponentData<PositionHistory>(e.Ghost));
+        }
+
+        void AddToPool(Struck s, GhostBodyEntry entry, in PositionHistory ring)
+        {
+            m_Pool.Add(s);
+            m_PoolEntry.Add(entry);
+            m_PoolRings.Add(ring);
+            m_Grid.Add(ring, s.Proxy);
+        }
 
         protected override void OnUpdate()
         {
@@ -78,6 +125,7 @@ namespace KryticalNova.Combat.Entities
             int rate = SystemAPI.TryGetSingleton<ClientServerTickRate>(out var r) && r.SimulationTickRate > 0 ? (int)r.SimulationTickRate : 30;
             EntityManager em = EntityManager;
             var collateral = new NativeList<int>(Allocator.Temp);
+            bool poolBuilt = false;
             foreach (GhostBodyEntry attacker in GhostBodyRegistry.Entries)
             {
                 if (!ReferenceEquals(attacker.World, World) || attacker.Body == null || !em.Exists(attacker.Ghost)
@@ -104,21 +152,25 @@ namespace KryticalNova.Combat.Entities
                     seen.Subtract(em.GetComponentData<CommandDataInterpolationDelay>(attacker.Ghost).Delay);
                 PlayerPose me = em.GetComponentData<PlayerPose>(attacker.Ghost);
                 int3 them = FeetOf(em, target.Ghost);
-                // M4.4g: everyone else who could be under the blade (NGO's sweep strikes each hostile it touches, once per swing)
+                // M4.4g: everyone else who could be under the blade (NGO's sweep strikes each hostile it touches, once per swing).
+                // Perf clean-ups round 2, chunk 7: the strikeable bodies are gathered once per tick (on its first due swing) and filed
+                // by place; a swing reads only the ones near the attacker, in the same order as before, so the same ones are struck.
+                if (!poolBuilt) { BuildPool(em); poolBuilt = true; }
+                m_Grid.Gather(me.Mm, t.ReachMm, m_Picks);
                 bystanders.Clear();
-                foreach (GhostBodyEntry e in GhostBodyRegistry.Entries)
-                    if (ReferenceEquals(e.World, World) && e != attacker && e.Ghost != target.Ghost && e.Body != null && em.Exists(e.Ghost)
-                        && em.HasComponent<PositionHistory>(e.Ghost) && e.Body.TryGetComponent(out IDamageable _))
-                        bystanders.Add(new Struck { Body = e.Body, Ghost = e.Ghost, Proxy = HitProxy.Player });
-                foreach (CombatTargetEntry e in CombatTargetRegistry.Entries)
-                    if (ReferenceEquals(e.World, World) && e.Ghost != target.Ghost && em.Exists(e.Ghost) && em.HasComponent<PositionHistory>(e.Ghost)
-                        && em.HasComponent<CombatTarget>(e.Ghost) && e.Body.TryGetComponent(out IDamageable _))
-                        bystanders.Add(new Struck { Body = e.Body, Ghost = e.Ghost, Proxy = em.GetComponentData<CombatTarget>(e.Ghost).Proxy });
+                m_Kept.Clear();
+                for (int k = 0; k < m_Picks.Length; k++)
+                {
+                    int p = m_Picks[k];
+                    if (ReferenceEquals(m_PoolEntry[p], attacker) || m_Pool[p].Ghost == target.Ghost) continue;
+                    bystanders.Add(m_Pool[p]);
+                    m_Kept.Add(p);
+                }
                 var rings = new NativeArray<PositionHistory>(bystanders.Count, Allocator.Temp);
                 var proxies = new NativeArray<HitProxy>(bystanders.Count, Allocator.Temp);
                 for (int i = 0; i < bystanders.Count; i++)
                 {
-                    rings[i] = em.GetComponentData<PositionHistory>(bystanders[i].Ghost);
+                    rings[i] = m_PoolRings[m_Kept[i]];
                     proxies[i] = bystanders[i].Proxy;
                 }
                 collateral.Clear();
