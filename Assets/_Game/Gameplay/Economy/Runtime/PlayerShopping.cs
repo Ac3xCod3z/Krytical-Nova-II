@@ -57,6 +57,8 @@ namespace KryticalNova.Economy
         public static PlayerShopping Local => LocalPlayer.Get<PlayerShopping>();
 
         public EconomySettings Settings => settings;
+        /// <summary>The Pack mirror timing of these settings (perf round 3, R3-6).</summary>
+        public IPackSyncTuning PackSyncTuning => settings;
         public VendorCatalog Vendors => vendors;
         public long Creds => wallet != null ? wallet.Creds : 0;
 
