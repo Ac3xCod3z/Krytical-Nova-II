@@ -20,6 +20,21 @@ namespace KryticalNova.GameFeel
 
         private Renderer[] renderers;
         private MaterialPropertyBlock block;
+        // Per renderer, its material's own colour property and value, looked at again only when the material reference changes (perf
+        // clean-ups round 2, chunk 15 part 2: HasProperty and GetColor were asked every frame of a flash).
+        private Material[] seenMaterial = System.Array.Empty<Material>();
+        private int[] seenId = System.Array.Empty<int>();
+        private Color[] seenColor = System.Array.Empty<Color>();
+
+        /// <summary>The colour property a flash pushes toward the glow (_BaseColor, else _Color, else 0) and its value.</summary>
+        public static int ColourOf(Material material, out Color colour)
+        {
+            colour = default;
+            if (material == null) return 0;
+            int id = material.HasProperty(BaseColorId) ? BaseColorId : material.HasProperty(ColorId) ? ColorId : 0;
+            if (id != 0) colour = material.GetColor(id);
+            return id;
+        }
         private Color color;
         private float elapsed;
         private float lastFactor = 1f;
@@ -35,6 +50,7 @@ namespace KryticalNova.GameFeel
         {
             Restore();
             renderers = GetComponentsInChildren<Renderer>(false);
+            if (seenMaterial.Length > 0) System.Array.Clear(seenMaterial, 0, seenMaterial.Length);   // a new pulse looks again
             block ??= new MaterialPropertyBlock();
             color = glow.maxColorComponent > 0.01f ? glow : Color.white;
             color.a = 1f;
@@ -62,8 +78,9 @@ namespace KryticalNova.GameFeel
         {
             if (renderers == null) return;
             Color emission = color * (FlashPeak * amount);
-            foreach (Renderer target in renderers)
+            for (int i = 0; i < renderers.Length; i++)
             {
+                Renderer target = renderers[i];
                 if (target == null || target is ParticleSystemRenderer || target is TrailRenderer) continue;
                 target.GetPropertyBlock(block);
                 block.SetColor(EmissionId, emission);
@@ -71,8 +88,15 @@ namespace KryticalNova.GameFeel
                 Material material = target.sharedMaterial;
                 if (material != null)
                 {
-                    int id = material.HasProperty(BaseColorId) ? BaseColorId : material.HasProperty(ColorId) ? ColorId : 0;
-                    if (id != 0) block.SetColor(id, Color.Lerp(material.GetColor(id), color * 1.6f, amount * 0.85f));
+                    if (seenMaterial.Length != renderers.Length)
+                    {
+                        seenMaterial = new Material[renderers.Length];
+                        seenId = new int[renderers.Length];
+                        seenColor = new Color[renderers.Length];
+                    }
+                    if (!ReferenceEquals(seenMaterial[i], material)) { seenMaterial[i] = material; seenId[i] = ColourOf(material, out seenColor[i]); }
+                    int id = seenId[i];
+                    if (id != 0) block.SetColor(id, Color.Lerp(seenColor[i], color * 1.6f, amount * 0.85f));
                 }
                 target.SetPropertyBlock(block);
             }

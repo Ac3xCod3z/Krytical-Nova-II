@@ -22,6 +22,35 @@ namespace KryticalNova.GameFeel
 
         private Renderer[] renderers;
         private MaterialPropertyBlock block;
+        // Per renderer, what its material said the last time it was looked at (perf clean-ups round 2, chunk 15 part 2: HasProperty,
+        // IsKeywordEnabled and GetColor were asked every frame of a pulse): looked at again only when the material reference changes,
+        // as when the appear effect swaps its own copies in and out.
+        private Material[] seenMaterial;
+        private Color[] seenEmission;
+        private byte[] seenKind;   // 0 no emission colour, 1 an emission colour, 2 and its emission switched on
+
+        /// <summary>What <paramref name="m"/> says for the glow: 0 no emission colour, 1 one, 2 one and switched on; its colour.</summary>
+        public static byte KindOf(Material m, out Color emission)
+        {
+            emission = default;
+            if (m == null || !m.HasProperty(EmissionColor)) return 0;
+            emission = m.GetColor(EmissionColor);
+            return m.IsKeywordEnabled("_EMISSION") ? (byte)2 : (byte)1;
+        }
+
+        private byte Look(int i, Material m, out Color emission)
+        {
+            if (seenMaterial == null || seenMaterial.Length != renderers.Length)
+            {
+                seenMaterial = new Material[renderers.Length];
+                seenEmission = new Color[renderers.Length];
+                seenKind = new byte[renderers.Length];
+            }
+            if (m == null) { emission = default; return 0; }
+            if (!ReferenceEquals(seenMaterial[i], m)) { seenMaterial[i] = m; seenKind[i] = KindOf(m, out seenEmission[i]); }
+            emission = seenEmission[i];
+            return seenKind[i];
+        }
         private float glow, shake, seconds, startedAt;
         private Color colour;
         private Vector3 shakeApplied;
@@ -64,6 +93,7 @@ namespace KryticalNova.GameFeel
         {
             if (renderers == null) renderers = GetComponentsInChildren<Renderer>(true);
             if (block == null) block = new MaterialPropertyBlock();
+            if (seenMaterial != null) System.Array.Clear(seenMaterial, 0, seenMaterial.Length);   // a new pulse looks again
             glow = glowTimes;
             shake = shakeMetres;
             seconds = length;
@@ -119,9 +149,9 @@ namespace KryticalNova.GameFeel
                 {
                     Renderer r = renderers[i];
                     Material m = r != null ? r.sharedMaterial : null;
-                    if (m == null || !m.HasProperty(EmissionColor) || !m.IsKeywordEnabled("_EMISSION")) continue;
+                    if (Look(i, m, out Color emission) != 2) continue;
                     r.GetPropertyBlock(block); // keep what else is set on it
-                    block.SetColor(EmissionColor, m.GetColor(EmissionColor) * (1f + glow * k));
+                    block.SetColor(EmissionColor, emission * (1f + glow * k));
                     r.SetPropertyBlock(block);
                 }
                 if (pop != null) pop.intensity = LightPeak * k;
@@ -147,9 +177,9 @@ namespace KryticalNova.GameFeel
                 {
                     Renderer r = renderers[i];
                     Material m = r != null ? r.sharedMaterial : null;
-                    if (m == null || !m.HasProperty(EmissionColor)) continue;
+                    if (Look(i, m, out Color emission) == 0) continue;
                     r.GetPropertyBlock(block);
-                    block.SetColor(EmissionColor, m.GetColor(EmissionColor));
+                    block.SetColor(EmissionColor, emission);
                     r.SetPropertyBlock(block);
                 }
             }
