@@ -62,6 +62,8 @@ namespace KryticalNova.World
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void Bootstrap()
         {
+            // the aurora comes in Winter, on the sky's own schedule (and all year on an always-winter map)
+            SkyEventPresenter.AuroraAllowed = () => SeasonView.HasClient && SeasonView.Client.AuroraAllowedAt(NetClock.Now);
             if (Instance != null) return;
             var go = new GameObject("SeasonPresenter") { hideFlags = HideFlags.HideInHierarchy | HideFlags.DontSave };
             DontDestroyOnLoad(go);

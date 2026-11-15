@@ -1,0 +1,92 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 220b03b411574faaa21048c481d1cd43, type: 3}
+  m_Name: SkyEvents
+  m_EditorClassIdentifier: KryticalNova.World::KryticalNova.World.SkyEventSettings
+  starMap: {fileID: 2800000, guid: 9370b32cdb3b02c4daa6b54312a8abab, type: 3}
+  overlayShader: {fileID: 4800000, guid: b79280a80dcf4458970e1e3c019afc72, type: 3}
+  starBrightness: 1.6
+  poleElevation: 35
+  poleAzimuth: 0
+  extraTurnsPerDay: 0
+  monthDays: 0
+  gameYearDays: 1344
+  showerDayOfYear: 700
+  cometPeriodDays: 2160
+  cometNights: 6
+  eclipseEveryYears: 2
+  eclipseDayOfYear: 300
+  shootingStarGapSeconds: {x: 60, y: 180}
+  streakSeconds: 1.6
+  streakWidthDegrees: 0.35
+  streakHeadDegrees: 0.25
+  streakDegrees: 21
+  streakTrail: 0.7
+  streakColor: {r: 1.6, g: 1.54, b: 1.4, a: 1}
+  showerStreaksPerMinute: 480
+  showerRadiant: {x: 70, y: 75}
+  showerStreakSeconds: 2.8
+  showerStreakDegrees: 40
+  showerSpread: {x: 4, y: 38}
+  showerWidthDegrees: 0.5
+  showerHeadDegrees: 0.4
+  showerHeadColor: {r: 2.6, g: 3, b: 3.6, a: 1}
+  showerTrailColor: {r: 0.55, g: 1, b: 2.4, a: 1}
+  nebulaFirstNight: 3
+  nebulaNights: 3
+  nebulaPath: {x: 110, y: 250, z: 62}
+  nebulas:
+  - name: Soul Tide
+    texture: {fileID: 2800000, guid: cdf8496e5030bf844baa02cf24dc7c4e, type: 3}
+    degrees: 84
+    brightness: 1
+    weight: 1
+  - name: Ember Rose
+    texture: {fileID: 2800000, guid: a42aac0bc787bc34389645ff3d79d435, type: 3}
+    degrees: 76
+    brightness: 1
+    weight: 1
+  - name: Veil Ribbon
+    texture: {fileID: 2800000, guid: 00818e718ed7f3648be85229f3da1a93, type: 3}
+    degrees: 100
+    brightness: 1
+    weight: 1
+  cometHead: {x: 240, y: 38}
+  cometTailDegrees: 44
+  cometBrightness: 1
+  sun2Color: {r: 1, g: 0.71, b: 0.28, a: 1}
+  sun2Degrees: 1.1
+  sun2Brightness: 1.2
+  sun2Path: {x: 40, y: 55}
+  sun2OrbitDays: 20
+  sun2Share: 0.6
+  sun2DayLength: 1.12
+  sun2DayFade: 0.08
+  eclipsePeak01: 0.5
+  eclipseSeconds: 240
+  eclipseApproachSeconds: 120
+  eclipseMoonScale: 1.5
+  eclipsePathDegrees: 20
+  eclipseDarkness: 0.85
+  eclipseSkyColor: {r: 0.04, g: 0.06, b: 0.2, a: 1}
+  coronaColor: {r: 0.93, g: 0.95, b: 1, a: 1}
+  eclipseMoonSize: 0.5
+  moonScale: 1.6
+  auroraLow: {r: 0.24, g: 1, b: 0.66, a: 1}
+  auroraHigh: {r: 0.25, g: 0.78, b: 1, a: 1}
+  auroraBrightness: 1
+  auroraNightShare: 0.5
+  migrationEveryDays: 9
+  migrationSeconds: 150
+  streaksByWorldEffects: 080000000e0000001800000018000000i
+  auroraOnLow: 0
+  forcedSeconds: 180

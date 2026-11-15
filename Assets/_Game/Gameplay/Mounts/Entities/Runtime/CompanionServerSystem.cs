@@ -383,6 +383,7 @@ namespace KryticalNova.Mounts.Entities
             if (!live.Mounts.TryGetComponent(out CharacterCombatStats ownerStats)) return;
             live.NextStrikeAt = now + Mathf.Max(0.2f, t.StrikeSeconds);
             DamageResult result = CompanionFightRules.Strike(CombatCalculator.CalculateAttack(ownerStats, struck.CombatStats), t);
+            live.Mounts.ServerNoteCompanionHelp(body, live.Acting);   // phase 5: before the blow, which may be the kill
             struck.TakeDamage(result, ownerStats);   // in the owner's name: the kill and the tag are theirs; NoThreat keeps it out of aggro
             string label = live.Mounts.Selected != null ? live.Mounts.Selected.displayName : "Mount";
             m_Hits ??= World.GetExistingSystemManaged<HitRecordServerSystem>();
@@ -421,6 +422,7 @@ namespace KryticalNova.Mounts.Entities
                 if (!em.Exists(hostiles[i]) || !em.HasBuffer<BrainEvent>(hostiles[i])) continue;
                 em.GetBuffer<BrainEvent>(hostiles[i]).Add(taunt);
                 written++;
+                live.Mounts.ServerNoteCompanionHelp(CombatTargetRegistry.BodyOf(World, seen[i].GhostId), live.Acting);   // phase 5
             }
             if (written == 0) return;
             TauntsWritten += written;
@@ -437,6 +439,7 @@ namespace KryticalNova.Mounts.Entities
             owner.Heal(CompanionFightRules.PulseHeal(owner.MaxHealth, t));   // a heal puts no threat on a Hostile here (none is sent)
             live.Pulses++;
             PulsesGiven++;
+            live.Mounts.ServerNoteCompanionHelp(CombatTargetRegistry.BodyOf(World, fight), live.Acting);   // phase 5: a heal in that fight
         }
 
         static float CompanionFlat(Vector3 a, Vector3 b)
