@@ -68,14 +68,15 @@ namespace KryticalNova.World
             var go = new GameObject("SeasonPresenter") { hideFlags = HideFlags.HideInHierarchy | HideFlags.DontSave };
             DontDestroyOnLoad(go);
             go.AddComponent<SeasonPresenter>();
-            go.AddComponent<SnowPrintWatcher>();
         }
 
         void Awake()
         {
             if (Instance != null && Instance != this) { Destroy(gameObject); return; }
             Instance = this;
+            // the foot watcher lives beside it (made here: Awake runs inside AddComponent, before the bootstrap could add it)
             m_Prints = GetComponent<SnowPrintWatcher>();
+            if (m_Prints == null) m_Prints = gameObject.AddComponent<SnowPrintWatcher>();
         }
 
         void OnDestroy()

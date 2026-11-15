@@ -23,11 +23,14 @@ namespace KryticalNova.Rendering
         /// <summary>True while there is snow to print into (set by the season presenter); nobody watches feet otherwise.</summary>
         public static bool Wanted { get; set; }
 
+        /// <summary>Prints added since the game began (tests, GM status).</summary>
+        public static int Added { get; private set; }
+
         /// <summary>Prints waiting now.</summary>
         public static int Count => s_Count;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics() { s_Count = 0; Wanted = false; }
+        static void ResetStatics() { s_Count = 0; Wanted = false; Added = 0; }
 
         /// <summary>
         /// A foot came down at <paramref name="foot"/> facing <paramref name="yawDegrees"/> (world, 0 = +Z). <paramref name="size"/> is
@@ -47,6 +50,7 @@ namespace KryticalNova.Rendering
             s_Where[s_Count] = new Vector4(foot.x, foot.z, Mathf.Sin(r), Mathf.Cos(r));
             s_Shape[s_Count] = new Vector4(Mathf.Max(0.02f, size.x * 0.5f), Mathf.Max(0.02f, size.y * 0.5f), (float)shape, Mathf.Clamp01(press));
             s_Count++;
+            Added++;
         }
 
         /// <summary>Hands this frame's prints to the track map and empties the queue. Returns how many.</summary>

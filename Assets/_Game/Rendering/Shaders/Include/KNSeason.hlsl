@@ -127,11 +127,12 @@ void KNSeasonGround(inout half3 albedo, inout half smoothness, float3 normalWS, 
         float2 slope = float2(KNSnowTrack(positionWS.xz + float2(e, 0.0)) - press, KNSnowTrack(positionWS.xz + float2(0.0, e)) - press) / e;
         float side = 0.0;
     #if defined(UNIVERSAL_INPUT_INCLUDED)
-        side = dot(slope, normalize(_MainLightPosition.xz + 1e-4)) * 0.05;
+        side = clamp(dot(slope, normalize(_MainLightPosition.xz + 1e-4)) * 0.18, -0.45, 0.45);
     #endif
         float rim = saturate(press * 4.0) * (1.0 - press) * _KN_SnowColor.a;
-        half3 packed = (half3)_KN_SnowColor.rgb * (half3)lerp(float3(1.0, 1.0, 1.0), float3(0.72, 0.78, 0.9), press * deep);
-        packed *= (half)saturate(1.0 + side + rim * 0.6);
+        // packed snow in the print reads clearly darker and bluer than the fresh snow round it, its walls lit and shaded
+        half3 packed = (half3)_KN_SnowColor.rgb * (half3)lerp(float3(1.0, 1.0, 1.0), float3(0.5, 0.57, 0.72), saturate(press * 1.4) * deep);
+        packed *= (half)saturate(1.0 + side + rim * 0.8);
         albedo = lerp(albedo, packed, (half)(snow * (1.0 - through)));
         smoothness = lerp(smoothness, 0.15h, (half)snow);
     }
