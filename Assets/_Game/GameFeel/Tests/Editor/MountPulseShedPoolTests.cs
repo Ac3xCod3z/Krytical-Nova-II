@@ -1,7 +1,9 @@
 using System;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.TestTools.Constraints;
 using KryticalNova.GameFeel;
+using Is = UnityEngine.TestTools.Constraints.Is;
 using Object = UnityEngine.Object;
 
 namespace KryticalNova.Tests
@@ -93,29 +95,37 @@ namespace KryticalNova.Tests
         }
 
         [Test]
-        public void Measure_ObjectsAndBytes_Per20Landings_OldVsNew()
+        public void Measure_ObjectsAndGarbage_Per20Landings_OldVsNew()
         {
+            // GC.GetAllocatedBytesForCurrentThread reads 0 under Unity's Mono: the Test Framework's GC.Alloc recorder decides; the
+            // heap growth printed is only an estimate.
             Transform mount = m_Mount.transform;
             for (int i = 0; i < 3; i++) Object.DestroyImmediate(Object.Instantiate(m_Prefab, mount.position, mount.rotation, mount));   // warm up
             m_Pulse.Shed(m_Prefab, 1f, 0f);
-            long before = GC.GetAllocatedBytesForCurrentThread();
+            m_Pulse.Shed(m_Prefab, 1f, 2f);   // warm up the reuse path too
             var made = new GameObject[20];
-            for (int i = 0; i < 20; i++)
+            System.Action oldWay = () =>
             {
-                made[i] = Object.Instantiate(m_Prefab, mount.position + Vector3.up * 0.6f, mount.rotation, mount);
-                made[i].transform.localScale = Vector3.one;
-            }
-            long oldBytes = GC.GetAllocatedBytesForCurrentThread() - before;
-            foreach (var g in made) Object.DestroyImmediate(g);
+                for (int i = 0; i < 20; i++)
+                {
+                    made[i] = Object.Instantiate(m_Prefab, mount.position + Vector3.up * 0.6f, mount.rotation, mount);
+                    made[i].transform.localScale = Vector3.one;
+                }
+            };
+            float t = 2f;
+            System.Action newWay = () => { for (int i = 0; i < 20; i++) m_Pulse.Shed(m_Prefab, 1f, t += 2f); };
 
-            before = GC.GetAllocatedBytesForCurrentThread();
-            for (int i = 1; i <= 20; i++) m_Pulse.Shed(m_Prefab, 1f, i * 2f);
-            long newBytes = GC.GetAllocatedBytesForCurrentThread() - before;
-            string line = $"[perf chunk 5] MountPulse, 20 landings 2 s apart: old 20 objects / {oldBytes} bytes, new {Copies()} object(s) / {newBytes} bytes";
+            long before = GC.GetTotalMemory(false); oldWay(); long oldBytes = GC.GetTotalMemory(false) - before;
+            foreach (var g in made) Object.DestroyImmediate(g);
+            before = GC.GetTotalMemory(false); newWay(); long newBytes = GC.GetTotalMemory(false) - before;
+            string line = $"[perf chunk 5] MountPulse, 20 landings 2 s apart: old 20 objects / ~{oldBytes} bytes of heap, new {Copies()} object(s) / ~{newBytes} bytes";
             TestContext.WriteLine(line);
             Debug.Log(line);
             Assert.AreEqual(1, Copies(), line);
-            Assert.Less(newBytes, oldBytes, line);
+            Assert.That(oldWay, Is.AllocatingGCMemory(), "a new copy per landing made garbage");
+            foreach (var g in made) Object.DestroyImmediate(g);
+            Assert.That(newWay, Is.Not.AllocatingGCMemory(), "reusing the copy makes none");
+            Assert.AreEqual(1, Copies(), line);
         }
     }
 }
