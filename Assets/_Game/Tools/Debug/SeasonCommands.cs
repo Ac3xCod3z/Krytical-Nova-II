@@ -39,7 +39,7 @@ namespace KryticalNova.DevTools
                 float c = float.NaN;
                 if (a != "auto" && (!float.TryParse(a, NumberStyles.Float, CultureInfo.InvariantCulture, out c) || c < -40f || c > 50f))
                     return "gm.season temp <-40..50 C> | auto, for example gm.season temp 34 (a hot afternoon) or gm.season temp -8";
-                return clock.SetTemperature(c) ? (float.IsNaN(c) ? "Temperature: the weather's. " : $"Air held at {c:0.#} C. ") + Status(clock) : NoSettings;
+                return clock.SetTemperature(c) ? (float.IsNaN(c) ? "Temperature: the weather's. " : $"Air held at {c:0.#} C ({KryticalNova.Core.TemperatureUnits.ToFahrenheit(c):0} F). ") + Status(clock) : NoSettings;
             }
             if (w == "spell")
             {
@@ -111,7 +111,7 @@ namespace KryticalNova.DevTools
             string ceiling = s.SnowRate > 0 && s.SnowCeiling < 1f ? $" toward {s.SnowCeiling:0.00}" : "";
             string progress = $"{s.ProgressAt(now) * 100f:0} % into it{(s.Progress >= 0f ? " (GM)" : "")}";
             WeatherSpell spell = clock.SpellNow;
-            string air = $"; air {s.Temperature:0.#} C{(s.GmTemperature ? " (GM)" : "")}";
+            string air = $"; air {s.Temperature:0.#} C / {KryticalNova.Core.TemperatureUnits.ToFahrenheit(s.Temperature):0} F{(s.GmTemperature ? " (GM)" : "")}";
             string spellText = spell != null
                 ? $"; spell {spell.name}{(s.GmSpell ? " (GM)" : $" day {clock.SpellDayNow.DayInSpell + 1} of {clock.SpellDayNow.Length}")}{(s.DryDays > 0 ? $", {s.DryDays} dry days" : "")}"
                 : "";

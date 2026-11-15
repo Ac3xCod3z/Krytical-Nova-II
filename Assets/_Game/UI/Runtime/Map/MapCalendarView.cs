@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using KryticalNova.Core;
 using KryticalNova.World;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -31,7 +32,7 @@ namespace KryticalNova.UI
         readonly List<ForecastDay> forecast = new List<ForecastDay>();
         readonly List<Label> eventTimes = new List<Label>();
         long builtForDay = long.MinValue;
-        bool builtAlwaysWinter;
+        bool builtAlwaysWinter, builtCelsius;
         float nextRefresh;
 
         public MapCalendarView(VisualElement page, Label minimapLine)
@@ -59,7 +60,7 @@ namespace KryticalNova.UI
             UpdateMinimapLine(date);
             if (!pageShown || page == null) return;
 
-            if (c.Day != builtForDay || c.AlwaysWinter != builtAlwaysWinter) Rebuild(c, s, cal);
+            if (c.Day != builtForDay || c.AlwaysWinter != builtAlwaysWinter || TemperatureUnits.Celsius != builtCelsius) Rebuild(c, s, cal);
             dateLabel.text = $"{SeasonWord(date.Season)}  ·  DAY {date.DayOfSeason} OF {date.SeasonDays}  ·  YEAR {date.Year}";
             timeLabel.text = $"Game day {date.Day:N0}  ·  {date.Hour:00}:{date.Minute:00}  (one game day = {GameCalendar.Span(c.DaySeconds)} real time)";
             seasonNextLabel.text = $"{SeasonRules.Name(date.NextSeason)} begins in {GameCalendar.Span(date.SecondsToNextSeason)}";
@@ -83,7 +84,7 @@ namespace KryticalNova.UI
         {
             if (minimapLine == null) return;
             string weather = GameCalendarSource.WeatherNow();
-            string air = GameCalendarSource.TryTemperature(out float t) ? $"  {t:0}°C" : "";
+            string air = GameCalendarSource.TryTemperature(out float t) ? "  " + TemperatureUnits.Format(t) : "";
             minimapLine.text = $"{SeasonWord(date.Season)} {date.DayOfSeason}/{date.SeasonDays}  ·  {date.Hour:00}:{date.Minute:00}{air}"
                                + (weather.Length > 0 ? $"  ·  {weather.ToUpperInvariant()}" : "");
         }
@@ -169,7 +170,7 @@ namespace KryticalNova.UI
 
             // forecast
             var fcBox = Box("calendar-forecast-box");
-            fcBox.Add(Heading("7-DAY FORECAST  ·  GAME DAYS"));
+            fcBox.Add(Heading("7-DAY FORECAST  ·  GAME DAYS  ·  HIGH / LOW"));
             forecastRow = new VisualElement();
             forecastRow.AddToClassList("calendar-forecast");
             fcBox.Add(forecastRow);
@@ -223,6 +224,7 @@ namespace KryticalNova.UI
         {
             builtForDay = c.Day;
             builtAlwaysWinter = c.AlwaysWinter;
+            builtCelsius = TemperatureUnits.Celsius;
             SkyEventSettings sky = GameCalendarSource.Sky;
 
             // tonight
@@ -312,7 +314,7 @@ namespace KryticalNova.UI
             look.AddToClassList("calendar-fc-look");
             var spell = new Label(d.SpellName.Length > 0 ? d.SpellName : SeasonRules.Name(d.Season));
             spell.AddToClassList("calendar-fc-spell");
-            var temp = new Label($"{d.HighC:0}° / {d.LowC:0}°");
+            var temp = new Label($"{TemperatureUnits.Format(d.HighC, false)} / {TemperatureUnits.Format(d.LowC, false)}");
             temp.AddToClassList("calendar-fc-temp");
             var chance = new Label($"R {d.Rain:P0}\nS {d.Snow:P0}\nT {d.Storm:P0}");
             chance.AddToClassList("calendar-fc-chance");
