@@ -91,6 +91,9 @@ namespace KryticalNova.Persistence.Entities
         /// </summary>
         public const string TwoBotVariable = "KN_PLAYHERE_TWOBOT";
 
+        /// <summary>=1: this run's server world runs relevancy as a built server does (the relevancy two-player proof, perf round 3 R3-3b).</summary>
+        public const string RelevancyVariable = "KN_PLAYHERE_RELEVANCY";
+
         /// <summary>Batch only: =1 runs the scripted session on the TEST save service, as the "(test saves)" menu does (cutover, 12 Nov 2026).</summary>
         public const string BatchTestSavesVariable = "KN_PLAYHERE_TESTSAVES";
 
@@ -1185,6 +1188,10 @@ namespace KryticalNova.Persistence.Entities
             PlayerWorldsSetup.TakeCameraWhenBodyMade = Environment.GetEnvironmentVariable("KN_PLAYHERE_SPAWNCAM_FIX") != "0";
             Debug.Log("[KnPlayHere] spawn-camera fix " + (PlayerWorldsSetup.TakeCameraWhenBodyMade ? "on" : "OFF"));
             if (!KnBootstrap.StartPlayHere(Port, join)) { StopPlay(1); return; }
+            // the relevancy proof (perf round 3, R3-3b; KnRelevancyProbe): Play DOTS here sends everyone everything, as the Editor always has;
+            // with this variable its server world runs relevancy as a built server does (the settings asset's numbers, switched on)
+            if (Environment.GetEnvironmentVariable(RelevancyVariable) == "1" && KnBootstrap.ServerWorld != null)
+                Debug.Log("[KnPlayHere] relevancy for this run: " + KryticalNova.Networking.Entities.RelevancySetup.Install(KnBootstrap.ServerWorld, null, true));
             // NGO's host rule: this Editor's own player hosts the game, so it is GM (findings item 9; Play DOTS here only, never a build)
             World playHereClient = KnBootstrap.ClientWorld;
             if (playHereClient != null && playHereClient.IsCreated) playHereClient.EntityManager.CreateEntity(typeof(PlayHereHostTag));

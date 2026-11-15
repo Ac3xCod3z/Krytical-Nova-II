@@ -83,6 +83,7 @@ namespace KryticalNova.Combat.Entities
 
         protected override void OnUpdate()
         {
+            GhostCaches.Prune(m_Seen, EntityManager);   // relevancy: ghosts come and go all session (R3-3 condition 3a)
             if (!SystemAPI.TryGetSingleton(out NetworkTime time) || !time.ServerTick.IsValid) return;
             int rate = SystemAPI.TryGetSingleton(out ClientServerTickRate r) && r.SimulationTickRate > 0 ? (int)r.SimulationTickRate : 30;
             EntityManager em = EntityManager;

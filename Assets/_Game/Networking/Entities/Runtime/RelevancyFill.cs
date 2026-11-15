@@ -26,6 +26,11 @@ namespace KryticalNova.Networking.Entities
         public float LeaveMargin;
         /// <summary>Server ticks between two fills when no ghost or connection appeared or went.</summary>
         public int FillIntervalTicks;
+        /// <summary>
+        /// Bumped by anything that moves a ghost too far for the next timed fill to be soon enough (a teleport: the players where it
+        /// lands must show at once, not up to <see cref="FillIntervalTicks"/> later). A change fills at once, like a ghost appearing.
+        /// </summary>
+        public uint Nudge;
 
         public static RelevancyConfig From(RelevancySettings settings) => new RelevancyConfig
         {
@@ -353,7 +358,7 @@ namespace KryticalNova.Networking.Entities
             var viewers = new NativeList<int>(64, state.WorldUpdateAllocator);
             var connectionOf = new NativeHashMap<int, Entity>(64, state.WorldUpdateAllocator);
             var always = new NativeList<RelevancyAlways>(16, state.WorldUpdateAllocator);
-            uint sum = signature.Value;
+            uint sum = signature.Value + Mark(config.Nudge, 0x4B4E5633u);
             foreach (var (id, list, connection) in SystemAPI.Query<RefRO<NetworkId>, DynamicBuffer<AlwaysRelevantGhost>>().WithAll<NetworkStreamInGame>().WithEntityAccess())
             {
                 int networkId = id.ValueRO.Value;

@@ -354,7 +354,7 @@ default (and makes the page password). Close the server, edit it with Notepad, s
 | `saveService` | empty | The save service this server saves through (`http://127.0.0.1:7801` for your real saves). Empty: the save folder. |
 | `ledgerDays` | 90 | Days the ledger (below) is kept; older lines are dropped once a day. Added to an older file by itself. |
 | `recordMonths` | 6 | Months of `gm.log`, `economy.log`, `access.log` and `flags.log` kept. |
-| `relevancy` | absent (the DOTS server only; section 13b) | `true` or `false`: switches relevancy on or off for one start, no rebuild. Absent means the settings asset's own value, which ships off. |
+| `relevancy` | absent (the DOTS server only; section 13b) | `true` or `false`: switches relevancy on or off for one start, no rebuild. Absent means the settings asset's own value, which ships on from the build after 15 Nov 2026 (players 150 m, monsters 150 m; build 17 and older ship it off). |
 | `leavesPerTick` | 10 (the DOTS server only) | The most players whose leave (save, body, ghost) is handled in one tick; when more drop at once the rest wait their turn, about a third of a second per 100 players, so the server never freezes on a mass disconnect. A player who joins again while waiting is handled at once. `0` = all in one tick (as before 15 Nov 2026). |
 | `mapServers` | Transit Row on 7779, page 8092 | The other maps' servers the app starts beside this one (section 2b): each a `name` (its tab), a `map`, a `port` (its status port is the next one) and a `pagePort`. Added to an older file by itself. |
 
@@ -916,15 +916,16 @@ run `Assets\_Game\Release\Publish~\upload-server-list-once.bat` **through explor
 
 Without relevancy the server sends every game every player and monster on the map. **Relevancy** sends a game only those within
 **150 m** of its own character (players and monsters alike; your own character and a Callout opponent are always sent, and a
-Recall in progress is shown with its seconds left when its owner walks into view). It is built and tested and ships **off**.
+Recall in progress is shown with its seconds left when its owner walks into view; a teleport shows the players where it lands at
+once). It ships **on** from the build after 15 Nov 2026 (perf round 3, R3-3); build 17 and older ship it off.
 
 - **The switch** is one key in `server-settings.json` beside the server: `"relevancy": true` (on), `"relevancy": false` (off),
-  or no key at all (the settings asset's own value, which ships off). It is read **at start**, so restart the server. The log
+  or no key at all (the settings asset's own value, which ships on from the build after 15 Nov 2026; build 17 and older ship it off). It is read **at start**, so restart the server. The log
   says `[Relevancy] on: players 150 m, ...` or `[Relevancy] off (server-settings.json)` / `off (the settings asset)`.
 - **The numbers** (150 m) are in the `RelevancySettings` asset inside the build, not in the file.
-- **Before the owner switches it on:** two things are still open (hand-over note of the relevancy coder): world tests with real
-  ghosts, and an audit that a game forgets what it remembers about a monster or player that went out of range. Then a two-bot run,
-  then the switch for the owner's pop-in check, watching the `relevancy` line of the performance log. Switch it off again by the
+- **What was checked before it went on (15 Nov 2026):** the world tests with real ghosts, the audit that a game forgets what it
+  remembers about a monster or player that went out of range (R3-3a), and a two-bot run on the test lane. Still the owner's: the
+  pop-in check, watching the `relevancy` line of the performance log. Switch it off again by the
   same key if anything looks wrong: off is exactly the world before relevancy.
 
 ### 13c. Publish, promote and roll back

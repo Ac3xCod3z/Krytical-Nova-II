@@ -122,6 +122,8 @@ namespace KryticalNova.EditorTools
                 r.Log($"two: Player2 joined: '{p2Trade?.TraderName}' ({p2.name}); the Tester '{hostTrade?.TraderName}'");
                 // the port waves' Squad proof instead (KN_PLAYHERE_SQUAD=1): Squad ids and the minimap rule, Follow's jump copy, a Squad's kill
                 if (KnSquadProbe.On) { squad = true; yield return KnSquadProbe.Run(r, p2); yield break; }
+                // the relevancy proof instead (KN_PLAYHERE_RELEVANCY=1, perf round 3 R3-3b): walk away past 150 + 16 m and back, a teleport in
+                if (KnRelevancyProbe.On) { squad = true; yield return KnRelevancyProbe.Run(r, p2); yield break; }
                 r.Put(p2, r.Body.transform.position + r.Body.transform.right * 2f);
                 yield return new WaitForSeconds(2f);
 

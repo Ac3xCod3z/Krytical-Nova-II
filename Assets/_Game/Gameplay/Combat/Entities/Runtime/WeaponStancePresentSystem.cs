@@ -21,6 +21,7 @@ namespace KryticalNova.Combat.Entities
 
         protected override void OnUpdate()
         {
+            GhostCaches.Prune(m_Shown, EntityManager);   // relevancy: ghosts come and go all session (R3-3 condition 3a)
             EntityManager em = EntityManager;
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
