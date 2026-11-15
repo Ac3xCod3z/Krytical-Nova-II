@@ -127,6 +127,34 @@ def make(src):
     graph["m_Path"] = GRAPH_PATH
     docs += [cf, s_alb, s_nrm, s_pos, s_out, nrm, s_n, psn, s_p]
 
+    # Fallen leaves really go (owner 15 Nov, T2): on a graph that alpha-clips, whatever fed Alpha goes through KNSeasonSyntyAlpha,
+    # which returns -1 where a tree's leaf has fallen (fed the same unseasoned albedo as the colour node, so every pass that clips,
+    # shadows and depth included, drops the same texels). A graph without alpha clip (Polygon_Triplanar) keeps the brown fallback.
+    alpha = next((o for o in docs if o["m_Type"].endswith("BlockNode") and o.get("m_SerializedDescriptor") == "SurfaceDescription.Alpha"), None)
+    a_feed = [e for e in graph["m_Edges"] if alpha is not None and e["m_InputSlot"]["m_Node"]["m_Id"] == alpha["m_ObjectId"]]
+    if alpha is not None and len(a_feed) == 1:
+        a_feed = a_feed[0]
+        sa_in = slot("Vector1MaterialSlot", 0, "Alpha", False)
+        sa_in["m_Value"], sa_in["m_DefaultValue"] = 1.0, 1.0
+        sa_alb = slot("Vector3MaterialSlot", 1, "Albedo", False)
+        sa_pos = slot("Vector3MaterialSlot", 2, "PositionWS", False)
+        sa_out = slot("Vector1MaterialSlot", 3, "Out", True)
+        sa_out["m_Value"], sa_out["m_DefaultValue"] = 1.0, 1.0
+        acf = node("CustomFunctionNode", "KN Season Leaf Fall (Custom Function)", x, y + 340.0, [sa_in, sa_alb, sa_pos, sa_out],
+                   version=1, m_DismissedVersion=0, m_SourceType=0, m_FunctionName="KNSeasonSyntyAlpha", m_FunctionSource=hlsl_guid,
+                   m_FunctionSourceUsePragmas=True, m_FunctionBody="")
+        acf["synonyms"] = ["code", "HLSL"]
+        graph["m_Edges"].remove(a_feed)
+        graph["m_Edges"] += [
+            edge(a_feed["m_OutputSlot"]["m_Node"]["m_Id"], a_feed["m_OutputSlot"]["m_SlotId"], acf["m_ObjectId"], 0),
+            edge(src_node["m_ObjectId"], feed["m_OutputSlot"]["m_SlotId"], acf["m_ObjectId"], 1),
+            edge(psn["m_ObjectId"], 0, acf["m_ObjectId"], 2),
+            edge(acf["m_ObjectId"], 3, alpha["m_ObjectId"], a_feed["m_InputSlot"]["m_SlotId"]),
+        ]
+        graph["m_Nodes"].append({"m_Id": acf["m_ObjectId"]})
+        docs += [acf, sa_in, sa_alb, sa_pos, sa_out]
+        print(f"  {src}: Alpha fed through KNSeasonSyntyAlpha (fallen leaves clip)")
+
     name = os.path.basename(src)
     dst = os.path.join(OUT_DIR, name)
     with open(dst, "w", encoding="utf-8", newline="\n") as f:

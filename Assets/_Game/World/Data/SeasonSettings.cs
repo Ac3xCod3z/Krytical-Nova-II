@@ -206,6 +206,28 @@ namespace KryticalNova.World
         [Header("Falling leaves (every client)")]
         [Tooltip("Falling and blowing leaves at the height of Autumn, times the windy-day rate, per World Effects tier (Low, Medium, High, Ultra).")]
         public float[] fallLeavesByTier = { 0f, 3f, 6f, 8f };
+
+        [Header("Dark leaves (owner 15 Nov)")]
+        [Tooltip("The least brightness (linear) a turned, budding leaf takes: the SciFi City atlas's leaves are near black, so their gold read as black.")]
+        [Range(0f, 0.5f)] public float turnedLeafMinBrightness = 0.14f;
+        [Tooltip("How sure the leaf test must be (0-1) before a texel may fall; trunks score 0, leaves about 1.")]
+        [Range(0.05f, 0.95f)] public float leafDropSureness = 0.4f;
+
+        [Header("Leaf litter (owner 15 Nov)")]
+        [Tooltip("Leaf litter under the canopies at most, per World Effects tier (Low, Medium, High, Ultra); it builds as the trees thin, lies under the snow and is gone as Spring's grass grows.")]
+        public float[] litterByTier = { 0f, 0.7f, 1f, 1f };
+        [Tooltip("The two dead-leaf tones of the litter (linear).")]
+        public Color litterColorA = new Color(0.42f, 0.2f, 0.06f);
+        public Color litterColorB = new Color(0.6f, 0.4f, 0.1f);
+        [Tooltip("Below this litter the canopy map is not drawn for it (it still is while snow lies).")]
+        [Range(0f, 0.2f)] public float litterMinShown = 0.02f;
+        [Tooltip("Wind speed (m/s, gust included) where a gust begins to sweep the litter, and where it sweeps all it can.")]
+        public Vector2 litterSweepWind = new Vector2(9f, 16f);
+        [Tooltip("Seconds a strong gust takes to sweep the litter, and the calm takes to lay it again.")]
+        [Range(0.2f, 20f)] public float litterSweepSeconds = 2f;
+        [Range(1f, 120f)] public float litterRebuildSeconds = 20f;
+        [Tooltip("Extra blowing leaves while litter is swept (times the windy-day rate per emitter).")]
+        [Range(0f, 4f)] public float litterBlownLeaves = 1.5f;
         [Tooltip("Flower density changes only in steps this big (a terrain rebuilds its detail patches on each change).")]
         [Range(0.05f, 0.5f)] public float flowerStep = 0.1f;
 
@@ -354,6 +376,8 @@ namespace KryticalNova.World
 
         /// <summary>Falling-leaf rate at the height of Autumn on a World Effects tier.</summary>
         public float FallLeaves(WorldEffects tier) => ByTier(fallLeavesByTier, (int)tier, 1f);
+        /// <summary>The most leaf litter on a World Effects tier (0 = none on Low).</summary>
+        public float Litter(WorldEffects tier) => ByTier(litterByTier, (int)tier, 1f);
 
         /// <summary>The leaves' year, for <see cref="SeasonRules.FoliageAt"/>.</summary>
         public FoliageCurve Foliage => new FoliageCurve

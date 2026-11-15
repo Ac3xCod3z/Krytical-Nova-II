@@ -291,6 +291,25 @@ namespace KryticalNova.World
         public static float NightAmount(float timeOfDay01) => (float)Math.Min(1.0, Math.Max(0.0, Math.Cos(timeOfDay01 * 2.0 * Math.PI) * 3.0));
 
         /// <summary>
+        /// Leaf litter under the canopies (owner 15 Nov, T3), 0-1: as much as the canopies have shed (none in Summer, building through
+        /// Autumn, all of it under Winter's snow), going as Spring's fresh green comes in.
+        /// </summary>
+        public static float LitterAmount(in FoliageNow f) => Clamp01((1f - f.Canopy) * (1f - f.Fresh));
+
+        /// <summary>
+        /// How hard the wind sweeps the litter now (owner 15 Nov, T4), 0-1: none below <paramref name="fromToSpeed"/>.x m/s, all above .y.
+        /// <paramref name="windSpeed"/> already holds the current gust; a gust (0-1) adds up to half the range again.
+        /// </summary>
+        public static float LitterSweep(float windSpeed, float gust, (float from, float to) fromToSpeed)
+        {
+            float range = Math.Max(0.01f, fromToSpeed.to - fromToSpeed.from);
+            float t = Clamp01((windSpeed - fromToSpeed.from) / range + Clamp01(gust) * 0.5f * (windSpeed > fromToSpeed.from ? 1f : 0f));
+            return t * t * (3f - 2f * t);
+        }
+
+        static float Clamp01(float v) => v < 0f ? 0f : v > 1f ? 1f : v;
+
+        /// <summary>
         /// The slope rule's two shader numbers (owner, 14 Nov 2026: snow settles on what is flat enough, like real life): the cosine of the
         /// steepest angle snow holds on, and one over the span to the angle it settles fully under. <c>KNSnowSlope</c> uses them.
         /// </summary>

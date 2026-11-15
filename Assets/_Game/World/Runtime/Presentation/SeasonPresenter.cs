@@ -40,6 +40,10 @@ namespace KryticalNova.World
         static readonly int BudId = Shader.PropertyToID("_KN_BudColor");
         static readonly int GoldenId = Shader.PropertyToID("_KN_GoldenGrass");
         static readonly int LeafBlossomId = Shader.PropertyToID("_KN_LeafBlossom");
+        static readonly int LeafLookId = Shader.PropertyToID("_KN_SeasonLeafLook");
+        static readonly int LitterId = Shader.PropertyToID("_KN_SeasonLitter");
+        static readonly int LitterAId = Shader.PropertyToID("_KN_LitterA");
+        static readonly int LitterBId = Shader.PropertyToID("_KN_LitterB");
         const int LeafKinds = 16;   // KNSeason.hlsl: rendering layer bits 8-11
         /// <summary>Rendering layer bit 6: a road or path (tagged at runtime by material name; KNSeason.hlsl draws it trodden).</summary>
         public const uint RoadLayerBit = 1u << 6;
@@ -63,6 +67,13 @@ namespace KryticalNova.World
         /// </summary>
         public static float FallingLeaves { get; private set; }
 
+        /// <summary>Leaf litter swept up by a gust now (0 none), read by <see cref="WindLeavesController"/> as extra blowing leaves.</summary>
+        public static float LitterBlown { get; private set; }
+
+        /// <summary>The litter under the canopies now (0-1) and how much of it a gust has swept (0-1): GM window, logs, tests.</summary>
+        public float Litter { get; private set; }
+        public float LitterSwept { get; private set; }
+
         /// <summary>The heat haze now, 0 none .. 1 a hot afternoon at full strength (times the World Effects tier's; 0 on Low), and the
         /// metres from the camera where it begins and is full. Read by the heat haze screen pass.</summary>
         public static float HeatHaze { get; private set; }
@@ -83,6 +94,7 @@ namespace KryticalNova.World
         Vector3 m_ShelterBuiltAt;
         Vector2 m_ShelterWind;
         float m_NextShelterLook;
+        float m_LitterSwept;
         bool m_ShelterDirty;
         SnowPrintWatcher m_Prints;
         SeasonMotes m_Motes;
@@ -96,6 +108,7 @@ namespace KryticalNova.World
         static void ResetStatics()
         {
             FallingLeaves = 0f;
+            LitterBlown = 0f;
             HeatHaze = 0f;
             s_ShuttingDown = false;
             Application.quitting -= NoteShutdown;
@@ -222,7 +235,26 @@ namespace KryticalNova.World
             SetColour(GoldenId, settings.goldenGrass);
             UpdateMotes(settings, s, t01, night, summer, leaves);
 
-            UpdateShelter(settings, cover);
+            // leaf litter under the canopies and the gusts that sweep it (owner 15 Nov, T3/T4: the existing wind, no new one)
+            WeatherBlend weather = WorldClock.Weather;
+            float windSpeed = weather.wind.magnitude;
+            float sweepTarget = SeasonRules.LitterSweep(windSpeed, weather.gust, (settings.litterSweepWind.x, settings.litterSweepWind.y));
+            float dt = Time.unscaledDeltaTime;
+            m_LitterSwept = sweepTarget > m_LitterSwept
+                ? Mathf.MoveTowards(m_LitterSwept, sweepTarget, dt / Mathf.Max(0.05f, settings.litterSweepSeconds))
+                : Mathf.MoveTowards(m_LitterSwept, sweepTarget, dt / Mathf.Max(0.05f, settings.litterRebuildSeconds));
+            float litter = SeasonRules.LitterAmount(leaves) * settings.Litter(WorldEffectsRuntime.Quality);
+            Litter = litter;
+            LitterSwept = m_LitterSwept;
+            Vector2 windDir = windSpeed > 0.01f ? weather.wind / windSpeed : Vector2.up;
+            Shader.SetGlobalVector(LitterId, new Vector4(litter, m_LitterSwept, windDir.x, windDir.y));
+            SetColour(LitterAId, settings.litterColorA);
+            SetColour(LitterBId, settings.litterColorB);
+            Shader.SetGlobalVector(LeafLookId, new Vector4(settings.turnedLeafMinBrightness, settings.leafDropSureness, 0f, 0f));
+            // the swept litter goes up into the blowing leaves
+            LitterBlown = litter * m_LitterSwept * settings.litterBlownLeaves;
+
+            UpdateShelter(settings, cover, litter);
             UpdateTracks(settings, cover);
             UpdateFlowers(settings, Mathf.Lerp(from.flowerDensity, to.flowerDensity, b));
         }
@@ -290,15 +322,10 @@ namespace KryticalNova.World
         /// per loaded map into canopies, walls and roads (roads by material or mesh name, and tagged with <see cref="RoadLayerBit"/> so
         /// their own surfaces draw trodden); the nearest are drawn into the map when the camera has moved far or the wind has turned.
         /// </summary>
-        void UpdateShelter(SeasonSettings settings, float cover)
+        void UpdateShelter(SeasonSettings settings, float cover, float litter)
         {
-            Camera cam = Camera.main;
-            int texels = settings.ShelterTexels(WorldEffectsRuntime.Quality);
-            if (cover < settings.trackMinCover || texels <= 0 || settings.trackCompute == null || cam == null)
-            {
-                if (m_Shelter.Allocated) m_Shelter.Release();
-                return;
-            }
+            // The map's renderers are sorted whatever the season (owner 15 Nov, T2: this ran only with snow lying, so all Autumn the
+            // town's Synty trees had no kind, drew as buildings and never turned). A cheap scene check every 3 s; a sort per map loaded.
             if (Time.unscaledTime >= m_NextShelterLook)
             {
                 m_NextShelterLook = Time.unscaledTime + 3f;
@@ -309,6 +336,15 @@ namespace KryticalNova.World
                     GatherShelter(settings);
                     m_ShelterDirty = true;
                 }
+            }
+            // the map itself is drawn while snow lies or leaf litter does (the litter lies under the canopies it marks)
+            Camera cam = Camera.main;
+            int texels = settings.ShelterTexels(WorldEffectsRuntime.Quality);
+            bool wanted = cover >= settings.trackMinCover || litter > settings.litterMinShown;
+            if (!wanted || texels <= 0 || settings.trackCompute == null || cam == null)
+            {
+                if (m_Shelter.Allocated) m_Shelter.Release();
+                return;
             }
             Vector3 at = cam.transform.position;
             Vector2 wind = WorldClock.Weather.wind;
@@ -420,7 +456,9 @@ namespace KryticalNova.World
             Shader.SetGlobalVector(FoliageId, new Vector4(0f, 1f, 0f, 0f));
             Shader.SetGlobalVector(SpringId, new Vector4(1f, 0f, 0f, 0f));
             Shader.SetGlobalVector(SummerId, new Vector4(0f, 1f, 0f, 0f));
+            Shader.SetGlobalVector(LitterId, Vector4.zero);
             FallingLeaves = 0f;
+            LitterBlown = 0f;
             HeatHaze = 0f;
             HeatHazeRuntime.Strength = 0f;
             m_Shelter.Release();

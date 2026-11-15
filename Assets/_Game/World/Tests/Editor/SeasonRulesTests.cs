@@ -513,5 +513,25 @@ namespace KryticalNova.Tests
             Assert.IsNotNull(s.motesMaterial, "the motes' soft additive material");
             Assert.Less(s.heatHazeDistance.x, s.heatHazeDistance.y, "the haze begins before it is full");
         }
+
+        [Test]
+        public void Litter_BuildsAsTheCanopyThins_AndGoesWithSpringsGreen()
+        {
+            Assert.AreEqual(0f, SeasonRules.LitterAmount(new FoliageNow { Canopy = 1f }), 1e-5f, "full canopy in Summer: no litter");
+            float half = SeasonRules.LitterAmount(new FoliageNow { Canopy = 0.5f });
+            float bare = SeasonRules.LitterAmount(new FoliageNow { Canopy = 0.08f });
+            Assert.Greater(bare, half, "more litter as the canopy thins");
+            Assert.AreEqual(0.92f, bare, 1e-4f, "Winter: all the shed leaves (under the snow)");
+            Assert.Less(SeasonRules.LitterAmount(new FoliageNow { Canopy = 0.4f, Fresh = 0.9f }), 0.1f, "Spring's green takes it away");
+        }
+
+        [Test]
+        public void LitterSweep_NoneInACalm_AllInAStrongGust()
+        {
+            var range = (9f, 16f);
+            Assert.AreEqual(0f, SeasonRules.LitterSweep(4f, 1f, range), 1e-5f, "a light wind sweeps nothing, gust or not");
+            Assert.AreEqual(1f, SeasonRules.LitterSweep(17f, 0f, range), 1e-5f, "a gale sweeps all");
+            Assert.Greater(SeasonRules.LitterSweep(12f, 0.8f, range), SeasonRules.LitterSweep(12f, 0f, range), "a gust sweeps more");
+        }
     }
 }

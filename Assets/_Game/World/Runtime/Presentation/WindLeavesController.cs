@@ -74,6 +74,13 @@ namespace KryticalNova.World
             float fall = SeasonPresenter.FallingLeaves;
             if (fall > 0.001f)
                 rate = Mathf.Max(rate, maxRatePerEmitter * fall * (0.35f + 0.65f * strength) * (0.6f + w.gust));
+            // owner 15 Nov (T4): a gust sweeping the litter off the ground sends it up into these leaves
+            float blown = SeasonPresenter.LitterBlown;
+            if (blown > 0.001f)
+            {
+                rate += maxRatePerEmitter * blown;
+                fall = Mathf.Max(fall, blown);
+            }
             int cap = Mathf.Min(maxParticlesPerEmitter * (1 + Mathf.CeilToInt(fall)), 400);
             Vector2 dir = speed > 0.01f ? w.wind / speed : Vector2.up;
 

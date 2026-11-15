@@ -40,6 +40,11 @@ float4 _KN_SpringGreen;    // rgb the fresh green (multiply)
 float4 _KN_BudColor;       // rgb pale buds
 float4 _KN_GoldenGrass;    // rgb golden dry-spell grass (multiply)
 float4 _KN_LeafBlossom[16];// per tree kind: rgb blossom colour, a 1 = it blossoms
+// Owner 15 Nov (T2-T4): dark atlases, leaf litter and the gusts that sweep it.
+float4 _KN_SeasonLeafLook; // x the least brightness a turned leaf takes (a dark atlas's leaves still read gold), y how sure the leaf test must be to drop
+float4 _KN_SeasonLitter;   // x litter on the ground under canopies 0-1, y swept by a gust 0-1, zw the wind's direction (world XZ, unit)
+float4 _KN_LitterA;        // rgb one dead-leaf tone of the litter
+float4 _KN_LitterB;        // rgb the other
 
 bool KNSeasonOn() { return _KN_SeasonParams.w > 0.5; }
 
@@ -180,6 +185,15 @@ float3 KNSnowLiftWS(float3 positionWS, float3 normalWS)
 // Leaves and lawn: green well above blue, and red not above green (a brown trunk, bark, dirt or grey stone scores 0).
 half KNSeasonLeafness(half3 albedo) { return saturate((albedo.g - albedo.b) * 6.0h - max(albedo.r - albedo.g, 0.0h) * 8.0h); }
 
+// Trees only (owner 15 Nov, T2): the town's Synty trees use the SciFi City atlas, whose leaf texel is dark in linear (0.036, 0.082,
+// 0.030): the test above scored it 0.31, under the drop line, and nothing fell. Measured by hue, not brightness: how far green stands
+// over both red and blue as a share of green. Those leaves score 1, the brown trunks (red over green) 0, a bright leaf as before.
+half KNSeasonTreeLeafness(half3 albedo)
+{
+    half rel = (albedo.g - max(albedo.r, albedo.b)) / max(albedo.g, 0.02h);
+    return max(KNSeasonLeafness(albedo), saturate(rel * 3.0h));
+}
+
 // The grass season (owner 15 Nov: it never showed), shared by the grass blades and the terrain's lawn: the profile's tint and autumn
 // dullness multiply; the brown after the snow and the summer gold BLEND toward a straw / gold of the grass's own brightness (a multiply
 // only darkened the green); the fresh spring green multiplies again.
@@ -194,8 +208,31 @@ half3 KNSeasonLawn(half3 col)
     return c;
 }
 
+// Leaf litter (owner 15 Nov, T3/T4): under the canopies (the shelter map's r) dead leaves build up as the trees thin through Autumn,
+// lie under the snow in Winter and are gone as Spring's grass grows (_KN_SeasonLitter.x, from the presenter). A gust sweeps it
+// (_KN_SeasonLitter.y): the patches thin and slide downwind while the blowing leaves take them away; it builds again when calm.
+// Flat ground only. Call it before the snow, so the snow lies on top.
+half3 KNSeasonLitter(half3 albedo, float3 normalWS, float3 positionWS, float canopy)
+{
+    half3 result = albedo;
+    float flat = saturate((normalWS.y - 0.6) * 4.0);
+    float cover = canopy * _KN_SeasonLitter.x * (1.0 - 0.85 * _KN_SeasonLitter.y) * flat;
+    [branch] if (cover > 0.002)
+    {
+        float2 drift = _KN_SeasonLitter.zw * (_KN_SeasonLitter.y * 2.5);
+        float n = KNSeasonNoise(positionWS.xz * 1.7 - drift) * 0.6 + KNSeasonNoise(positionWS.xz * 5.3 - drift * 1.6) * 0.4;
+        float lay = smoothstep(1.0 - cover, 1.0 - cover + 0.15, n);
+        float tone = KNSeasonNoise(positionWS.xz * 9.1 + 3.3);
+        half3 leaves = (half3)lerp(_KN_LitterA.rgb, _KN_LitterB.rgb, tone) * (half)(0.8 + 0.4 * KNSeasonHash(floor(positionWS.xz * 6.0)));
+        result = lerp(albedo, leaves, (half)lay);
+    }
+    return result;
+}
+
 void KNSeasonGround(inout half3 albedo, inout half smoothness, float3 normalWS, float3 positionWS)
 {
+    [branch] if (KNSeasonOn() && _KN_SeasonLitter.x > 0.002)
+        albedo = KNSeasonLitter(albedo, normalWS, positionWS, KNSnowShelter(positionWS.xz).r);
     // owner 15 Nov: the lawn is mostly the terrain's grass texture, so its green texels take the grass season too (dirt, paving: none)
     [branch] if (KNSeasonOn())
         albedo = lerp(albedo, KNSeasonLawn(albedo), KNSeasonLeafness(albedo));
@@ -230,6 +267,10 @@ void KNSeasonGround(inout half3 albedo, inout half smoothness, float3 normalWS, 
 half3 KNSeasonSurface(half3 albedo, float3 normalWS, float3 positionWS, uint renderingLayer)
 {
     half3 result = albedo;
+    // leaf litter on the town's flat ground (pavement, planters, lawns of Synty meshes) under its trees; never on No Snow surfaces
+    [branch] if (KNSeasonOn() && _KN_SeasonLitter.x > 0.002 && (renderingLayer & 128u) == 0u)
+        albedo = KNSeasonLitter(albedo, normalWS, positionWS, KNSnowShelter(positionWS.xz).r);
+    result = albedo;
     [branch] if (KNSeasonOn() && _KN_SeasonParams.x > 0.001 && (renderingLayer & 128u) == 0u)
     {
         // rendering layer bit 6 = a road or path (the season presenter tags them by material): trodden
@@ -255,7 +296,8 @@ bool KNSeasonLeafGone(half3 albedo, float3 positionWS, float3 pivotWS, uint rend
     [branch] if (KNSeasonOn() && _KN_SeasonFoliage.y < 0.999)
     {
         float4 peak = _KN_LeafPeak[KNSeasonLeafKind(renderingLayer)];
-        if (peak.a < 0.5 && KNSeasonLeafness(albedo) > 0.4)
+        float sure = _KN_SeasonLeafLook.y > 0.0 ? _KN_SeasonLeafLook.y : 0.4;
+        if (peak.a < 0.5 && KNSeasonTreeLeafness(albedo) > sure)
         {
             float h = KNSeasonHash(pivotWS.xz * 0.173 + 7.1);
             float canopy = saturate(_KN_SeasonFoliage.y + (h - 0.5) * _KN_SeasonFoliage.w * 0.5);
@@ -273,7 +315,7 @@ half3 KNSeasonFoliage(half3 albedo, float3 normalWS, float3 positionWS, float3 p
     half3 result = albedo;
     [branch] if (KNSeasonOn())
     {
-        half leaf = KNSeasonLeafness(albedo);
+        half leaf = KNSeasonTreeLeafness(albedo);
         float h = KNSeasonHash(pivotWS.xz * 0.173 + 7.1);
         float h2 = KNSeasonHash(pivotWS.zx * 0.311 + 3.7);
         float spread = _KN_SeasonMisc.y;
@@ -281,6 +323,8 @@ half3 KNSeasonFoliage(half3 albedo, float3 normalWS, float3 positionWS, float3 p
         float4 leafTint = lerp(_KN_SeasonLeafFrom, _KN_SeasonLeafTo, b);
         half lum = dot(albedo, half3(0.3h, 0.59h, 0.11h));
         result = lerp(albedo, (half3)leafTint.rgb * (lum * 1.8h), leaf * (half)leafTint.a);
+        // a turned leaf is never darker than this (the SciFi atlas's leaves are near black: its gold read as black before)
+        half lit = max(lum, (half)_KN_SeasonLeafLook.x);
 
         uint kind = KNSeasonLeafKind(renderingLayer);
         float4 peak = _KN_LeafPeak[kind];
@@ -293,9 +337,9 @@ half3 KNSeasonFoliage(half3 albedo, float3 normalWS, float3 positionWS, float3 p
             float falling = saturate((1.0 - _KN_SeasonFoliage.y) * 1.5);
             float3 fall = lerp(peak.rgb, late.rgb, saturate(h2 * 0.55 + falling * 0.6));
             fall *= 0.82 + 0.36 * KNSeasonHash(pivotWS.xz * 0.57 + 1.3);
-            result = lerp(result, (half3)fall * (lum * 1.9h), leaf * (half)turn);
+            result = lerp(result, (half3)fall * (lit * 1.9h), leaf * (half)turn);
             // spring: pale buds on the twigs, then blossom on the kinds that flower (clump by clump), before the leaves are out
-            result = lerp(result, (half3)_KN_BudColor.rgb * (lum * 1.8h), leaf * (half)(_KN_SeasonSpring.w * 0.6));
+            result = lerp(result, (half3)_KN_BudColor.rgb * (lit * 1.8h), leaf * (half)(_KN_SeasonSpring.w * 0.6));
             float4 bloom = _KN_LeafBlossom[kind];
             [branch] if (bloom.a > 0.5 && _KN_SeasonSummer.x > 0.001)
             {
