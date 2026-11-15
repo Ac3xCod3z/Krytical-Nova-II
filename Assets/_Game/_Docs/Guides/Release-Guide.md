@@ -384,3 +384,7 @@ good again.
 - 1 Nov 2026: faster publishes (section 1a-4): the server in its own checkout (`KN-worktrees/build-server`, on Server), the
   map search only when the maps changed, the server packed with LZ4 and its backend set and reported truthfully,
   `publish-test.ps1`; the Sentis define pinned (`FORCE_SENTIS_ANALYTICS`) with `define_guard.py`; the Bezi plugin removed.
+- 15 Nov 2026: build 17 (cutover publish, release 20): the news limits are checked by hand before a publish too (three
+  headline bodies over 300 characters and two patch lines over 400 would have stopped the stage step); the server step
+  needs the NGO `certificates` folder (Server Guide 13c: never clean it) and a failed server step can leave ProjectSettings
+  changed, which the resume refuses until the file is put back.

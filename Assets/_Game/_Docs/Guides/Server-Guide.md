@@ -58,8 +58,8 @@ every server step (online phase 1, `Plans/online-phase-01-dedicated-server.md`).
 | 6. The move to the old PC | A zip, an install step and a step-by-step guide | Not yet |
 | 7. Measuring | How many players and Hostiles one PC carries | Not yet |
 | The entity server (test) | The DOTS port as a test version beside the normal server, with its own app, port 7799 and the test database (section 13e) | Built 8 Nov 2026; kept as the **test lane** |
-| **The DOTS server is the real server** | Build 16 on `Builds\Server\Windows` of the DOTS clone: UDP 7777 with DTLS, page 8090, the real save service on 7801, relevancy off (section 13) | **Live since 12 Nov 2026, 22:56**; players get it from release 18 |
-| Promote and roll back | One click per promote (`promote-live.bat <release>`); the live badge is release 18, the rollback is release 13 (the NGO build 14) (section 13c) | Built 12 Nov 2026 |
+| **The DOTS server is the real server** | Build 17 on `Builds\Server\Windows` of the DOTS clone: UDP 7777 with DTLS, page 8090, the real save service on 7801, relevancy off (section 13) | **Live since 12 Nov 2026, 22:56** (build 16); build 17 since 15 Nov 2026, about 01:45; players get it from release 20 |
+| Promote and roll back | One click per promote (`promote-live.bat <release>`); the live badge is release 20 (build 17), the rollback is release 19 (build 16) or release 13 (the NGO build 14) (section 13c) | Built 12 Nov 2026 |
 | Relevancy (who is sent what) | Players and monsters farther than 150 m are not sent to a game; one key in `server-settings.json` switches it on (section 13b) | Built, **shipped off**; the owner switches it on |
 | Soak tooling | Many bots on a test-lane server and a result page (section 13d) | Built; the test lane only; first use still to do |
 
@@ -933,13 +933,23 @@ Recall in progress is shown with its seconds left when its owner walks into view
   Burst, the release server (same build number, no test defines), checks that every map matches its scene, and uploads under
   the **`test`** badge only. Progress is in `Builds\Release-Cutover\publish-status.txt`, the record in `release-log.txt`.
 - **Promote:** `Builds\Release-Cutover\promote-live.bat <release>` through explorer. It moves the Cloud Content Delivery **live**
-  badge to that release; players' Launchers update from it. The **live badge is release 18** (build 16, since 23:04 on 12 Nov).
+  badge to that release; players' Launchers update from it. The **live badge is release 20** (build 17, since about 01:45 on 15 Nov; release 19 is build 16 with its news, release 18 build 16 without).
+- **Roll back one build (players):** `promote-live.bat 19` puts everyone back on build 16.
 - **Roll back (players):** promote **release 13** (the NGO build 14): `promote-live.bat 13`, or by hand
   `ugs ccd badges create 13 live ...`.
 - **Roll back (server):** stop the server, then copy the saved build-15 server folder back over
   `Builds\Server\Windows` (the copy is in `Documents\KryticalNova-Backups\cutover-2026-11-12\build15-server`, 1,819 files).
   For the NGO game itself, start the NGO server from the main project's `Builds\Server` and promote release 13. Test an NGO
   rollback on a copy of the saves first: the NGO game has not read a build 16 save yet.
+- **Certificates:** the server step copies `server.crt` and `server.key` from the NGO server's `certificates` folder (the main
+  project's `Builds\Server\Windows\certificates`) beside the release server. **Never clean a `certificates` folder**: on 14 Nov
+  that NGO folder was emptied, and build 17's server step failed after a good build ("the NGO server has no certificates
+  folder"). The same two files are beside the release server (`Builds\Server\Windows\certificates` of the DOTS clone) and in
+  `Documents\KryticalNova-Backups\cutover-2026-11-12\certificates`; copy them back, then resume with
+  `publish-cutover-from-server.bat`.
+- **A server step that failed** can leave Server rows in `ProjectSettings/ProjectSettings.asset` (scripting backend, IL2CPP
+  configuration, stripping, an empty preloaded asset); the resume then refuses ("ProjectSettings has changes a build would
+  bake in"). Put the file back with `git checkout -- ProjectSettings/ProjectSettings.asset` and resume.
 - **Never** promote, push to `main` or run the real server from a session's terminal: the owner (or the Master on the owner's
   word) clicks. Each production deploy needs the owner's yes.
 
@@ -1181,3 +1191,6 @@ Things learned the hard way:
   `relevancy` key (shipped off), publish, promote (live badge release 18) and rollback (release 13, the NGO build 14); the
   soak tooling on the test lane; the entity test server moved to 13e. Sections 1 to 12 stay as the NGO-era story, with a
   note at the top.
+- 15 Nov 2026: **build 17 live** (release17): release 20 promoted, live badge 20, rollback 19 (section 13c); the certificates rule
+  (never clean a `certificates` folder; where the two files are kept) and resuming after a failed server step that left
+  ProjectSettings changed.
