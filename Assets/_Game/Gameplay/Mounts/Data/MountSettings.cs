@@ -207,6 +207,12 @@ namespace KryticalNova.Mounts
         [Tooltip("TANK: its max HP times this while in the stance, x = at 0 % growth, y = at 100 % (x1 -> x2).")]
         public Vector2 companionTankHpMultiplierByGrowth = new Vector2(1f, 2f);
 
+        [Header("Companion XP: kills the companion helped with (phase 5; owner, 14 Nov 2026)")]
+        [Tooltip("A Hostile kill gives the selected mount this many times its kill EXP when the companion helped with it (struck it, taunted it, or HEALER pulsed a heal on you while you fought it). It multiplies with the Rider and Convoy Boosters (1.5 x 2 = 3).")]
+        [Min(1f)] public float companionHelpedKillXpMultiplier = 1.5f;
+        [Tooltip("The help counts only if it came this many seconds or less before the kill.")]
+        [Min(0f)] public float companionHelpSeconds = 10f;
+
         /// <summary>The fight numbers as the pure rules take them (phases 3-4), with each stance number's 0 % and 100 % growth values (lerp with AtGrowth).</summary>
         public CompanionFightTuning CompanionFight => new CompanionFightTuning
         {

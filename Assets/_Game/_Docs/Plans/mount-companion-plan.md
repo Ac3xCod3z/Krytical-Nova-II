@@ -238,8 +238,8 @@ stance row (FREE lit; the other three greyed in phases 1-2). The detail goes in 
   companion entries so it can chase and strike the companion body. Strikes on it are rolled by the existing
   `HostileStrikeBridge` rules.
 - **Phase 5, XP and items.** A kill with the companion out in a combat stance and having helped (hit, healed or taunted)
-  gives the selected mount 1.5x the kill XP (PROPOSED; riding stays 1x), like the pets' rule of XP from kills. The
-  Double Mount XP item: reuse the Rider Booster (9503) rather than add a second item (the owner picks then).
+  gives the selected mount 1.5x the kill XP (riding stays 1x), like the pets' rule of XP from kills. The
+  Double Mount XP item: reuse the Rider Booster (9503) rather than add a second item. Built 14 Nov 2026, see "Phase 5 as built".
 
 ## 6. Performance budget
 
@@ -457,3 +457,20 @@ Phase 3, 13-14 Nov 2026 (b18-coder-20, branch `b18/19-companion-phase3`): the DP
   (`CompanionTankToughnessTests` prints both). This replaces the earlier flat 0.7 buff.
 - The ride stats (the two main stats up to their max, the riding speeds) do not change with any stance (`CompanionStanceGrowthTests`).
 - The Mount window's stance tooltips show the numbers of the selected mount's growth (`CompanionFightRules.StanceTip`).
+
+## Phase 5 as built (14 Nov 2026, helped kills)
+
+The owner's picks (14 Nov 2026): a flat 1.5x; "helped" = the companion struck, taunted or (HEALER) pulsed a heal on its owner
+during that fight within the 10 s before the kill, so all three combat stances earn it; it multiplies with the Rider Booster
+(1.5 x 2 = 3x); no new item, the Rider Booster stays the only mount-EXP item.
+
+- `CompanionServerSystem` (server) notes each help on the owner's `PlayerMounts.ServerNoteCompanionHelp(body, acting)`: DPS just
+  before each strike lands (so the killing blow counts), TANK for every Hostile a taunt reaches, HEALER after each pulse for the
+  Hostile its owner fights. The note is keyed by the Hostile's `HostileNet` and stamped with the server's `Time.time`.
+- `CompanionHelpLog` (Mounts runtime, pure) keeps the last 16 helps in fixed arrays (no garbage); FREE notes nothing
+  (`CompanionHelpRules.Counts`), and a combat stance acts as FREE in PvP, so PvP never earns it.
+- `PlayerMounts.OnHostileKill`, the only mount kill-EXP path, takes the note (used up) and pays
+  `MountRules.KillXpUnits(tuning, boosterBonus, companionMultiplier)`: the kill EXP times 1.5 first, then the boosters.
+- Numbers: `MountSettings` "Companion XP" (`companionHelpedKillXpMultiplier` 1.5, `companionHelpSeconds` 10).
+- Tests: `CompanionHelpedKillTests` (each stance 1.5x, FREE none, none after 10 s, 3x with the Rider, another Hostile none,
+  the log keeps the newest, the asset's numbers). Server decides; client presentation is untouched.
