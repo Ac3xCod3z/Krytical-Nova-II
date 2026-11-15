@@ -163,7 +163,8 @@ namespace KryticalNova.GameFeel
             }
             foreach (SkinnedMeshRenderer body in Found)
             {
-                int at = skins.FindIndex(s => s.body == body);
+                int at = -1;   // a loop, not FindIndex with a lambda: no closure per body per smear (perf chunk 15 part 3)
+                for (int k = 0; k < skins.Count; k++) if (skins[k].body == body) { at = k; break; }
                 Skin skin = at >= 0 ? skins[at] : Make(body);
                 skin.skin.sharedMesh = body.sharedMesh;
                 skin.skin.bones = body.bones;
