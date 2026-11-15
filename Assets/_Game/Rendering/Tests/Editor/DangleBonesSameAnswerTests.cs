@@ -177,5 +177,28 @@ namespace KryticalNova.Rendering.Tests
             Assert.LessOrEqual(worst, MaxRadians, $"{where}: {worst:E2} rad from the old code ({worstMetres:E2} m); per 10 frames: " + string.Join(" ", System.Array.ConvertAll(bins, x => x.ToString("E1"))));
             TestContext.WriteLine($"worst {worst:E2} rad and {worstMetres:E2} m over {Frames} frames, {jobbed.BoneCount} bones, swing up to {moved:F1} deg");
         }
+
+        // The old code against itself, the second character 10 micrometres to the side: how much float rounding alone
+        // grows in each phase of the same move (the floor any rewrite of the swing is measured against).
+        [TestCase(0, 1f, TestName = "NoiseFloor_FoxTail")]
+        [TestCase(1, 1.12f, TestName = "NoiseFloor_CapeScaled")]
+        [TestCase(2, 0.93f, TestName = "NoiseFloor_ForkedHair")]
+        public void OldCodeAgainstItselfNudged(int kind, float scale)
+        {
+            var a = Build(kind, scale);
+            var b = Build(kind, scale);
+            b.root.transform.position += new Vector3(1e-5f, 0f, 0f);
+            var la = new DangleBonesLegacy(a.root); la.Rebind(new[] { a.smr });
+            var lb = new DangleBonesLegacy(b.root); lb.Rebind(new[] { b.smr });
+            var bins = new float[Frames / 10];
+            for (int f = 0; f < Frames; f++)
+            {
+                Move(a, f); Move(b, f);
+                la.Step(Dt); lb.Step(Dt);
+                for (int i = 0; i < a.dyn.Count; i++)
+                    bins[f / 10] = Mathf.Max(bins[f / 10], Radians(a.dyn[i].rotation, b.dyn[i].rotation));
+            }
+            Assert.Fail("noise floor per 10 frames: " + string.Join(" ", System.Array.ConvertAll(bins, x => x.ToString("E1"))));
+        }
     }
 }
