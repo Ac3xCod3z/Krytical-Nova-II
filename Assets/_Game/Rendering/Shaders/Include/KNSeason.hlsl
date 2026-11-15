@@ -46,6 +46,7 @@ float4 _KN_SeasonLitter;   // x litter on the ground under canopies 0-1, y swept
 float4 _KN_LitterA;        // rgb one dead-leaf tone of the litter
 float4 _KN_LitterB;        // rgb the other
 float4 _KN_RoadSlush;      // owner 15 Nov: x how fast trodden roads pack over (cover gain), y how much the paving pattern shows (grey only), z wet worn darkness, w how broken a road's edge is
+float4 _KN_LawnGreen;      // rgb the Spring / Summer lawn green (times the grass's brightness), a how far now (0 outside Spring and Summer)
 float4 _KN_RoadWet;        // rgb the wet, worn lanes (multiplies the slush), a how far the slush colour goes from the snow (0 = fresh snow, 1 = full slush)
 
 bool KNSeasonOn() { return _KN_SeasonParams.w > 0.5; }
@@ -208,6 +209,8 @@ half3 KNSeasonLawn(half3 col)
     c = lerp(c, lum * (half3)_KN_ThawGrass.rgb * 1.7h, (half)(_KN_SeasonSpring.y * 0.85));
     c *= (half3)lerp(float3(1.0, 1.0, 1.0), _KN_SpringGreen.rgb, _KN_SeasonSpring.z);
     c = lerp(c, lum * (half3)_KN_GoldenGrass.rgb * 1.5h, (half)(_KN_SeasonSummer.z * 0.8));
+    // owner 15 Nov: a clear green in Spring and Summer (the art's olive lawn and the summer tint read straw all year)
+    c = lerp(c, max(lum, 0.06h) * (half3)_KN_LawnGreen.rgb * 2.2h, (half)_KN_LawnGreen.a);
     return c;
 }
 
@@ -271,13 +274,14 @@ half3 KNSeasonLitter(half3 albedo, float3 normalWS, float3 positionWS, float can
     return result;
 }
 
-void KNSeasonGround(inout half3 albedo, inout half smoothness, float3 normalWS, float3 positionWS)
+// lawn 0-1 = how much of this ground is lawn (the terrain's lawn layers), or < 0 to tell it by colour as before
+void KNSeasonGroundLawn(inout half3 albedo, inout half smoothness, float3 normalWS, float3 positionWS, half lawn)
 {
     [branch] if (KNSeasonOn() && _KN_SeasonLitter.x > 0.002)
         albedo = KNSeasonLitter(albedo, normalWS, positionWS, KNSnowShelter(positionWS.xz).r);
     // owner 15 Nov: the lawn is mostly the terrain's grass texture, so its green texels take the grass season too (dirt, paving: none)
     [branch] if (KNSeasonOn())
-        albedo = lerp(albedo, KNSeasonLawn(albedo), KNSeasonLeafness(albedo));
+        albedo = lerp(albedo, KNSeasonLawn(albedo), lawn >= 0.0h ? lawn : KNSeasonLeafness(albedo));
     [branch] if (KNSeasonOn() && _KN_SeasonParams.x > 0.001)
     {
         float4 shelter = KNSnowShelter(positionWS.xz);
@@ -304,6 +308,11 @@ void KNSeasonGround(inout half3 albedo, inout half smoothness, float3 normalWS, 
         albedo = lerp(albedo, packed, (half)(snow * (1.0 - through)));
         smoothness = lerp(smoothness, lerp(0.15h, 0.5h, (half)shelter.b), (half)snow);
     }
+}
+
+void KNSeasonGround(inout half3 albedo, inout half smoothness, float3 normalWS, float3 positionWS)
+{
+    KNSeasonGroundLawn(albedo, smoothness, normalWS, positionWS, -1.0h);
 }
 
 // Buildings and props (Comic Toon Lit): roofs, ledges and planter tops whiten first; walls never. The layer's thin edge shades a

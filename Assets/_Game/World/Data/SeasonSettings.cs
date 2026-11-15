@@ -142,6 +142,13 @@ namespace KryticalNova.World
         [Range(0f, 1f)] public float roadSlushShare = 0.5f;
         [Tooltip("How broken a road's edge is against the full snow (fresh-snow islands toward its edges; 0.02 sharp .. 0.5 very ragged).")]
         [Range(0.02f, 0.5f)] public float roadEdgeBreakup = 0.3f;
+
+        [Header("Lawn (owner 15 Nov: it never went green)")]
+        [Tooltip("A terrain layer whose name holds one of these words is lawn and takes the grass season in full (its texture's colour does not matter).")]
+        public List<string> lawnLayerWords = new List<string> { "Grass", "Lawn", "Meadow", "Moss", "Turf" };
+        [Tooltip("The green the lawn and the blades go in Spring and Summer (times the grass's own brightness), and how far at most.")]
+        public Color lawnGreen = new Color(0.3f, 0.62f, 0.16f);
+        [Range(0f, 1f)] public float lawnGreenStrength = 0.65f;
         [Tooltip("A road or pavement is flat: a renderer taller than this (metres) is never one, whatever its name (lamps, barriers, machines).")]
         public float roadMaxHeight = 1f;
 
@@ -389,6 +396,15 @@ namespace KryticalNova.World
         public float FallLeaves(WorldEffects tier) => ByTier(fallLeavesByTier, (int)tier, 1f);
         /// <summary>The most leaf litter on a World Effects tier (0 = none on Low).</summary>
         public float Litter(WorldEffects tier) => ByTier(litterByTier, (int)tier, 1f);
+
+        /// <summary>True when a terrain layer's name holds a lawn word (whole word, any case).</summary>
+        public bool IsLawnLayer(string layerName)
+        {
+            if (lawnLayerWords == null || string.IsNullOrEmpty(layerName)) return false;
+            foreach (string w in lawnLayerWords)
+                if (!string.IsNullOrWhiteSpace(w) && NameHasWord(layerName, w.Trim())) return true;
+            return false;
+        }
 
         /// <summary>The leaves' year, for <see cref="SeasonRules.FoliageAt"/>.</summary>
         public FoliageCurve Foliage => new FoliageCurve

@@ -8,6 +8,10 @@
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/GBufferOutput.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DBuffer.hlsl"
+
+// KN: which of the first four layers are lawn (1 each), and 1 once the season presenter has looked at this terrain (its splat property block)
+float4 _KN_LawnLayers;
+float _KN_LawnLayersSet;
 #include "Assets/_Game/Rendering/Shaders/Include/KNSeason.hlsl"
 
 struct Attributes
@@ -467,7 +471,9 @@ void SplatmapFragment(
     InitializeInputData(IN, normalTS, inputData);
     SetupTerrainDebugTextureData(inputData, IN.uvMainAndLM.xy);
 #if !defined(TERRAIN_SPLAT_ADDPASS)
-    KNSeasonGround(albedo, smoothness, inputData.normalWS, IN.positionWS);   // KN: season snow and footprints
+    // KN: season snow and footprints; the lawn layers (set by the season presenter per terrain) take the grass season in full
+    half knLawn = _KN_LawnLayersSet > 0.5 ? (half)saturate(dot(splatControl, (half4)_KN_LawnLayers)) : -1.0h;
+    KNSeasonGroundLawn(albedo, smoothness, inputData.normalWS, IN.positionWS, knLawn);
 #endif
 
 #if defined(_DBUFFER)

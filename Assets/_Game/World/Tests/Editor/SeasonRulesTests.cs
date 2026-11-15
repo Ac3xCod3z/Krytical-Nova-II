@@ -533,5 +533,15 @@ namespace KryticalNova.Tests
             Assert.AreEqual(1f, SeasonRules.LitterSweep(17f, 0f, range), 1e-5f, "a gale sweeps all");
             Assert.Greater(SeasonRules.LitterSweep(12f, 0.8f, range), SeasonRules.LitterSweep(12f, 0f, range), "a gust sweeps more");
         }
+
+        [Test]
+        public void LawnGreen_FullInSummer_NoneInAutumnDullOrAfterSnow_GrowsBackInSpring()
+        {
+            Assert.AreEqual(1f, SeasonRules.LawnGreen(new FoliageNow { Grow = 1f }, 0f), 1e-5f, "Summer: green");
+            Assert.AreEqual(0f, SeasonRules.LawnGreen(new FoliageNow { Grow = 1f, Dull = 1f }, 0f), 1e-5f, "late Autumn: dull, not green");
+            Assert.AreEqual(0f, SeasonRules.LawnGreen(new FoliageNow { Grow = 0f, Brown = 1f }, 0f), 1e-5f, "Winter: brown after the snow");
+            Assert.AreEqual(0.5f, SeasonRules.LawnGreen(new FoliageNow { Grow = 0.5f }, 0f), 1e-5f, "Spring: as it grows back");
+            Assert.AreEqual(0f, SeasonRules.LawnGreen(new FoliageNow { Grow = 1f }, 1f), 1e-5f, "a dry spell: golden instead");
+        }
     }
 }

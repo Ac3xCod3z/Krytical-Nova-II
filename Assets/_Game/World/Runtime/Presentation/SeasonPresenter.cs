@@ -46,6 +46,9 @@ namespace KryticalNova.World
         static readonly int LitterBId = Shader.PropertyToID("_KN_LitterB");
         static readonly int RoadSlushId = Shader.PropertyToID("_KN_RoadSlush");
         static readonly int RoadWetId = Shader.PropertyToID("_KN_RoadWet");
+        static readonly int LawnGreenId = Shader.PropertyToID("_KN_LawnGreen");
+        static readonly int LawnLayersId = Shader.PropertyToID("_KN_LawnLayers");
+        static readonly int LawnLayersSetId = Shader.PropertyToID("_KN_LawnLayersSet");
         const int LeafKinds = 16;   // KNSeason.hlsl: rendering layer bits 8-11
         /// <summary>Rendering layer bit 6: a road or path (tagged at runtime by material name; KNSeason.hlsl draws it trodden).</summary>
         public const uint RoadLayerBit = 1u << 6;
@@ -104,6 +107,9 @@ namespace KryticalNova.World
         readonly List<Terrain> m_Terrains = new List<Terrain>();
         readonly List<Terrain> m_GoneTerrains = new List<Terrain>();
         float m_FlowerApplied = -1f, m_NextTerrainLook;
+        float m_NextLawnLook;
+        readonly HashSet<Terrain> m_LawnTerrains = new HashSet<Terrain>();
+        MaterialPropertyBlock m_LawnBlock;
         bool m_PublishedOff;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -113,6 +119,7 @@ namespace KryticalNova.World
             LitterBlown = 0f;
             HeatHaze = 0f;
             s_ShuttingDown = false;
+            s_Play++;
             Application.quitting -= NoteShutdown;
             Application.quitting += NoteShutdown;
         }
@@ -121,6 +128,26 @@ namespace KryticalNova.World
         // render settings may already be gone); only a presenter destroyed while the game runs publishes "no season".
         static bool s_ShuttingDown;
         static void NoteShutdown() => s_ShuttingDown = true;
+
+        // Owner 15 Nov (bug A of the watched run): this presenter outlives Play in the Editor (no domain reload) while the clock
+        // restarts at 0, so its "look again at" times from the last Play kept the tree kinds unstamped for minutes. A new Play (or
+        // a clock that went backwards) starts its looks again.
+        static int s_Play;
+        int m_Play = -1;
+
+        void RestartLooksIfNewPlay()
+        {
+            float now = Time.unscaledTime;
+            bool clockBack = m_NextShelterLook > now + 3.5f || m_NextTerrainLook > now + 2.5f || m_NextLawnLook > now + 2.5f;
+            if (m_Play == s_Play && !clockBack) return;
+            m_Play = s_Play;
+            m_NextShelterLook = 0f;
+            m_NextTerrainLook = 0f;
+            m_NextLawnLook = 0f;
+            m_ShelterSceneKey = int.MinValue;
+            m_LitterSwept = 0f;
+            m_LawnTerrains.Clear();
+        }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void Bootstrap()
@@ -161,6 +188,7 @@ namespace KryticalNova.World
             }
             m_PublishedOff = false;
             Publishing = true;
+            RestartLooksIfNewPlay();
             SeasonState s = SeasonView.Client;
             double now = NetClock.Now;
             float b = s.BlendAt(now);
@@ -261,6 +289,12 @@ namespace KryticalNova.World
             UpdateShelter(settings, cover, litter);
             UpdateTracks(settings, cover);
             UpdateFlowers(settings, Mathf.Lerp(from.flowerDensity, to.flowerDensity, b));
+            UpdateLawnLayers(settings);
+            // the lawn and the blades go green in Spring and Summer (owner 15 Nov: the lawn never went green): as the grass grows
+            // back, not while it is dull in Autumn, browned after the snow or golden in a dry spell
+            float green = SeasonRules.LawnGreen(leaves, golden);
+            Color lawnGreen = settings.lawnGreen;
+            Shader.SetGlobalVector(LawnGreenId, new Vector4(lawnGreen.r, lawnGreen.g, lawnGreen.b, green * settings.lawnGreenStrength));
         }
 
         /// <summary>Dust and pollen by day in Summer and late Spring (as the grass is grown back), fireflies from sunset toward
@@ -428,6 +462,35 @@ namespace KryticalNova.World
             }
         }
 
+        /// <summary>
+        /// Which of each terrain's first four layers are lawn (owner 15 Nov: the lawn's grass texture is olive, red about as high as
+        /// green, so the colour test gave it a fifth of the season): a layer whose name holds one of <see cref="SeasonSettings.lawnLayerWords"/>.
+        /// Set once per terrain on its splat property block (_KN_LawnLayers, w = 1 known); looked for every 2 s, nothing per frame.
+        /// </summary>
+        void UpdateLawnLayers(SeasonSettings settings)
+        {
+            if (Time.unscaledTime < m_NextLawnLook) return;
+            m_NextLawnLook = Time.unscaledTime + 2f;
+            Terrain.GetActiveTerrains(m_Terrains);
+            for (int i = 0; i < m_Terrains.Count; i++)
+            {
+                Terrain t = m_Terrains[i];
+                if (t == null || t.terrainData == null || m_LawnTerrains.Contains(t)) continue;
+                m_LawnTerrains.Add(t);
+                TerrainLayer[] layers = t.terrainData.terrainLayers;
+                Vector4 mask = Vector4.zero;
+                bool any = false;
+                for (int l = 0; l < 4 && layers != null && l < layers.Length; l++)
+                    if (layers[l] != null && settings.IsLawnLayer(layers[l].name)) { mask[l] = 1f; any = true; }
+                if (!any) continue;   // no lawn-named layer: this terrain keeps telling its lawn by colour
+                m_LawnBlock ??= new MaterialPropertyBlock();
+                t.GetSplatMaterialPropertyBlock(m_LawnBlock);
+                m_LawnBlock.SetVector(LawnLayersId, mask);
+                m_LawnBlock.SetFloat(LawnLayersSetId, 1f);
+                t.SetSplatMaterialPropertyBlock(m_LawnBlock);
+            }
+        }
+
         void UpdateFlowers(SeasonSettings settings, float density)
         {
             float step = Mathf.Max(0.05f, settings.flowerStep);
@@ -461,6 +524,7 @@ namespace KryticalNova.World
             Shader.SetGlobalVector(SpringId, new Vector4(1f, 0f, 0f, 0f));
             Shader.SetGlobalVector(SummerId, new Vector4(0f, 1f, 0f, 0f));
             Shader.SetGlobalVector(LitterId, Vector4.zero);
+            Shader.SetGlobalVector(LawnGreenId, Vector4.zero);
             FallingLeaves = 0f;
             LitterBlown = 0f;
             HeatHaze = 0f;
