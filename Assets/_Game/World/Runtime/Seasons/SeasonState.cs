@@ -45,6 +45,12 @@ namespace KryticalNova.World
         /// <summary>The snow cover at <paramref name="now"/>, 0-1.</summary>
         public float SnowAt(double now) => SeasonRules.SnowCover(SnowCover, SnowRate, SnowAnchor, now, SnowFloor, SnowCeiling);
 
+        /// <summary>
+        /// Whether the sky may show its aurora now (owner, via the Master 14 Nov 2026: the aurora comes in Winter, on the sky's own
+        /// schedule): while Winter shows more than the season it blends from, and all year on an always-winter map.
+        /// </summary>
+        public bool AuroraAllowedAt(double now) => AlwaysWinter || DominantAt(now) == Season.Winter;
+
         /// <summary>How far into its season the world is at <paramref name="now"/>, 0-1 (a GM's fixed share, else the calendar's).</summary>
         public float ProgressAt(double now)
         {

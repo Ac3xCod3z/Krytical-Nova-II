@@ -221,6 +221,19 @@ namespace KryticalNova.Tests
         }
 
         [Test]
+        public void Aurora_OnlyInWinter_OrOnAnAlwaysWinterMap()
+        {
+            var s = new SeasonState { FromSeason = (byte)Season.Autumn, ToSeason = (byte)Season.Winter, BlendStart = 100, BlendSeconds = 100 };
+            Assert.IsFalse(s.AuroraAllowedAt(120), "Autumn still shows more");
+            Assert.IsTrue(s.AuroraAllowedAt(160), "Winter from halfway through the blend");
+            Assert.IsTrue(s.AuroraAllowedAt(1000));
+            s.FromSeason = (byte)Season.Winter; s.ToSeason = (byte)Season.Spring;
+            Assert.IsFalse(s.AuroraAllowedAt(1000), "not in Spring");
+            s.Flags = SeasonState.FlagAlwaysWinter;
+            Assert.IsTrue(s.AuroraAllowedAt(1000), "an always-winter map has it all year");
+        }
+
+        [Test]
         public void Foliage_FollowsTheSeasonBlend_AndAGmProgress()
         {
             FoliageCurve c = Curve;
