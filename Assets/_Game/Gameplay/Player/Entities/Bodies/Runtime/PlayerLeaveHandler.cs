@@ -22,6 +22,8 @@ namespace KryticalNova.Player.Entities.Bodies
     public sealed class PlayerLeaveHandler : IKnConnectionClosedHandler
     {
         readonly World m_World;
+        EntityQuery m_Ghosts;
+        bool m_HasGhostQuery;
 
         /// <summary>Leave the ghost (ownerless, marked leaving) to <see cref="PlayerLeavingCleanupSystem"/> on the next update (the async-save variant of later phases).</summary>
         public bool DeferGhostDestroy;
@@ -90,9 +92,14 @@ namespace KryticalNova.Player.Entities.Bodies
         Entity FindGhost(PlayerKey key)
         {
             if (m_World == null || !m_World.IsCreated || !key.IsValid) return Entity.Null;
-            using var query = m_World.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<PlayerGhostTag>(), ComponentType.ReadOnly<PlayerGhostKey>());
-            var ghosts = query.ToEntityArray(Allocator.Temp);
-            var keys = query.ToComponentDataArray<PlayerGhostKey>(Allocator.Temp);
+            // made once and kept (perf round 3, R3-7: one query built and freed per leaving player); it dies with the world
+            if (!m_HasGhostQuery)
+            {
+                m_Ghosts = m_World.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<PlayerGhostTag>(), ComponentType.ReadOnly<PlayerGhostKey>());
+                m_HasGhostQuery = true;
+            }
+            var ghosts = m_Ghosts.ToEntityArray(Allocator.Temp);
+            var keys = m_Ghosts.ToComponentDataArray<PlayerGhostKey>(Allocator.Temp);
             Entity found = Entity.Null;
             for (int i = 0; i < ghosts.Length; i++)
                 if (keys[i].Key == key.Value) { found = ghosts[i]; break; }

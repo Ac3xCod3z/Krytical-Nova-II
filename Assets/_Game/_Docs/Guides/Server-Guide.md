@@ -355,6 +355,7 @@ default (and makes the page password). Close the server, edit it with Notepad, s
 | `ledgerDays` | 90 | Days the ledger (below) is kept; older lines are dropped once a day. Added to an older file by itself. |
 | `recordMonths` | 6 | Months of `gm.log`, `economy.log`, `access.log` and `flags.log` kept. |
 | `relevancy` | absent (the DOTS server only; section 13b) | `true` or `false`: switches relevancy on or off for one start, no rebuild. Absent means the settings asset's own value, which ships off. |
+| `leavesPerTick` | 10 (the DOTS server only) | The most players whose leave (save, body, ghost) is handled in one tick; when more drop at once the rest wait their turn, about a third of a second per 100 players, so the server never freezes on a mass disconnect. A player who joins again while waiting is handled at once. `0` = all in one tick (as before 15 Nov 2026). |
 | `mapServers` | Transit Row on 7779, page 8092 | The other maps' servers the app starts beside this one (section 2b): each a `name` (its tab), a `map`, a `port` (its status port is the next one) and a `pagePort`. Added to an older file by itself. |
 
 A mistake is forgiven: a port that is not a port becomes 7777, a player limit of 0 becomes 1, and a file Notepad
