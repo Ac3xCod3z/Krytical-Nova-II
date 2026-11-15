@@ -148,7 +148,10 @@ namespace KryticalNova.Player.Entities
     /// water by the zone's water map, and ashore. While the walk's progress is on the leg the body runs at the leg's own speed (no
     /// acceleration, no slowing at the end) and turns at its own rate. Planned by the server with the walk (all players see it: the wake);
     /// integers only. Whether the body is on the water now is <see cref="MoveState.Water"/>.
+    /// Sent to the owner only (perf round 3, R3-2): only the owner's predicted run reads the leg; other players' bodies stand on the
+    /// water by <see cref="MoveState.Water"/> (PlayerPresentationFollowSystem), which every client still gets.
     /// </summary>
+    [GhostComponent(OwnerSendType = SendToOwnerType.SendToOwner)]
     public struct WaterPlan : IComponentData
     {
         /// <summary>The walk's order number this leg belongs to (0 = none).</summary>
