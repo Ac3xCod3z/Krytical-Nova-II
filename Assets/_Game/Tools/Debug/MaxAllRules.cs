@@ -42,21 +42,27 @@ namespace KryticalNova.DevTools
         public static bool IsConfirm(string word) => string.Equals((word ?? string.Empty).Trim(), ConfirmWord, StringComparison.OrdinalIgnoreCase);
 
         /// <summary>
-        /// The caller's own Rare and Epic gear: every ladder level of every slot, of their faction, body and lineage (outfit pieces
-        /// by <paramref name="pack"/>) and, for weapons, of their class line. One piece per slot, rarity and level, the first in
-        /// the dictionary's order (as gm.gear picks). Common and Uncommon, and pets, are never in it.
+        /// The caller's own Rare and Epic gear, the TOP set of each ladder bracket only (owner, 15 Nov 2026: "just give you the top level
+        /// in its bracket ie lvl 112 epic set, or rare lvl 110 or rare lvl 75, not each and every set"). A bracket is a band of
+        /// GearStatTable (Rare I 45-75, Rare II 85-110, Epic 100-112), read from the piece's line by <paramref name="bandOf"/>; per slot
+        /// and bracket it gives the one highest tier the character can wear at <paramref name="level"/> (so at level 112: Rare 75,
+        /// Rare 110 and Epic 112; at 110 the Epic is 109; below 45 nothing). Pieces of the caller's faction, body and lineage (outfit
+        /// pieces by <paramref name="pack"/>) and, for weapons, of their class line; on a tie the first in the dictionary's order (as
+        /// gm.gear picks). Common and Uncommon, and pets, are never in it. A line with no band (<paramref name="bandOf"/> null or below 0)
+        /// counts its rarity as one bracket.
         /// </summary>
-        public static List<GearDictionary.Entry> PickGear(IReadOnlyList<GearDictionary.Entry> entries, FactionId faction, BodyFit body,
-            string pack, WeaponClassId weaponClass)
+        public static List<GearDictionary.Entry> PickGear(IReadOnlyList<GearDictionary.Entry> entries, Func<ushort, int> bandOf, int level,
+            FactionId faction, BodyFit body, string pack, WeaponClassId weaponClass)
         {
             var picked = new List<GearDictionary.Entry>();
             if (entries == null) return picked;
-            var seen = new HashSet<(EquipSlot, ItemRarity, byte)>();
+            var best = new Dictionary<(EquipSlot, ItemRarity, int), int>(); // slot and bracket -> index in picked
             foreach (GearDictionary.Entry entry in entries)
             {
                 if (!entry.IsValid || (entry.rarity != ItemRarity.Rare && entry.rarity != ItemRarity.Epic)) continue;
                 if (entry.slot == EquipSlot.None || entry.slot == EquipSlot.Pet) continue;
-                // the same matching as GearDictionary.TryFindItem (gm.gear), every level instead of one
+                if (entry.itemLevel > level) continue; // only what the character can wear
+                // the same matching as GearDictionary.TryFindItem (gm.gear)
                 if (faction != FactionId.None && !FactionRules.Includes(entry.factions, faction)) continue;
                 if (body != BodyFit.None && (entry.bodies & body) == 0) continue;
                 if (entry.slot == EquipSlot.Weapon)
@@ -64,8 +70,10 @@ namespace KryticalNova.DevTools
                     if (weaponClass != WeaponClassId.None && entry.weaponClass != weaponClass) continue;
                 }
                 else if (!string.IsNullOrEmpty(pack) && !string.IsNullOrEmpty(entry.pack) && entry.pack != pack) continue;
-                if (!seen.Add((entry.slot, entry.rarity, entry.itemLevel))) continue;
-                picked.Add(entry);
+                int band = bandOf != null ? bandOf(entry.lineId) : -1;
+                var key = (entry.slot, entry.rarity, band < 0 ? -1 : band);
+                if (!best.TryGetValue(key, out int index)) { best[key] = picked.Count; picked.Add(entry); }
+                else if (entry.itemLevel > picked[index].itemLevel) picked[index] = entry;
             }
             return picked;
         }

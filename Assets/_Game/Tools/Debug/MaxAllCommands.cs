@@ -32,7 +32,7 @@ namespace KryticalNova.DevTools
     {
         [Command("gm.maxall", "Max everything on the targeted character, on top of what it has: max level and skills, Ascension and " +
                               "Standings, every mount and pet at 100 %, 3 days of Autopilot and Autoward, max Serums, its own faction's and lineage's " +
-                              "Rare gear (clean) and Epic gear (Temper cap, Fusion 12), forge materials x999, every Pass x50, every crafting item, " +
+                              "top gear set of each bracket it can wear (at 112: Rare 75 and Rare 110 clean, Epic 112 at the Temper cap and Fusion 12), forge materials x999, every Pass x50, every crafting item, " +
                               "2,000,000 Creds, 50 Chroma and 50 Prism Cells. GM only: gm.maxall confirm.")]
         internal static string MaxAll(string confirm = "")
         {
@@ -189,7 +189,10 @@ namespace KryticalNova.DevTools
             return $"all {kinds} kinds taken to the cap ({serums.Settings.Cap}).";
         }
 
-        /// <summary>The caller's faction and lineage Rare and Epic gear of every ladder level and slot, in its class line.</summary>
+        /// <summary>
+        /// The caller's faction and lineage gear, in its class line: per slot, the top set of each ladder bracket (Rare I, Rare II, Epic)
+        /// the character can wear at its level, which gm.maxall has just maxed (<see cref="MaxAllRules.PickGear"/>).
+        /// </summary>
         private static string Gear(GameObject player, List<string> notFit)
         {
             if (!player.TryGetComponent(out PlayerInventory inventory) || inventory.Gear == null || inventory.Catalog == null) return "that player has no Pack.";
@@ -199,21 +202,24 @@ namespace KryticalNova.DevTools
             BodyFit body = wearer != null ? wearer.Body : BodyFit.None;
             string pack = wearer != null ? wearer.GearPack : null;
             WeaponClassId cls = source != null ? source.ActiveClass : wearer != null ? wearer.Discipline : WeaponClassId.None;
+            int level = player.TryGetComponent(out PlayerCharacterProgression prog) ? prog.CurrentLevel : int.MaxValue;
+            GearDictionary gear = inventory.Gear;
+            int BandOf(ushort lineId) => gear.TryGetLine(lineId, out GearDictionary.Line l) ? l.band : -1;
             int temperCap = player.TryGetComponent(out PlayerGearWork work) && work.Settings != null ? work.Settings.temper.hardCap : GearItemState.MaxTemper;
 
             var pieces = new List<ItemStack>();
             int rare = 0, epic = 0;
-            foreach (GearDictionary.Entry entry in MaxAllRules.PickGear(inventory.Gear.Entries, faction, body, pack, cls))
+            foreach (GearDictionary.Entry entry in MaxAllRules.PickGear(gear.Entries, BandOf, level, faction, body, pack, cls))
             {
                 if (inventory.Catalog.Get(entry.itemId) == null) continue;
                 pieces.Add(new ItemStack(entry.itemId, 1, MaxAllRules.GearState(entry.rarity, temperCap)));
                 if (entry.rarity == ItemRarity.Epic) epic++; else rare++;
             }
-            if (pieces.Count == 0) return "no Rare or Epic gear fits this character. Re-bake the gear ladder.";
+            if (pieces.Count == 0) return $"no Rare or Epic gear fits this character at level {level}. Re-bake the gear ladder.";
             Placed placed = Place(player, inventory, pieces, "gear", notFit);
             s_Gear += placed.Total;
             string line = cls != WeaponClassId.None ? $", weapons of the {WeaponClasses.DisplayName(cls)} line" : string.Empty;
-            return $"{rare} Rare (clean) and {epic} Epic (Temper +{temperCap}%, Fusion {GearItemState.MaxFusion}) pieces of {faction} {pack}{line}: {placed.Where}.";
+            return $"top set of each bracket at level {level}: {rare} Rare (clean) and {epic} Epic (Temper +{temperCap}%, Fusion {GearItemState.MaxFusion}) pieces of {faction} {pack}{line}: {placed.Where}.";
         }
 
         private static string PassItems(GameObject player)
