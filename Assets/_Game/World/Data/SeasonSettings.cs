@@ -174,6 +174,17 @@ namespace KryticalNova.World
         public int[] firefliesByTier = { 0, 30, 70, 110 };
         [Tooltip("Fireflies come out at or above this temperature (deg C) from sunset to the middle of the night.")]
         [Range(0f, 30f)] public float fireflyTemperature = 14f;
+        [Tooltip("The motes' colour (alpha = how strong), their size in metres, how long one lives, and the box around the camera they fill.")]
+        public Color motesColor = new Color(1f, 0.93f, 0.72f, 0.5f);
+        public float motesSize = 0.05f;
+        public float motesLifetime = 7f;
+        public Vector3 motesBox = new Vector3(26f, 7f, 26f);
+        [Tooltip("The fireflies' glow colour, size in metres, life, the box they fill, and how far below the camera its middle sits (in the grass).")]
+        public Color fireflyColor = new Color(0.78f, 1f, 0.35f, 1f);
+        public float fireflySize = 0.11f;
+        public float fireflyLifetime = 5f;
+        public Vector3 fireflyBox = new Vector3(22f, 1.8f, 22f);
+        public float fireflyHeight = -2.2f;
 
         [Header("Leaves through the year (owner 14 Nov: fall turns every kind its own colour, bare before Winter)")]
         [Tooltip("Share of Autumn by which the leaves have fully turned.")]

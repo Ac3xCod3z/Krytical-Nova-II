@@ -83,6 +83,7 @@ namespace KryticalNova.World
         float m_NextShelterLook;
         bool m_ShelterDirty;
         SnowPrintWatcher m_Prints;
+        SeasonMotes m_Motes;
         readonly Dictionary<Terrain, float> m_FlowerBase = new Dictionary<Terrain, float>();
         readonly List<Terrain> m_Terrains = new List<Terrain>();
         readonly List<Terrain> m_GoneTerrains = new List<Terrain>();
@@ -90,7 +91,19 @@ namespace KryticalNova.World
         bool m_PublishedOff;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics() { FallingLeaves = 0f; HeatHaze = 0f; }
+        static void ResetStatics()
+        {
+            FallingLeaves = 0f;
+            HeatHaze = 0f;
+            s_ShuttingDown = false;
+            Application.quitting -= NoteShutdown;
+            Application.quitting += NoteShutdown;
+        }
+
+        // The sky's quit-crash rule (PR 282): nothing is put back while the game or Play is ending (the scene's terrains and the
+        // render settings may already be gone); only a presenter destroyed while the game runs publishes "no season".
+        static bool s_ShuttingDown;
+        static void NoteShutdown() => s_ShuttingDown = true;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void Bootstrap()
@@ -110,12 +123,15 @@ namespace KryticalNova.World
             // the foot watcher lives beside it (made here: Awake runs inside AddComponent, before the bootstrap could add it)
             m_Prints = GetComponent<SnowPrintWatcher>();
             if (m_Prints == null) m_Prints = gameObject.AddComponent<SnowPrintWatcher>();
+            m_Motes = GetComponent<SeasonMotes>();
+            if (m_Motes == null) m_Motes = gameObject.AddComponent<SeasonMotes>();
         }
 
         void OnDestroy()
         {
             if (Instance == this) Instance = null;
-            PublishOff();
+            HeatHazeRuntime.Strength = 0f;
+            if (!s_ShuttingDown) PublishOff();
         }
 
         void LateUpdate()
@@ -148,7 +164,9 @@ namespace KryticalNova.World
             }
 
             float t01 = EnvironmentPresenter.PresentedTimeOfDay01;   // already warped: night by the season's sun
-            float night = Mathf.Clamp01(-Mathf.Cos(t01 * 2f * Mathf.PI) * 3f);   // 0 from sunrise to sunset, 1 soon after dusk
+            // 0.5 is noon, 0.25 sunrise, 0.75 sunset: 0 from sunrise to sunset, 1 soon after dusk (it was the wrong way up, so the
+            // night frost peaked at noon and the haze only came at night)
+            float night = Mathf.Clamp01(Mathf.Cos(t01 * 2f * Mathf.PI) * 3f);
             float frost = Mathf.Lerp(from.frost, to.frost, b) + Mathf.Lerp(from.nightFrost, to.nightFrost, b) * night;
             float cover = s.SnowAt(now);
             SnowCover = cover;
@@ -193,16 +211,38 @@ namespace KryticalNova.World
             float heat = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(settings.heatHazeFromTo.x, settings.heatHazeFromTo.y, s.Temperature)) * (1f - night);
             HeatHaze = heat * settings.HeatHaze(WorldEffectsRuntime.Quality);
             HeatHazeDistance = settings.heatHazeDistance;
+            HeatHazeRuntime.Strength = HeatHaze;
+            HeatHazeRuntime.Distance = HeatHazeDistance;
             Shader.SetGlobalVector(SpringId, new Vector4(leaves.Grow, leaves.Brown, leaves.Fresh, leaves.Bud));
             Shader.SetGlobalVector(SummerId, new Vector4(leaves.Blossom, settings.winterGrassHeight, golden, heat));
             SetColour(ThawGrassId, settings.thawGrass);
             SetColour(SpringGreenId, settings.springGreen);
             SetColour(BudId, settings.budColor);
             SetColour(GoldenId, settings.goldenGrass);
+            UpdateMotes(settings, s, t01, night, summer, leaves);
 
             UpdateShelter(settings, cover);
             UpdateTracks(settings, cover);
             UpdateFlowers(settings, Mathf.Lerp(from.flowerDensity, to.flowerDensity, b));
+        }
+
+        /// <summary>Dust and pollen by day in Summer and late Spring (as the grass is grown back), fireflies from sunset toward
+        /// midnight on warm evenings; neither in rain or snow, nor on an always-winter map.</summary>
+        void UpdateMotes(SeasonSettings settings, SeasonState s, float t01, float night, float summer, FoliageNow leaves)
+        {
+            if (m_Motes == null) return;
+            Camera cam = Camera.main;
+            float spring = s.AlwaysWinter ? 0f
+                : (s.From == Season.Spring ? 1f - Blend : 0f) + (s.To == Season.Spring ? Blend : 0f);
+            float warmSeason = Mathf.Clamp01(summer + spring * leaves.Grow);
+            WeatherBlend w = WorldClock.Weather;
+            float dry = 1f - Mathf.Clamp01((w.rain + w.snow) * 2f);
+            float motes = warmSeason * (1f - night) * dry;
+            // the evening half (0.5 noon .. 1 midnight), fading out just before midnight; warm enough
+            float evening = t01 > 0.5f ? Mathf.InverseLerp(1f, 0.94f, t01) : 0f;
+            float warm = Mathf.InverseLerp(settings.fireflyTemperature - 2f, settings.fireflyTemperature, s.Temperature);
+            float flies = warmSeason * night * evening * warm * dry;
+            m_Motes.Step(settings, cam != null ? cam.transform.position : (Vector3?)null, motes, flies);
         }
 
         void UpdateTracks(SeasonSettings settings, float cover)
@@ -375,10 +415,12 @@ namespace KryticalNova.World
             Shader.SetGlobalVector(SummerId, new Vector4(0f, 1f, 0f, 0f));
             FallingLeaves = 0f;
             HeatHaze = 0f;
+            HeatHazeRuntime.Strength = 0f;
             m_Shelter.Release();
             m_ShelterSceneKey = int.MinValue;
             SnowPrints.Wanted = false;
             if (m_Prints != null) m_Prints.Watch(null, null);
+            if (m_Motes != null) m_Motes.Step(null, null, 0f, 0f);
             SeasonView.DaylightShare = 0.5f;
             SnowCover = 0f;
             Blend = 1f;
