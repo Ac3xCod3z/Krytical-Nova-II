@@ -197,6 +197,42 @@ namespace KryticalNova.World
             return len;
         }
 
+        // ------------------------------------------------------------------ the nights' events (Evaluate and the game calendar use these)
+
+        /// <summary>Nights in one moon cycle as the sky counts them (the settings' own month, else the day cycle's moon).</summary>
+        public static int MonthOf(SkyEventSettings s, float lunarCycleDays) =>
+            Mathf.Max(1, Mathf.RoundToInt(s.monthDays > 0f ? s.monthDays : Mathf.Max(1f, lunarCycleDays)));
+
+        /// <summary>A nebula night: a few nights in each moon cycle.</summary>
+        public static bool IsNebulaNight(long night, int month, SkyEventSettings s)
+        {
+            int cycleNight = (int)Mod(night, Math.Max(1, month));
+            return cycleNight >= s.nebulaFirstNight && cycleNight < s.nebulaFirstNight + s.nebulaNights;
+        }
+
+        /// <summary>The Emberfall's night: one night a game year.</summary>
+        public static bool IsShowerNight(long night, SkyEventSettings s) => Mod(night, s.gameYearDays) == s.showerDayOfYear;
+
+        /// <summary>A night The Pale Wanderer shows; <paramref name="visitNight"/> is the night of its visit (0 = the first).</summary>
+        public static bool IsCometNight(int seed, long night, SkyEventSettings s, out int visitNight)
+        {
+            long cycle = (long)Math.Floor(night / (double)s.cometPeriodDays);
+            int into = (int)Mod(night, s.cometPeriodDays);
+            int start = (int)(Hash01(seed ^ SaltComet, cycle) * Math.Max(1, s.cometPeriodDays - s.cometNights));
+            visitNight = into - start;
+            return into >= start && into < start + s.cometNights;
+        }
+
+        /// <summary>The day of a total eclipse (at <see cref="SkyEventSettings.eclipsePeak01"/> of that day).</summary>
+        public static bool IsEclipseDay(long day, SkyEventSettings s)
+        {
+            long dayYear = (long)Math.Floor(day / (double)s.gameYearDays);
+            return Mod(dayYear, s.eclipseEveryYears) == 0 && Mod(day, s.gameYearDays) == s.eclipseDayOfYear;
+        }
+
+        /// <summary>A night the aurora may show (only where the season allows it: winter or an always-winter map).</summary>
+        public static bool IsAuroraNight(int seed, long night, SkyEventSettings s) => Hash01(seed ^ SaltAurora, night) < s.auroraNightShare;
+
         /// <summary>Everything in the sky now.</summary>
         public static SkyNow Evaluate(in SkyClock c, SkyEventSettings s)
         {
@@ -214,13 +250,10 @@ namespace KryticalNova.World
             float np = NightProgress(c.Time01);
             bool isNight = np > 0f && np < 1f;
             float nightFade = isNight ? Fade(np, 0.08f) : 0f;
-            long year = (long)Math.Floor(night / (double)s.gameYearDays);
-            int dayOfYear = (int)Mod(night, s.gameYearDays);
-            int month = Mathf.Max(1, Mathf.RoundToInt(s.monthDays > 0f ? s.monthDays : Mathf.Max(1f, c.MonthDays)));
+            int month = MonthOf(s, c.MonthDays);
 
             // ---- nebula: its own path, a few nights in each moon cycle
-            int cycleNight = (int)Mod(night, month);
-            bool nebulaNight = cycleNight >= s.nebulaFirstNight && cycleNight < s.nebulaFirstNight + s.nebulaNights;
+            bool nebulaNight = IsNebulaNight(night, month, s);
             float nebulaProgress = np;
             if (Forced(c, SkyEventKind.Nebula, s, out float nAge)) { nebulaNight = true; nebulaProgress = 0.5f; }
             if (nebulaNight && (isNight || c.Forced == SkyEventKind.Nebula))
@@ -240,7 +273,7 @@ namespace KryticalNova.World
                 RareStreaks(ref now, c.Seed ^ SaltStreaks, -(1L << 40), c.ForcedAge - 1.0, true, s);
 
             // ---- The Emberfall: once a game year, many long glowing streaks falling from one point (owner's references, 14 Nov)
-            now.ShowerNight = dayOfYear == s.showerDayOfYear;
+            now.ShowerNight = IsShowerNight(night, s);
             bool showerForced = Forced(c, SkyEventKind.Shower, s, out float shAge);
             if ((now.ShowerNight && isNight) || showerForced)
             {
@@ -263,15 +296,12 @@ namespace KryticalNova.World
             }
 
             // ---- The Pale Wanderer: every few real months, several nights
-            long cycle = (long)Math.Floor(night / (double)s.cometPeriodDays);
-            int into = (int)Mod(night, s.cometPeriodDays);
-            int start = (int)(Hash01(c.Seed ^ SaltComet, cycle) * Math.Max(1, s.cometPeriodDays - s.cometNights));
-            bool cometNight = into >= start && into < start + s.cometNights;
+            bool cometNight = IsCometNight(c.Seed, night, s, out int cometVisitNight);
             if (Forced(c, SkyEventKind.Comet, s, out float cAge)) { now.Comet = Fade(cAge, 0.1f); now.CometHead = Dir(s.cometHead.x, s.cometHead.y); }
             else if (cometNight && isNight)
             {
                 now.Comet = nightFade;
-                now.CometHead = Dir(s.cometHead.x + (into - start) * 2.5f, s.cometHead.y);
+                now.CometHead = Dir(s.cometHead.x + cometVisitNight * 2.5f, s.cometHead.y);
             }
 
             // ---- second sun: its own path, up only for part of the orbit cycle
@@ -291,9 +321,7 @@ namespace KryticalNova.World
             now.Sun2 = sunUp * Sun2DayGate(c.Time01, s);
 
             // ---- total eclipse: every few game years, around midday
-            long dayYear = (long)Math.Floor(c.Day / (double)s.gameYearDays);
-            int dayInYear = (int)Mod(c.Day, s.gameYearDays);
-            now.EclipseDay = Mod(dayYear, s.eclipseEveryYears) == 0 && dayInYear == s.eclipseDayOfYear;
+            now.EclipseDay = IsEclipseDay(c.Day, s);
             // the moon is a real body (owner 14 Nov, part 3): it rises opposite the sun, travels one way along a great circle through the
             // sun, crosses it at the peak and sets opposite it again; the cover is the two discs' real overlap, nothing fades
             float sr = c.SunDiscRadians > 0f ? c.SunDiscRadians : DefaultSunDisc;
@@ -314,7 +342,7 @@ namespace KryticalNova.World
 
             // ---- aurora: some winter nights (the presenter applies the season / zone gate)
             if (Forced(c, SkyEventKind.Aurora, s, out float aAge)) now.Aurora = Fade(aAge, 0.1f);
-            else if (isNight && Hash01(c.Seed ^ SaltAurora, night) < s.auroraNightShare) now.Aurora = nightFade;
+            else if (isNight && IsAuroraNight(c.Seed, night, s)) now.Aurora = nightFade;
 
             // ---- daytime migrations
             if (Forced(c, SkyEventKind.Migration, s, out float mAge)) { now.Migration = mAge; now.MigrationHeading = 360f * Hash01(c.Seed ^ SaltMigration, -7); }

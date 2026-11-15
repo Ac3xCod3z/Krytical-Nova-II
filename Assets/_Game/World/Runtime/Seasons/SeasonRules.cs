@@ -217,6 +217,21 @@ namespace KryticalNova.World
         /// <summary>A value in steps (the server re-anchors the snow and resends only when the temperature's step changes).</summary>
         public static float Quantize(float value, float step) => step <= 0f ? value : (float)Math.Round(value / step) * step;
 
+        /// <summary>
+        /// The weather seed for one map: the settings' seed mixed with the scene's name (each map its own weather). The server rolls the
+        /// spells with it and the game calendar's forecast reads the same days with it.
+        /// </summary>
+        public static int WeatherSeed(int settingsSeed, string sceneName)
+        {
+            int h = settingsSeed;
+            if (!string.IsNullOrEmpty(sceneName))
+                foreach (char c in sceneName) h = unchecked(h * 31 + char.ToLowerInvariant(c));
+            return h;
+        }
+
+        /// <summary>The temperature wobble's seed (the day's own few degrees up or down) from the weather seed.</summary>
+        public static int WobbleSeed(int weatherSeed) => weatherSeed ^ 0x2F6B;
+
         /// <summary>A deterministic 0-1 from a seed and a number (SplitMix64): the same on every machine and in tests.</summary>
         public static float Hash01(int seed, long n)
         {

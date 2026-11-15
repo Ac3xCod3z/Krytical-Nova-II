@@ -259,10 +259,7 @@ namespace KryticalNova.World.Entities
         int WeatherSeed(SeasonSettings s)
         {
             var (_, scene) = ZoneSource != null ? ZoneSource() : DefaultZone();
-            int h = s.weatherSeed;
-            if (!string.IsNullOrEmpty(scene))
-                foreach (char c in scene) h = unchecked(h * 31 + char.ToLowerInvariant(c));
-            return h;
+            return SeasonRules.WeatherSeed(s.weatherSeed, scene);
         }
 
         /// <summary>The air temperature now (deg C, in the settings' steps), or a GM's.</summary>
@@ -274,7 +271,7 @@ namespace KryticalNova.World.Entities
             TemperatureCurve b = to != null ? to.Temperature : a;
             TemperatureCurve curve = TemperatureCurve.Lerp(a, b, m_State.BlendAt(now));
             float spell = m_Spell != null ? m_Spell.temperatureOffset : 0f;
-            float wobble = SeasonRules.Hash01(WeatherSeed(s) ^ 0x2F6B, day);
+            float wobble = SeasonRules.Hash01(SeasonRules.WobbleSeed(WeatherSeed(s)), day);
             float t = SeasonRules.TemperatureAt(curve, clock01, share, s.warmestClock, spell, weatherOffset, wobble, s.dayWobble);
             return SeasonRules.Quantize(t, s.temperatureStep);
         }

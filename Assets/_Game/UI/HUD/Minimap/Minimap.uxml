@@ -11,5 +11,7 @@
         <ui:Label name="minimap-north" text="N" class="minimap-north" picking-mode="Ignore" />
         <ui:Button name="minimap-zoom-in" text="+" class="minimap-zoom minimap-zoom-in" />
         <ui:Button name="minimap-zoom-out" text="−" class="minimap-zoom minimap-zoom-out" />
+        <!-- Today's date, time and weather (MapCalendarView, once a second). -->
+        <ui:Label name="minimap-date" text="" class="minimap-date" picking-mode="Ignore" />
     </ui:VisualElement>
 </ui:UXML>

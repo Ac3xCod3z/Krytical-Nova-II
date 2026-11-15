@@ -892,7 +892,7 @@ namespace KryticalNova.EditorTools.GM
                 string blend = s.From == s.To ? "" : $", blending {s.From} -> {s.To} {Mathf.RoundToInt(s.BlendAt(now) * 100f)} %";
                 string hold = s.GmHold ? " (GM hold)" : "";
                 string zone = s.AlwaysWinter ? ", always-winter map" : "";
-                return $"Now {s.DominantAt(now)}{hold}{blend}; calendar {(KryticalNova.World.Season)s.CalendarSeason} day {day} of {days}; snow {s.SnowAt(now):0.00}; air {s.Temperature:0.#} C{zone}";
+                return $"Now {s.DominantAt(now)}{hold}{blend}; calendar {(KryticalNova.World.Season)s.CalendarSeason} day {day} of {days}; snow {s.SnowAt(now):0.00}; air {s.Temperature:0.#} C / {KryticalNova.Core.TemperatureUnits.ToFahrenheit(s.Temperature):0} F{zone}";
             }
         }
 
