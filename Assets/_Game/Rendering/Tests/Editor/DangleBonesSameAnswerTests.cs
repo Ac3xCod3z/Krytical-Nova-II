@@ -132,6 +132,14 @@ namespace KryticalNova.Rendering.Tests
             b.thighR.localRotation = Quaternion.Euler(-35f * Mathf.Sin(frame * 0.3f), 0f, 180f);
         }
 
+        // Quaternion.Angle reads anything under about 0.16 degrees as 0: the angle of the turn between the two, exactly.
+        private static float Radians(Quaternion a, Quaternion b)
+        {
+            var r = Quaternion.Inverse(a) * b;
+            double v = System.Math.Sqrt((double)r.x * r.x + (double)r.y * r.y + (double)r.z * r.z);
+            return (float)(2.0 * System.Math.Atan2(v, System.Math.Abs((double)r.w)));
+        }
+
         [TestCase(0, 1f, TestName = "SameAnswer_FoxTail")]
         [TestCase(1, 1.12f, TestName = "SameAnswer_CapeScaled")]
         [TestCase(2, 0.93f, TestName = "SameAnswer_ForkedHair")]
@@ -146,7 +154,8 @@ namespace KryticalNova.Rendering.Tests
             Assert.AreEqual(legacy.BoneCount, jobbed.BoneCount);
             Assert.Greater(jobbed.BoneCount, 2);
 
-            float worst = 0f, moved = 0f;
+            float worst = 0f, worstMetres = 0f, moved = 0f;
+            string where = "";
             var start = new Quaternion[newBody.dyn.Count];
             for (int i = 0; i < start.Length; i++) start[i] = newBody.dyn[i].localRotation;
             for (int f = 0; f < Frames; f++)
@@ -155,15 +164,15 @@ namespace KryticalNova.Rendering.Tests
                 legacy.Step(Dt); jobbed.Step(Dt);
                 for (int i = 0; i < newBody.dyn.Count; i++)
                 {
-                    float rad = Quaternion.Angle(oldBody.dyn[i].rotation, newBody.dyn[i].rotation) * Mathf.Deg2Rad;
-                    worst = Mathf.Max(worst, rad);
-                    Assert.LessOrEqual(rad, MaxRadians, $"{newBody.dyn[i].name} frame {f}: {rad:E2} rad from the old code");
-                    Assert.Less(Vector3.Distance(oldBody.dyn[i].position, newBody.dyn[i].position), 1e-4f, $"{newBody.dyn[i].name} frame {f}");
+                    float rad = Radians(oldBody.dyn[i].rotation, newBody.dyn[i].rotation);
+                    if (rad > worst) { worst = rad; where = $"{newBody.dyn[i].name} frame {f}"; }
+                    worstMetres = Mathf.Max(worstMetres, Vector3.Distance(oldBody.dyn[i].position, newBody.dyn[i].position));
                     moved = Mathf.Max(moved, Quaternion.Angle(start[i], newBody.dyn[i].localRotation));
                 }
             }
             Assert.Greater(moved, 1f, "the test moved the pieces (degrees)");
-            TestContext.WriteLine($"worst {worst:E2} rad over {Frames} frames, {jobbed.BoneCount} bones");
+            Assert.LessOrEqual(worst, MaxRadians, $"{where}: {worst:E2} rad from the old code ({worstMetres:E2} m)");
+            TestContext.WriteLine($"worst {worst:E2} rad and {worstMetres:E2} m over {Frames} frames, {jobbed.BoneCount} bones, swing up to {moved:F1} deg");
         }
     }
 }

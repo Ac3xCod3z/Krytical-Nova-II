@@ -324,14 +324,14 @@ namespace KryticalNova.Rendering
                     if (pg < 0) { pos[g] = target[g]; prev[g] = target[g]; continue; }
                     float4 pr = prof[g]; // stiffness, damping, gravity, follow
                     float3 carry = moved * pr.w;
-                    float3 velocity = (pos[g] - prev[g]) * (math.pow(1f - pr.y, frames) * velScale);
+                    float3 velocity = (pos[g] - prev[g]) * (Pow(1f - pr.y, frames) * velScale);
                     prev[g] = pos[g] + carry;
                     float3 p = pos[g] + velocity + carry + gravity * pr.z;
 
                     float3 restVec = target[g] - target[pg];
                     float length = math.length(restVec);
                     float3 goal = pos[pg] + restVec;
-                    p += (goal - p) * (1f - math.pow(1f - pr.x, frames));
+                    p += (goal - p) * (1f - Pow(1f - pr.x, frames));
 
                     p = Keep(pos[pg], p, length);
                     float prad = profRadius[g] * scale;
@@ -421,6 +421,9 @@ namespace KryticalNova.Rendering
                 float w = math.sqrt((1f + d) * 2f);
                 return math.normalize(new quaternion(cr.x / w, cr.y / w, cr.z / w, w * 0.5f));
             }
+
+            /// <summary>As Mathf.Pow, which works in double.</summary>
+            private static float Pow(float x, float y) => (float)math.pow((double)x, (double)y);
 
             /// <summary>As Vector3.normalized: zero below 1e-5 m.</summary>
             private static float3 Normalized(float3 v)
