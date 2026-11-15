@@ -57,6 +57,8 @@ namespace KryticalNova.Persistence.Entities
             public float NextSkillAt;
             public float NextAutopilotAsk;
             public SkillDefinitionSO AskedSkill;
+            /// <summary>The last pass's state and plan, for the diagnostic line.</summary>
+            public string LastLook = string.Empty;
         }
 
         readonly Dictionary<Entity, Bot> m_Bots = new Dictionary<Entity, Bot>();
@@ -217,6 +219,9 @@ namespace KryticalNova.Persistence.Entities
                 MayAskAutopilot = time >= bot.NextAutopilotAsk,
             };
             KnBotBrainRules.Plan plan = KnBotBrainRules.Decide(view, m_Hostiles, m_Attackers);
+            MoveState move = em.HasComponent<MoveState>(ghost) ? em.GetComponentData<MoveState>(ghost) : default;
+            bot.LastLook = $"alive {alive}, autopilot {autopilotOn}, target {combat.TargetGhostId} (valid {targetValid}), walking {walking} " +
+                           $"(flags {move.Flags}, order {move.OrderSeq}, server {move.ServerSeq}, refused {move.RefusedSeq}), plan {plan.Act} {plan.TargetGhostId}";
             switch (plan.Act)
             {
                 case KnBotBrainRules.Act.Attack:
@@ -328,9 +333,26 @@ namespace KryticalNova.Persistence.Entities
                     if (b.WalkedMm >= 10_000) moved++;
                     if (b.Strikes > 0) fought++;
                 }
+                int alive = 0;
+                foreach (var h in m_Hostiles) if (h.Alive) alive++;
                 Debug.Log(string.Format(CultureInfo.InvariantCulture,
-                    "[KnBotBrain] t={0:0}s bots={1} hunting={2} walked10m={3} fought={4} walked={5:0} m attacks={6} skillAsks={7} teleports={8}",
-                    time, m_Bots.Count, enrolled, moved, fought, WalkedMm / 1000.0, Attacks, SkillAsks, Teleports));
+                    "[KnBotBrain] t={0:0}s bots={1} hunting={2} walked10m={3} fought={4} walked={5:0} m attacks={6} skillAsks={7} teleports={8} hostiles={9} alive={10}",
+                    time, m_Bots.Count, enrolled, moved, fought, WalkedMm / 1000.0, Attacks, SkillAsks, Teleports, m_Hostiles.Count, alive));
+                int shown = 0;
+                foreach (Bot b in m_Bots.Values)
+                {
+                    if (!b.Enrolled || shown++ >= 3) continue;
+                    double nearHome = double.MaxValue, nearMe = double.MaxValue;
+                    foreach (var h in m_Hostiles)
+                    {
+                        if (!h.Alive) continue;
+                        nearHome = math.min(nearHome, math.sqrt((double)KnBotBrainRules.FlatDistanceSq(h.FeetMm, b.HomeMm)) / 1000.0);
+                        nearMe = math.min(nearMe, math.sqrt((double)KnBotBrainRules.FlatDistanceSq(h.FeetMm, b.LastMm)) / 1000.0);
+                    }
+                    Debug.Log(string.Format(CultureInfo.InvariantCulture,
+                        "[KnBotBrain] look {0}: at {1} home {2} radius {3:0.0} m, nearest living Hostile {4:0.0} m from home, {5:0.0} m from it; {6}",
+                        b.Name, b.LastMm, b.HomeMm, b.HomeRadiusMm / 1000.0, nearHome, nearMe, b.LastLook));
+                }
             }
             if (time >= m_NextPerBot)
             {
