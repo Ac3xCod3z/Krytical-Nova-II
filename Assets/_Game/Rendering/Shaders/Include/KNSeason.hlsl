@@ -180,23 +180,25 @@ float3 KNSnowLiftWS(float3 positionWS, float3 normalWS)
 // Leaves and lawn: green well above blue, and red not above green (a brown trunk, bark, dirt or grey stone scores 0).
 half KNSeasonLeafness(half3 albedo) { return saturate((albedo.g - albedo.b) * 6.0h - max(albedo.r - albedo.g, 0.0h) * 8.0h); }
 
-// The grass season as one multiply (the profile's tint, autumn dullness, brown after the snow, fresh spring green, golden dry spells),
-// shared by the grass blades and the terrain's lawn.
-half3 KNSeasonLawnTint()
+// The grass season (owner 15 Nov: it never showed), shared by the grass blades and the terrain's lawn: the profile's tint and autumn
+// dullness multiply; the brown after the snow and the summer gold BLEND toward a straw / gold of the grass's own brightness (a multiply
+// only darkened the green); the fresh spring green multiplies again.
+half3 KNSeasonLawn(half3 col)
 {
-    half3 t = (half3)_KN_SeasonGrass.rgb;
-    t *= (half3)lerp(float3(1.0, 1.0, 1.0), _KN_SeasonDull.rgb, _KN_SeasonFoliage.z);
-    t *= (half3)lerp(float3(1.0, 1.0, 1.0), _KN_ThawGrass.rgb, _KN_SeasonSpring.y);
-    t *= (half3)lerp(float3(1.0, 1.0, 1.0), _KN_SpringGreen.rgb, _KN_SeasonSpring.z);
-    t *= (half3)lerp(float3(1.0, 1.0, 1.0), _KN_GoldenGrass.rgb, _KN_SeasonSummer.z);
-    return t;
+    half lum = dot(col, half3(0.3h, 0.59h, 0.11h));
+    half3 c = col * (half3)_KN_SeasonGrass.rgb;
+    c *= (half3)lerp(float3(1.0, 1.0, 1.0), _KN_SeasonDull.rgb, _KN_SeasonFoliage.z);
+    c = lerp(c, lum * (half3)_KN_ThawGrass.rgb * 1.7h, (half)(_KN_SeasonSpring.y * 0.85));
+    c *= (half3)lerp(float3(1.0, 1.0, 1.0), _KN_SpringGreen.rgb, _KN_SeasonSpring.z);
+    c = lerp(c, lum * (half3)_KN_GoldenGrass.rgb * 1.5h, (half)(_KN_SeasonSummer.z * 0.8));
+    return c;
 }
 
 void KNSeasonGround(inout half3 albedo, inout half smoothness, float3 normalWS, float3 positionWS)
 {
     // owner 15 Nov: the lawn is mostly the terrain's grass texture, so its green texels take the grass season too (dirt, paving: none)
     [branch] if (KNSeasonOn())
-        albedo = lerp(albedo, albedo * KNSeasonLawnTint(), KNSeasonLeafness(albedo));
+        albedo = lerp(albedo, KNSeasonLawn(albedo), KNSeasonLeafness(albedo));
     [branch] if (KNSeasonOn() && _KN_SeasonParams.x > 0.001)
     {
         float4 shelter = KNSnowShelter(positionWS.xz);
@@ -319,7 +321,7 @@ float3 KNSeasonGrassColour(float3 col, float height01, float3 rootWS)
     [branch] if (KNSeasonOn())
     {
         // the season's tint, dull through Autumn, brown after the snow, a fresh green, golden on dry spells (as the lawn)
-        result *= (float3)KNSeasonLawnTint();
+        result = (float3)KNSeasonLawn((half3)result);
         result = lerp(result, _KN_SnowColor.rgb, _KN_SeasonGrass.a * height01 * height01);
         float cover = _KN_SeasonParams.x * (1.0 - KNSnowTrack(rootWS.xz));
         float dusting = _KN_SnowShape.w > 0.0 ? 0.35 : 1.0;   // raised snow buries the base; the tips only carry a dusting
