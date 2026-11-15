@@ -50,7 +50,16 @@ namespace KryticalNova.Combat.Entities
     public partial class StrikeDummyServerSystem : SystemBase
     {
         const int ScanEveryUpdates = 30;
-        int m_Wait;
+        /// <summary>A whole-scene search at least this often (10 s at 30 Hz), for a dummy that appears without a scene loading.</summary>
+        public const int FullScanEveryUpdates = 300;
+        int m_Wait, m_SinceFullScan = FullScanEveryUpdates;   // the first scan searches the scene
+        // The scene dummies found by the last whole-scene search (perf clean-ups round 2, chunk 12: every scan was a scene-wide
+        // FindObjectsByType<CombatEntity>, every player and Hostile body included); searched again when the loaded scenes change.
+        readonly List<CombatEntity> m_Dummies = new List<CombatEntity>();
+        readonly List<UnityEngine.SceneManagement.Scene> m_Scenes = new List<UnityEngine.SceneManagement.Scene>(), m_ScenesNow = new List<UnityEngine.SceneManagement.Scene>();
+
+        /// <summary>Whole-scene searches made (tests).</summary>
+        public int FullScans { get; private set; }
 
         /// <summary>Dummy ghosts spawned (tests).</summary>
         public int Spawned { get; private set; }
@@ -64,7 +73,16 @@ namespace KryticalNova.Combat.Entities
             {
                 m_Wait = ScanEveryUpdates;
                 Entity prefab = SystemAPI.GetSingleton<StrikeDummyGhostPrefab>().Prefab;
-                foreach (CombatEntity dummy in Object.FindObjectsByType<CombatEntity>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+                m_SinceFullScan += ScanEveryUpdates;
+                if (ScenesChanged(m_Scenes, m_ScenesNow) || m_SinceFullScan >= FullScanEveryUpdates)
+                {
+                    m_SinceFullScan = 0;
+                    FullScans++;
+                    m_Dummies.Clear();
+                    foreach (CombatEntity found in Object.FindObjectsByType<CombatEntity>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+                        if (StrikeDummies.IsSceneDummy(found)) m_Dummies.Add(found);
+                }
+                foreach (CombatEntity dummy in m_Dummies)
                     if (StrikeDummies.IsSceneDummy(dummy) && CombatTargetRegistry.Of(World, dummy.gameObject) == null) Spawn(em, prefab, dummy);
             }
 
@@ -94,6 +112,21 @@ namespace KryticalNova.Combat.Entities
             using var all = GetEntityQuery(ComponentType.ReadOnly<CombatTarget>(), ComponentType.ReadOnly<GhostInstance>()).ToEntityArray(Allocator.Temp);
             foreach (Entity ghost in all)
                 if (em.GetComponentData<CombatTarget>(ghost).Kind == CombatTargetKinds.StrikeDummy && !Linked(ghost)) em.DestroyEntity(ghost);
+        }
+
+        /// <summary>The loaded scenes (in order) differ from <paramref name="last"/>; <paramref name="last"/> takes them.</summary>
+        public static bool ScenesChanged(List<UnityEngine.SceneManagement.Scene> last, List<UnityEngine.SceneManagement.Scene> scratch)
+        {
+            scratch.Clear();
+            for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCount; i++)
+            {
+                UnityEngine.SceneManagement.Scene scene = UnityEngine.SceneManagement.SceneManager.GetSceneAt(i);
+                if (scene.isLoaded) scratch.Add(scene);
+            }
+            bool changed = scratch.Count != last.Count;
+            for (int i = 0; !changed && i < scratch.Count; i++) changed = scratch[i] != last[i];
+            if (changed) { last.Clear(); last.AddRange(scratch); }
+            return changed;
         }
 
         bool Linked(Entity ghost)
