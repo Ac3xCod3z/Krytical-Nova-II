@@ -143,6 +143,50 @@ namespace KryticalNova.Tests
             a.Dispose(); b.Dispose();
         }
 
+        [Test]
+        public void CellBorders_Corners_AndAStackOnOnePoint_PushExactlyAsTheOldLoop()
+        {
+            int cell = 2 * Radius;
+            var cases = new List<NativeList<PlayerSeparation.Body>>();
+            // pairs across a border (x, z, both, at zero, negative), just inside touching (2R - 1) and exactly touching (2R: no push)
+            foreach (int border in new[] { 0, cell, -cell, 5 * cell, -7 * cell })
+            foreach (int gap in new[] { 1, 2 * Radius - 1, 2 * Radius, 2 * Radius + 1 })
+            {
+                var l = new NativeList<PlayerSeparation.Body>(8, Allocator.Temp)
+                {
+                    Body(1, border - 1, 0, 3, 2), Body(2, border - 1 + gap, 0, 3, 1),                 // across an x border
+                    Body(3, 40000, 0, border - 1, 0), Body(4, 40000, 0, border - 1 + gap, 3),         // across a z border
+                    Body(5, border - 1, 0, border - 1, 1), Body(6, border - 1 + gap * 7 / 10, 0, border - 1 + gap * 7 / 10, 1),   // diagonal, across a corner
+                };
+                cases.Add(l);
+            }
+            // twelve players on one point, sitting on a cell corner, and twelve on one point at a negative corner beside a wall
+            var stack = new NativeList<PlayerSeparation.Body>(24, Allocator.Temp);
+            for (int k = 0; k < 12; k++) stack.Add(Body(10 + k * 3, cell, 0, cell, (uint)(k % 4)));
+            for (int k = 0; k < 12; k++) stack.Add(Body(100 + k, -3 * cell, 0, -3 * cell, (uint)(k % 3)));
+            cases.Add(stack);
+
+            int slid = 0;
+            for (int c = 0; c < cases.Count; c++)
+            {
+                var a = cases[c];
+                var b = new NativeList<PlayerSeparation.Body>(a.Length, Allocator.Temp); b.AddRange(a.AsArray());
+                bool wall = c == cases.Count - 1;
+                var s1 = new Slide { S = new Slider { HasWall = wall, WallX = -3 * cell + 150 } };
+                var s2 = new Slide { S = new Slider { HasWall = wall, WallX = -3 * cell + 150 } };
+                for (int tick = 0; tick < 60; tick++)
+                {
+                    Assert.AreEqual(OldLoop(a, Radius, Step, ref s1), PlayerSeparation.ResolvePairs(b, Radius, Step, ref s2), $"case {c} tick {tick}: blocked");
+                    CollectionAssert.AreEqual(s1.S.Log, s2.S.Log, $"case {c} tick {tick}: pushes");
+                    for (int k = 0; k < a.Length; k++)
+                        Assert.IsTrue(a[k].XMm == b[k].XMm && a[k].ZMm == b[k].ZMm, $"case {c} tick {tick}: body {k}");
+                }
+                slid += s1.S.Log.Count;
+                a.Dispose(); b.Dispose();
+            }
+            Assert.Greater(slid, 100, "the edge cases really pushed");
+        }
+
         [TestCase(50), TestCase(200), TestCase(1000)]
         public void Timing_OneTick_OldLoopVsGrid(int n)
         {
