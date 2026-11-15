@@ -147,14 +147,22 @@ namespace KryticalNova.EditorTools
             string status = Page("/api/status", null);
             if (status == null) { Debug.LogError("[Measure] The measure server's page does not answer."); return; }
             int equipped = 0;
+            var placed = new List<string>();
             foreach (Match player in Regex.Matches(status, "\\{\"id\":(\\d+),\"name\":\"(Bot[a-z]+[0-9]?)\""))
             {
                 string id = player.Groups[1].Value;
                 if (Page("/api/command", "{\"line\":\"gm.target " + id + "\"}") == null) continue;
                 foreach (string line in Equip) Page("/api/command", "{\"line\":\"" + line + "\"}");
                 Page("/api/command", "{\"line\":\"gm.tp " + BotZones[equipped % BotZones.Length] + "\"}");
-                Page("/api/command", "{\"line\":\"gm.autopilot on\"}");
+                placed.Add(id);
                 equipped++;
+            }
+            // Autopilot on in a second pass: the teleport moves the body a tick later, and Autopilot only starts inside a Hostile Zone
+            System.Threading.Thread.Sleep(1500);
+            foreach (string id in placed)
+            {
+                Page("/api/command", "{\"line\":\"gm.target " + id + "\"}");
+                Page("/api/command", "{\"line\":\"gm.autopilot on\"}");
             }
             Debug.Log($"[Measure] Equipped {equipped} bot(s): {string.Join(", ", Equip)}, a Hostile Zone each, Autopilot on.");
         }
