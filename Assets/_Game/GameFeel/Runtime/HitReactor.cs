@@ -41,6 +41,19 @@ namespace KryticalNova.GameFeel
         private float lastReact = -10f;
         private CombatEntity entity;
         private float lastHealth = -1f;
+        // At rest (perf clean-ups round 2, chunk 13): the springs have settled and the base pose is written, so LateUpdate skips them
+        // until the next kick (a hit, a pose, a lean); the curve is the same frame by frame until it settles.
+        private bool resting;
+        private Vector3 lastScale = Vector3.one, lastLean;
+        // The renderer's own material instances, read into one reused list (r.materials made a new array on every hit).
+        private static readonly List<Material> rendererMats = new List<Material>();
+
+        /// <summary>True while the springs are settled and nothing is written each frame (tests).</summary>
+        public bool Resting => resting;
+
+        /// <summary>Settled: within 1e-4 of where the spring goes and moving under 1e-5 a frame.</summary>
+        public static bool Settled(Vector3 value, Vector3 previous, Vector3 target) =>
+            (value - target).sqrMagnitude < 1e-8f && (value - previous).sqrMagnitude < 1e-10f;
 
         public static HitReactor For(Transform target)
         {
@@ -101,6 +114,7 @@ namespace KryticalNova.GameFeel
             float s = heavy ? heavySquash : squash;
             // Squashed wide and short, released with outward velocity so the spring overshoots into a wobble.
             scaleSpring.Reset(new Vector3(1f + s * 0.6f, 1f - s, 1f + s * 0.6f), new Vector3(-s * 6f, s * 9f, -s * 6f));
+            resting = false;
             if (towardAttacker.sqrMagnitude > 0.001f) Lean(towardAttacker, heavy);
             StartFlash(heavy);
         }
@@ -112,6 +126,7 @@ namespace KryticalNova.GameFeel
         public void Pose(Vector3 scale, Vector3 velocity)
         {
             scaleSpring.Reset(scale, velocity);
+            resting = false;
         }
 
         private void Lean(Vector3 towardAttacker, bool heavy)
@@ -123,15 +138,30 @@ namespace KryticalNova.GameFeel
             Vector3 local = visual.parent != null ? visual.parent.InverseTransformDirection(away) : away;
             float deg = leanDegrees * (heavy ? 1.5f : 1f);
             leanSpring.Reset(Vector3.zero, new Vector3(local.z, 0f, -local.x) * deg * 14f);
+            resting = false;
         }
 
         private void LateUpdate()
         {
-            float dt = Time.deltaTime;
-            Vector3 scale = scaleSpring.TrackHalfLife(Vector3.one, springFrequency, springHalfLife, dt);
-            Vector3 lean = leanSpring.TrackHalfLife(Vector3.zero, springFrequency * 0.8f, springHalfLife * 1.4f, dt);
-            visual.localScale = Vector3.Scale(baseScale, scale);
-            visual.localRotation = baseRotation * Quaternion.Euler(lean.x, 0f, lean.z);
+            if (!resting)
+            {
+                float dt = Time.deltaTime;
+                Vector3 scale = scaleSpring.TrackHalfLife(Vector3.one, springFrequency, springHalfLife, dt);
+                Vector3 lean = leanSpring.TrackHalfLife(Vector3.zero, springFrequency * 0.8f, springHalfLife * 1.4f, dt);
+                if (Settled(scale, lastScale, Vector3.one) && Settled(lean, lastLean, Vector3.zero))
+                {
+                    // snap to rest once: the base pose, then nothing more until a kick
+                    scaleSpring.Reset(Vector3.one);
+                    leanSpring.Reset(Vector3.zero);
+                    scale = Vector3.one;
+                    lean = Vector3.zero;
+                    resting = true;
+                }
+                lastScale = scale;
+                lastLean = lean;
+                visual.localScale = Vector3.Scale(baseScale, scale);
+                visual.localRotation = baseRotation * Quaternion.Euler(lean.x, 0f, lean.z);
+            }
 
             if (flashT >= 0f)
             {
@@ -154,7 +184,8 @@ namespace KryticalNova.GameFeel
                 {
                     // The smear's second skin has a material of its own that the smear drives: flashing it would copy it.
                     if (r == null || r is ParticleSystemRenderer || r.name == ActorSmear.SkinName) continue;
-                    foreach (var mat in r.materials) // per-renderer instances; OccluderFader swaps are re-read next hit
+                    r.GetMaterials(rendererMats);   // per-renderer instances (as r.materials), no new array; OccluderFader swaps are re-read next hit
+                    foreach (var mat in rendererMats)
                     {
                         if (mat == null || !mat.HasProperty(EmissionColorId)) continue;
                         bool had = mat.IsKeywordEnabled("_EMISSION");
