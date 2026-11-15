@@ -25,7 +25,7 @@ namespace KryticalNova.Combat.Entities
         {
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
-                if (!ReferenceEquals(entry.World, World) || entry.Body == null || !entry.Body.TryGetComponent(out PlayerCombatSkills skills)
+                if (!ReferenceEquals(entry.World, World) || entry.Body == null || !entry.TryGetPart(out PlayerCombatSkills skills)
                     || !m_Heard.Add(skills)) continue;
                 Entity ghost = entry.Ghost;
                 skills.SquadBuffGiven += (skillId, rank, giver) => Record(ghost, skillId, rank, giver);
@@ -91,7 +91,7 @@ namespace KryticalNova.Combat.Entities
                     if (given.Seq <= seen) continue;
                     seen = given.Seq;
                     Shown++;
-                    if (player.Body.TryGetComponent(out PlayerCombatSkills skills))
+                    if (player.TryGetPart(out PlayerCombatSkills skills))
                         skills.ShowSquadBuff(given.SkillId.ToString(), given.Rank, given.Giver.ToString());
                 }
                 m_Seen[player.Ghost] = seen;

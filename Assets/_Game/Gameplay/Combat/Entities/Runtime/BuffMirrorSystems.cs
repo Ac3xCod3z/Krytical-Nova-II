@@ -32,7 +32,7 @@ namespace KryticalNova.Combat.Entities
             EntityManager em = EntityManager;
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
-                if (!ReferenceEquals(entry.World, World) || entry.Body == null || !entry.Body.TryGetComponent(out CharacterBuffManager buffs)) continue;
+                if (!ReferenceEquals(entry.World, World) || entry.Body == null || !entry.TryGetPart(out CharacterBuffManager buffs)) continue;
                 if (m_Heard.Add(buffs))
                 {
                     buffs.BuffsChanged += () => m_Dirty.Add(buffs);
@@ -89,7 +89,7 @@ namespace KryticalNova.Combat.Entities
             foreach (GhostBodyEntry player in GhostBodyRegistry.Entries)
             {
                 if (!ReferenceEquals(player.World, World) || player.Body == null || !em.Exists(player.Ghost) || !em.HasBuffer<RunningBuff>(player.Ghost)
-                    || !player.Body.TryGetComponent(out CharacterBuffManager copy) || !player.Body.TryGetComponent(out PlayerCombatSkills skills)) continue;
+                    || !player.TryGetPart(out CharacterBuffManager copy) || !player.TryGetPart(out PlayerCombatSkills skills)) continue;
                 DynamicBuffer<RunningBuff> list = em.GetBuffer<RunningBuff>(player.Ghost, true);
                 int signature = Signature(list);
                 if (m_Seen.TryGetValue(player.Ghost, out int seen) && seen == signature) continue;

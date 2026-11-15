@@ -27,6 +27,48 @@ namespace KryticalNova.Player.Entities.Presentation
 
         /// <summary>The world is gone or the body was destroyed from outside: nothing may keep pointing at it.</summary>
         internal bool IsDead => World == null || !World.IsCreated || Body == null;
+
+        // The body's parts found so far, one slot per part type (perf clean-ups round 2, chunk 9: ~27 systems asked the body for the
+        // same parts with TryGetComponent every tick). Only parts that were found are kept.
+        object[] m_Parts;
+
+        /// <summary>
+        /// <c>Body.TryGetComponent(out part)</c>, kept: the first answer that finds the part is remembered and handed out again. A
+        /// remembered part that was destroyed is not handed out (Unity-null, as TryGetComponent would not find it) and is looked up
+        /// again; a part that was not there is looked up again every time, so one added later is found, as before. False when the
+        /// body is gone. Main thread only, as the registry.
+        /// </summary>
+        public bool TryGetPart<T>(out T part) where T : class
+        {
+            int slot = PartSlot<T>.Index;
+            if (m_Parts != null && slot < m_Parts.Length && m_Parts[slot] is T kept && !(kept is UnityEngine.Object unity && unity == null))
+            {
+                part = kept;
+                return true;
+            }
+            GameObject body = Body;
+            if (body == null || !body.TryGetComponent(out part))
+            {
+                if (m_Parts != null && slot < m_Parts.Length) m_Parts[slot] = null;
+                part = null;
+                return false;
+            }
+            if (m_Parts == null || slot >= m_Parts.Length) Array.Resize(ref m_Parts, Math.Max(slot + 1, PartSlot.Count + 4));
+            m_Parts[slot] = part;
+            return true;
+        }
+
+        /// <summary>One slot number per part type asked for, shared by every entry.</summary>
+        static class PartSlot<T> where T : class
+        {
+            public static readonly int Index = PartSlot.Next();
+        }
+
+        static class PartSlot
+        {
+            public static int Count;
+            public static int Next() => Count++;
+        }
     }
 
     /// <summary>
