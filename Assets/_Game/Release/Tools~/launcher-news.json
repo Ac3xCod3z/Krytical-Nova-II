@@ -3,15 +3,15 @@
   "items": [
     {
       "title": "A Better Start in Nova",
-      "body": "New characters begin with a starter kit: 20 HP Stims, 20 Flux Stims and 2,500 Creds, plus 5 stat points to place. Level 1 Hostiles pay a little more Creds and XP, and every weapon class now has its own Instructor in the Training Yard. Stims can be used at any time, even during a charge, with a short cooldown per kind, and new percentage Stims from the Apothecary restore a share of your HP or Flux."
+      "body": "New characters start with 20 HP Stims, 20 Flux Stims, 2,500 Creds and 5 stat points to place. Level 1 Hostiles pay a little more, every weapon class has its own Instructor in the Training Yard, Stims work at any time, even mid-charge, and new percentage Stims are at the Apothecary."
     },
     {
-      "title": "Defense Means Something Now",
-      "body": "Defense cuts every hit by a share, can block a hit outright for 70 % less damage, and resists crits. Evasion softens the crits that do land. Every build now has something it beats."
+      "title": "Defense and Crits Reworked",
+      "body": "Defense cuts every hit by a share, can block a hit for 70 % less damage and resists crits. Crit buffs add to your crit chance with no cap, crit on gear comes from rings, and weapon Tuning raises Critical Damage. On the Cadence beat, a Redline three-hit crits with all three hits."
     },
     {
-      "title": "Crits Reworked",
-      "body": "Crit buffs add to your crit chance instead of multiplying it, with no cap. Crit chance on gear now comes from rings, and Tempering a ring adds on top of its own crit, and weapon Tuning raises Critical Damage instead. On the Cadence beat, a Redline three-hit crits with all three hits."
+      "title": "Seasons and a New Sky",
+      "body": "The world turns through Spring, Summer, Autumn and Winter, two real weeks each, with real snow that holds your footprints and trees that change colour. A new star map, shooting stars, nebulae, a second sun and eclipses fill the sky, and the World Map has a Calendar with a 7-day forecast."
     },
     {
       "title": "Bigger Moments",
@@ -23,11 +23,11 @@
     },
     {
       "title": "Sky Concord Comes Alive",
-      "body": "Sky Concord has townsfolk now: workers on their shifts, strollers, joggers, shoppers, gossips in chat circles, street performers and guards, each with a personality and a day plan. Fewer come out at night, and they shelter or go home in the rain. The vendors are new faces too: they look up as you pass, wave you over and bow when you open their shop."
+      "body": "Sky Concord has townsfolk now: workers, strollers, joggers, shoppers, gossips, street performers and guards, each with a personality and a day plan. Fewer come out at night and they shelter from the rain. The vendors are new faces too: they look up as you pass and wave you over."
     },
     {
       "title": "Your Mount Walks Beside You",
-      "body": "Press Y (or CALL in the Mount window) and your selected mount walks beside you instead of carrying you. It keeps up, catches up when left behind and keeps giving its stats; it gets hungry faster while out, and when its hunger runs out it goes home. It has HP of its own: enemy players' area skills can knock it out, and then it rests for 5 minutes. The new Mount Stim heals it. Set it to DPS and it fights beside you; set it to HEALER and it heals you while you fight (PvE only, never drawing aggro); set it to TANK and it taunts the Hostiles off you and takes their blows with a defence buff (PvE only). Kills it helps with give your mount 1.5x its growth EXP, 3x with a Rider Booster."
+      "body": "Press Y and your mount walks beside you, keeps giving its stats and has HP of its own (the new Mount Stim heals it). Set it to DPS and it fights with you, HEALER and it heals you, TANK and it pulls Hostiles off you (PvE only). Its stances grow with it, and kills it helps with grow it faster."
     }
   ],
   "patchNotes": [
@@ -63,13 +63,15 @@
         "Swings move the grass: every swing throws the grass in front of it aside and it springs back; area skills send a ring across it and big hits a wave. Hostiles' swings push it too, the bigger the beast the wider.",
         "World effects (Settings, Graphics): how much the world's little effects do on your screen, Low to Ultra; on Low four swings move the grass at once instead of eight; on Low the sky shows fewer shooting stars at once and no aurora.",
         "A unique sky: the old dot stars are replaced by a star map that turns with the calendar, with eight constellations of bright stars spread far apart (at least 45 degrees of empty sky between any two). The moon is bigger and closer, and no star shows in front of it.",
-        "Sky events everyone sees at the same moment: a rare shooting star (about one every 1 to 3 minutes) with a long, softly fading trail; a big nebula three nights in each moon cycle, one of three (the teal-violet Soul Tide, the warm Ember Rose or the cyan-to-gold Veil Ribbon); The Emberfall once a game year, a storm of long, glowing blue streaks with white-hot heads falling from one point of the sky and The Pale Wanderer comet every few real months. Aurora (winter) comes with the seasons.",
+        "Sky events everyone sees at the same moment: a rare shooting star (about one every 1 to 3 minutes) with a long, softly fading trail, and a big nebula three nights in each moon cycle, one of three (the teal-violet Soul Tide, the warm Ember Rose or the cyan-to-gold Veil Ribbon).",
+        "The Emberfall once a game year: a storm of long, glowing blue streaks with white-hot heads falling from one point of the sky. The Pale Wanderer comet passes every few real months, and the aurora comes with Winter.",
         "The second sun: an amber sun with its own path, drawn like our sun, only by day (it sets with ours and never shows at night). It is only in the sky: it gives no light or shadow and changes nothing on the ground.",
         "Total eclipse every two game years: the second sun leaves the sky, the moon rises opposite the sun, crosses the sky, passes in front of the sun and keeps going, a pearl corona flares and the day dims almost to night, then comes back exactly as it was.",
         "Seasons: the world turns through Spring, Summer, Autumn and Winter, two real weeks each, changing every second Monday at 00:00 UTC (Winter arrives 23 Nov). Each brings its own weather, its own daylight (short winter days, long summer ones) and its own colours: spring flowers, orange autumn trees, frosted winter woods.",
         "Snow: it builds up like real snow, slowly and thin in light snow, fast and deep in a blizzard, and settles only on what is flat enough. It has real depth (grass gets buried) and every foot leaves its own print, boots or paws, that fills back in. World effects on Low lets less rain and snow fall.",
         "Autumn: every kind of tree turns its own colour (maples red, birches gold, oaks brown), grass goes dull, leaves blow across the ground, and the trees are almost bare by Winter. Pines stay green.",
-        "Calendar: the World Map (M) has a CALENDAR tab beside the map: today's date (season, day of 14, year), the moon and when it is next full or new, tonight's constellation, four moon cycles with The Emberfall, The Pale Wanderer, eclipses, aurora and nebula nights marked, what is coming up with a countdown in real time, and a 7-day forecast with highs, lows and the chance of rain, snow and storms. Under the minimap, a small line shows the date, the time, the air and the weather. Temperatures show in °F; pick °C in Settings ▸ Accessibility ▸ Units."
+        "Calendar: the World Map (M) has a CALENDAR tab: today's date (season, day of 14, year), the moon and when it is next full or new, tonight's constellation, four moon cycles with The Emberfall, The Pale Wanderer, eclipses, aurora and nebula nights marked, and what is coming up with a countdown in real time.",
+        "Forecast: the Calendar shows the next 7 days with highs, lows and the chance of rain, snow and storms, and a small line under the minimap shows the date, the time, the air and the weather. Temperatures show in °F; pick °C in Settings ▸ Accessibility ▸ Units."
       ]
     },
     {
@@ -101,7 +103,9 @@
       "lines": [
         "The Aegis shield now counts down hit by hit, on your screen and on everyone else's.",
         "Logging out while the Deck was playing no longer keeps the music going into your next character.",
-        "Logging in no longer plays a level-up for every level from 1; only a real level gained shows the moment."
+        "Logging in no longer plays a level-up for every level from 1; only a real level gained shows the moment.",
+        "Damage numbers always float over the one who was hit; they no longer get stuck in the corner by your portrait.",
+        "Quitting the game while a sky event was showing could crash it on the way out; it now closes cleanly."
       ]
     }
   ],
