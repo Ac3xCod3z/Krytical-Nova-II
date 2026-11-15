@@ -42,7 +42,7 @@ namespace KryticalNova.Networking.Tests
         static List<ParticleSystem> NewWay(NetworkCombatVFXPool pool, GameObject instance)
         {
             var found = new List<ParticleSystem>();
-            foreach (ParticleSystem ps in pool.SystemsOf(instance)) if (NetworkCombatVFXPool.Active(ps)) found.Add(ps);
+            foreach (ParticleSystem ps in pool.SystemsOf(instance)) if (NetworkCombatVFXPool.Active(ps, instance)) found.Add(ps);
             return found;
         }
 
@@ -59,7 +59,7 @@ namespace KryticalNova.Networking.Tests
             parts[1].SetActive(false);
             CollectionAssert.AreEqual(effect.GetComponentsInChildren<ParticleSystem>(), NewWay(pool, effect), "a part and its child switched off");
             effect.SetActive(false);
-            CollectionAssert.AreEqual(effect.GetComponentsInChildren<ParticleSystem>(), NewWay(pool, effect), "the whole copy off: none");
+            CollectionAssert.AreEqual(effect.GetComponentsInChildren<ParticleSystem>(), NewWay(pool, effect), "the whole copy off: its switched-on parts, as the old search gave");
         }
 
         [Test]
@@ -73,7 +73,7 @@ namespace KryticalNova.Networking.Tests
             Assert.That(() =>
             {
                 for (int r = 0; r < 100; r++)
-                    foreach (ParticleSystem ps in pool.SystemsOf(effect)) if (NetworkCombatVFXPool.Active(ps)) { }
+                    foreach (ParticleSystem ps in pool.SystemsOf(effect)) if (NetworkCombatVFXPool.Active(ps, effect)) { }
             }, Is.Not.AllocatingGCMemory());
             Debug.Log("[perf chunk 15] VFX pool: 100 returns read the kept systems with 0 bytes (was a GetComponentsInChildren array each)");
         }

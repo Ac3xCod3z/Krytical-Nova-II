@@ -44,8 +44,19 @@ namespace KryticalNova.Networking
             return all;
         }
 
-        /// <summary>A system the old GetComponentsInChildren&lt;ParticleSystem&gt;() would have found now: there and active in the hierarchy.</summary>
-        public static bool Active(ParticleSystem ps) => ps != null && ps.gameObject.activeInHierarchy;
+        /// <summary>
+        /// A system the old <c>instance.GetComponentsInChildren&lt;ParticleSystem&gt;()</c> would have found now: there, and switched on
+        /// itself and in every parent below <paramref name="instance"/>. The instance's own switch (and what is above it) does not count,
+        /// as the old search ignored it: a copy that is off still gave its switched-on parts (the batched EditMode run, 15 Nov).
+        /// </summary>
+        public static bool Active(ParticleSystem ps, GameObject instance)
+        {
+            if (ps == null) return false;
+            Transform root = instance != null ? instance.transform : null;
+            for (Transform t = ps.transform; t != null && t != root; t = t.parent)
+                if (!t.gameObject.activeSelf) return false;
+            return true;
+        }
 
         /// <summary>Copies made ahead of time by <see cref="Prewarm"/> or the predefined pools.</summary>
         public int CreatedAhead { get; private set; }
@@ -268,7 +279,7 @@ namespace KryticalNova.Networking
             float fade = 0f;
             foreach (var ps in SystemsOf(instance))
             {
-                if (!Active(ps)) continue;
+                if (!Active(ps, instance)) continue;
                 ps.Stop(false, ParticleSystemStopBehavior.StopEmitting);
                 fade = Mathf.Max(fade, ps.main.startLifetime.constantMax);
             }
@@ -286,7 +297,7 @@ namespace KryticalNova.Networking
             attachedKeys.Remove(instance);
             if (instance == null) { systemsOf.Remove(instance); return; }
             foreach (var ps in SystemsOf(instance))
-                if (Active(ps)) ps.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
+                if (Active(ps, instance)) ps.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
             pendingReturns.Add(new PendingReturn { poolKey = key, instance = instance, returnTime = Time.time });
         }
 
@@ -403,7 +414,7 @@ namespace KryticalNova.Networking
             if (instance == null) { if (!ReferenceEquals(instance, null)) systemsOf.Remove(instance); return; }
 
             foreach (var ps in SystemsOf(instance))
-                if (Active(ps)) ps.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
+                if (Active(ps, instance)) ps.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
             instance.SetActive(false);
             instance.transform.SetParent(transform);
 
