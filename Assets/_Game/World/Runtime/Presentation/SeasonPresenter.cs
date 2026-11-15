@@ -108,8 +108,6 @@ namespace KryticalNova.World
         readonly List<Terrain> m_GoneTerrains = new List<Terrain>();
         float m_FlowerApplied = -1f, m_NextTerrainLook;
         float m_NextLawnLook;
-        readonly HashSet<Terrain> m_LawnTerrains = new HashSet<Terrain>();
-        readonly List<(Terrain terrain, Material original, Material copy)> m_LawnMaterials = new List<(Terrain, Material, Material)>();
         bool m_PublishedOff;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -146,7 +144,6 @@ namespace KryticalNova.World
             m_NextLawnLook = 0f;
             m_ShelterSceneKey = int.MinValue;
             m_LitterSwept = 0f;
-            ReleaseLawnMaterials();
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -176,7 +173,6 @@ namespace KryticalNova.World
             if (Instance == this) Instance = null;
             HeatHazeRuntime.Strength = 0f;
             if (!s_ShuttingDown) PublishOff();
-            if (!s_ShuttingDown) ReleaseLawnMaterials();
         }
 
         void LateUpdate()
@@ -466,54 +462,35 @@ namespace KryticalNova.World
         }
 
         /// <summary>
-        /// Which of each terrain's first four layers are lawn (owner 15 Nov: the lawn's grass texture is olive, red about as high as
-        /// green, so the colour test gave it a fifth of the season): a layer whose name holds one of <see cref="SeasonSettings.lawnLayerWords"/>.
-        /// Set once per terrain on its splat property block (_KN_LawnLayers, w = 1 known); looked for every 2 s, nothing per frame.
+        /// Which of the terrain's first four layers are lawn (owner 15 Nov: the lawn's grass texture is olive, red about as high as green,
+        /// so the colour test gave it a fifth of the season): a layer whose name holds one of <see cref="SeasonSettings.lawnLayerWords"/>.
+        /// Published as GLOBALS for the terrain under the camera (measured in Play: neither a splat property block nor a runtime copy of
+        /// the terrain's material reached the instanced terrain draws; globals, like the snow's, do). Terrains side by side share their
+        /// layers in practice; one that has no lawn-named layer publishes "not set" and keeps the colour test. Every 2 s, no garbage.
         /// </summary>
         void UpdateLawnLayers(SeasonSettings settings)
         {
             if (Time.unscaledTime < m_NextLawnLook) return;
             m_NextLawnLook = Time.unscaledTime + 2f;
-            for (int i = m_LawnMaterials.Count - 1; i >= 0; i--)
-                if (m_LawnMaterials[i].terrain == null)
-                {
-                    if (m_LawnMaterials[i].copy != null) Destroy(m_LawnMaterials[i].copy);
-                    m_LawnMaterials.RemoveAt(i);
-                }
-            m_LawnTerrains.RemoveWhere(x => x == null);
+            Camera cam = Camera.main;
+            Terrain under = null;
             Terrain.GetActiveTerrains(m_Terrains);
             for (int i = 0; i < m_Terrains.Count; i++)
             {
                 Terrain t = m_Terrains[i];
-                if (t == null || t.terrainData == null || m_LawnTerrains.Contains(t)) continue;
-                m_LawnTerrains.Add(t);
-                TerrainLayer[] layers = t.terrainData.terrainLayers;
-                Vector4 mask = Vector4.zero;
-                bool any = false;
-                for (int l = 0; l < 4 && layers != null && l < layers.Length; l++)
-                    if (layers[l] != null && settings.IsLawnLayer(layers[l].name)) { mask[l] = 1f; any = true; }
-                if (!any || t.materialTemplate == null) continue;   // no lawn-named layer: this terrain keeps telling its lawn by colour
-                // Owner 15 Nov, measured in Play: the splat property block never reached the (instanced) terrain draws (the shader read
-                // "not set" and fell back to the colour test, which scores this olive grass 0), so the lawn never went green. A runtime
-                // copy of the terrain's material carries the mask instead (made in Play, gone with it; the asset is untouched; one per terrain).
-                var copy = new Material(t.materialTemplate) { name = t.materialTemplate.name + " (KN season lawn)" };
-                copy.SetVector(LawnLayersId, mask);
-                copy.SetFloat(LawnLayersSetId, 1f);
-                m_LawnMaterials.Add((t, t.materialTemplate, copy));
-                t.materialTemplate = copy;
+                if (t == null || t.terrainData == null) continue;
+                if (under == null) under = t;
+                if (cam == null) break;
+                Vector3 p = cam.transform.position - t.GetPosition(), size = t.terrainData.size;
+                if (p.x >= 0f && p.z >= 0f && p.x <= size.x && p.z <= size.z) { under = t; break; }
             }
-        }
-
-        // the terrains' own materials back, and the copies gone (a terrain already destroyed took its copy's use with it)
-        void ReleaseLawnMaterials()
-        {
-            foreach (var (terrain, original, copy) in m_LawnMaterials)
-            {
-                if (terrain != null && terrain.materialTemplate == copy) terrain.materialTemplate = original;
-                if (copy != null) Destroy(copy);
-            }
-            m_LawnMaterials.Clear();
-            m_LawnTerrains.Clear();
+            Vector4 mask = Vector4.zero;
+            bool any = false;
+            TerrainLayer[] layers = under != null ? under.terrainData.terrainLayers : null;
+            for (int l = 0; l < 4 && layers != null && l < layers.Length; l++)
+                if (layers[l] != null && settings.IsLawnLayer(layers[l].name)) { mask[l] = 1f; any = true; }
+            Shader.SetGlobalVector(LawnLayersId, mask);
+            Shader.SetGlobalFloat(LawnLayersSetId, any ? 1f : 0f);
         }
 
         void UpdateFlowers(SeasonSettings settings, float density)
@@ -550,6 +527,7 @@ namespace KryticalNova.World
             Shader.SetGlobalVector(SummerId, new Vector4(0f, 1f, 0f, 0f));
             Shader.SetGlobalVector(LitterId, Vector4.zero);
             Shader.SetGlobalVector(LawnGreenId, Vector4.zero);
+            Shader.SetGlobalFloat(LawnLayersSetId, 0f);
             FallingLeaves = 0f;
             LitterBlown = 0f;
             HeatHaze = 0f;

@@ -9,7 +9,7 @@
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/GBufferOutput.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DBuffer.hlsl"
 
-// KN: which of the first four layers are lawn (1 each), and 1 once the season presenter has looked at this terrain (its splat property block)
+// KN: which of the first four layers are lawn (1 each), and 1 once set: GLOBALS from the season presenter (the terrain under the camera)
 float4 _KN_LawnLayers;
 float _KN_LawnLayersSet;
 #include "Assets/_Game/Rendering/Shaders/Include/KNSeason.hlsl"
