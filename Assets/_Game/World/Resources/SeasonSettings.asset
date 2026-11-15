@@ -65,18 +65,24 @@ MonoBehaviour:
     evergreen: 0
     peak: {r: 0.8, g: 0.14, b: 0.07, a: 1}
     late: {r: 0.52, g: 0.12, b: 0.08, a: 1}
+    blossoms: 0
+    blossom: {r: 0.98, g: 0.78, b: 0.86, a: 1}
   - name: Birch
     prefabNameContains:
     - SM_Gen_Env_Tree_02
     evergreen: 0
     peak: {r: 0.95, g: 0.78, b: 0.18, a: 1}
     late: {r: 0.72, g: 0.55, b: 0.2, a: 1}
+    blossoms: 0
+    blossom: {r: 0.98, g: 0.78, b: 0.86, a: 1}
   - name: Oak
     prefabNameContains:
     - SM_Gen_Env_Tree_03
     evergreen: 0
     peak: {r: 0.72, g: 0.4, b: 0.13, a: 1}
     late: {r: 0.45, g: 0.28, b: 0.12, a: 1}
+    blossoms: 0
+    blossom: {r: 0.98, g: 0.78, b: 0.86, a: 1}
   - name: Pine
     prefabNameContains:
     - Pine
@@ -86,24 +92,32 @@ MonoBehaviour:
     evergreen: 1
     peak: {r: 0.3, g: 0.5, b: 0.3, a: 1}
     late: {r: 0.3, g: 0.5, b: 0.3, a: 1}
+    blossoms: 0
+    blossom: {r: 0.98, g: 0.78, b: 0.86, a: 1}
   - name: Emberleaf
     prefabNameContains:
     - SM_Env_Tree_01
     evergreen: 0
     peak: {r: 0.98, g: 0.5, b: 0.1, a: 1}
     late: {r: 0.62, g: 0.3, b: 0.1, a: 1}
+    blossoms: 1
+    blossom: {r: 0.98, g: 0.7, b: 0.82, a: 1}
   - name: Duskleaf
     prefabNameContains:
     - SM_Env_Tree_02
     evergreen: 0
     peak: {r: 0.62, g: 0.12, b: 0.3, a: 1}
     late: {r: 0.4, g: 0.12, b: 0.2, a: 1}
+    blossoms: 1
+    blossom: {r: 0.86, g: 0.66, b: 0.92, a: 1}
   - name: Gildleaf
     prefabNameContains:
     - SM_Env_Tree_03
     evergreen: 0
     peak: {r: 0.9, g: 0.66, b: 0.12, a: 1}
     late: {r: 0.62, g: 0.44, b: 0.14, a: 1}
+    blossoms: 1
+    blossom: {r: 0.97, g: 0.95, b: 0.92, a: 1}
   fallLeavesByTier:
   - 0
   - 3

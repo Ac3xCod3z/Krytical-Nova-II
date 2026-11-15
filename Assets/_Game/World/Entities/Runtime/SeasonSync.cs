@@ -7,18 +7,19 @@ using Unity.NetCode;
 
 namespace KryticalNova.World.Entities
 {
-    /// <summary>The season as the server sends it (owner's DAY list item 21): <see cref="SeasonState"/> field for field, 56 bytes.</summary>
+    /// <summary>The season as the server sends it (owner's DAY list item 21): <see cref="SeasonState"/> field for field, 63 bytes.</summary>
     public struct SeasonStateRpc : IRpcCommand
     {
         public double BlendStart, SeasonStart, SnowAnchor;
-        public float BlendSeconds, SeasonSeconds, SnowCover, SnowRate, SnowFloor, SnowCeiling, Progress;
-        public byte FromSeason, ToSeason, CalendarSeason, Flags;
+        public float BlendSeconds, SeasonSeconds, SnowCover, SnowRate, SnowFloor, SnowCeiling, Progress, Temperature;
+        public byte FromSeason, ToSeason, CalendarSeason, Flags, Spell, SpellSeason, DryDays;
 
         public static SeasonStateRpc Of(in SeasonState s) => new SeasonStateRpc
         {
             BlendStart = s.BlendStart, SeasonStart = s.SeasonStart, SnowAnchor = s.SnowAnchor, BlendSeconds = s.BlendSeconds,
             SeasonSeconds = s.SeasonSeconds, SnowCover = s.SnowCover, SnowRate = s.SnowRate, SnowFloor = s.SnowFloor,
             SnowCeiling = s.SnowCeiling, Progress = s.Progress, FromSeason = s.FromSeason, ToSeason = s.ToSeason, CalendarSeason = s.CalendarSeason, Flags = s.Flags,
+            Temperature = s.Temperature, Spell = s.Spell, SpellSeason = s.SpellSeason, DryDays = s.DryDays,
         };
 
         public SeasonState State => new SeasonState
@@ -26,6 +27,7 @@ namespace KryticalNova.World.Entities
             BlendStart = BlendStart, SeasonStart = SeasonStart, SnowAnchor = SnowAnchor, BlendSeconds = BlendSeconds,
             SeasonSeconds = SeasonSeconds, SnowCover = SnowCover, SnowRate = SnowRate, SnowFloor = SnowFloor,
             SnowCeiling = SnowCeiling, Progress = Progress, FromSeason = FromSeason, ToSeason = ToSeason, CalendarSeason = CalendarSeason, Flags = Flags,
+            Temperature = Temperature, Spell = Spell, SpellSeason = SpellSeason, DryDays = DryDays,
         };
     }
 
@@ -36,6 +38,10 @@ namespace KryticalNova.World.Entities
         public float Intensity;
         /// <summary>Time of day on the world clock, 0-1 (the season warps it for the sun).</summary>
         public float Clock01;
+        /// <summary>The world clock's day number (weather spells run over days).</summary>
+        public long Day;
+        /// <summary>Degrees the weather now adds to the air (its profiles' offsets, blended).</summary>
+        public float TemperatureOffset;
     }
 
     /// <summary>How a GM set this map's climate (gm.season climate).</summary>
@@ -76,7 +82,15 @@ namespace KryticalNova.World.Entities
         SeasonClimate m_Climate;
         SeasonState m_State;
         SeasonProfile m_WeatherProfile;
+        WeatherSpell m_Spell;
         Func<WeatherProfile, float> m_Scale;
+        readonly List<WeatherProfile.NextWeather> m_Extra = new List<WeatherProfile.NextWeather>();
+        float m_TemperatureOverride = float.NaN;
+        int m_SpellOverride = -1;
+        long m_SpellDayKey = long.MinValue;
+        Season m_SpellSeasonKey;
+        SpellDay m_SpellDay;
+        int m_DryDays;
         readonly Dictionary<Entity, SeasonState> m_Sent = new Dictionary<Entity, SeasonState>();
         readonly List<Entity> m_Gone = new List<Entity>();
         EntityQuery m_InGame;
@@ -101,7 +115,7 @@ namespace KryticalNova.World.Entities
         protected override void OnCreate()
         {
             m_InGame = GetEntityQuery(ComponentType.ReadOnly<NetworkId>(), ComponentType.ReadOnly<NetworkStreamInGame>());
-            m_Scale = w => m_WeatherProfile != null ? m_WeatherProfile.WeightOf(w) : 1f;
+            m_Scale = w => (m_WeatherProfile != null ? m_WeatherProfile.WeightOf(w) : 1f) * (m_Spell != null ? m_Spell.WeightOf(w) : 1f);
         }
 
         protected override void OnDestroy()
@@ -166,20 +180,28 @@ namespace KryticalNova.World.Entities
             float floor = alwaysWinter ? s.alwaysWinterFloor : 0f;
             m_State.Flags = (byte)((m_Hold ? SeasonState.FlagGmHold : 0) | (alwaysWinter ? SeasonState.FlagAlwaysWinter : 0));
 
-            // the weather pick gets the season's weights (an always-winter map takes Winter's)
+            // the weather pick gets the season's weights and today's spell's (an always-winter map takes Winter's)
             Season dominant = m_State.DominantAt(now);
-            m_WeatherProfile = s.Profile(alwaysWinter ? Season.Winter : dominant);
-            SeasonWeather.Scale = m_WeatherProfile != null ? m_Scale : null;
-            SeasonWeather.Extra = m_WeatherProfile != null ? m_WeatherProfile.extraNext : null;
+            Season weatherSeason = alwaysWinter ? Season.Winter : dominant;
+            SeasonProfile profile = s.Profile(weatherSeason);
+            (bool ok, SeasonWeatherNow w) = WeatherSource != null ? WeatherSource() : DefaultWeather();
+            UpdateSpell(s, profile, weatherSeason, ok ? w.Day : (long)Math.Floor(now / 3600.0));
+            m_WeatherProfile = profile;
+            SeasonWeather.Scale = profile != null ? m_Scale : null;
+            SeasonWeather.Extra = profile != null ? m_Extra : null;
 
-            // the snow: re-anchored only when its rate or floor changes (a new weather, sunrise, sunset, a GM)
+            // the air: the season's mean and day swing, the spell, the weather, the day's own wobble (owner 14 Nov)
+            float share = DaylightShare(s, now);
+            float temperature = TemperatureNow(s, now, ok ? w.Clock01 : 0.5f, share, ok ? w.TemperatureOffset : 0f, ok ? w.Day : 0, alwaysWinter);
+            m_State.Temperature = temperature;
+
+            // the snow: re-anchored only when its rate or floor changes (a new weather, a temperature step, sunrise, sunset, a GM)
             float coverNow = m_Started ? m_State.SnowAt(now) : 0f;
             var trend = new SnowTrend { Rate = 0f, Ceiling = 1f };
-            (bool ok, SeasonWeatherNow w) = WeatherSource != null ? WeatherSource() : DefaultWeather();
             if (ok)
             {
-                bool night = SeasonRules.IsNight(w.Clock01, DaylightShare(s, now));
-                trend = SeasonRules.SnowTrendOf(s.Rates, w.Falling, w.Intensity, night, dominant, alwaysWinter, coverNow);
+                bool sunUp = !SeasonRules.IsNight(w.Clock01, share);
+                trend = SeasonRules.SnowTrendOf(s.Rates, w.Falling, w.Intensity, temperature, sunUp, coverNow);
             }
             if (!m_Started || !trend.Rate.Equals(m_State.SnowRate) || !floor.Equals(m_State.SnowFloor) || !trend.Ceiling.Equals(m_State.SnowCeiling))
             {
@@ -189,11 +211,77 @@ namespace KryticalNova.World.Entities
                 m_State.SnowFloor = floor;
                 m_State.SnowCeiling = trend.Ceiling;
             }
+            m_State.Flags |= (byte)((float.IsNaN(m_TemperatureOverride) ? 0 : SeasonState.FlagGmTemperature)
+                                    | (m_SpellOverride >= 0 ? SeasonState.FlagGmSpell : 0));
             m_Started = true;
             SeasonView.Server = m_State;
             SeasonView.HasServer = true;
             return true;
         }
+
+        /// <summary>
+        /// Today's weather spell (owner, 14 Nov 2026: runs of wet, dry, cold or stormy days), rolled from the world's seed and the map's
+        /// name; worked out once a day (or when the season or a GM changes it). A new spell asks the weather to roll again at once.
+        /// </summary>
+        void UpdateSpell(SeasonSettings s, SeasonProfile profile, Season season, long day)
+        {
+            long key = day * 16 + (m_SpellOverride + 1);
+            if (key == m_SpellDayKey && season == m_SpellSeasonKey && m_Started) return;
+            bool changed = m_Started;
+            m_SpellDayKey = key;
+            m_SpellSeasonKey = season;
+            m_Spell = null;
+            m_DryDays = 0;
+            m_SpellDay = new SpellDay { Spell = -1, Length = 1 };
+            if (profile != null && profile.spells.Count > 0)
+            {
+                int seed = WeatherSeed(s);
+                IReadOnlyList<SpellChoice> table = profile.SpellTable;
+                m_SpellDay = m_SpellOverride >= 0
+                    ? new SpellDay { Spell = Math.Min(m_SpellOverride, profile.spells.Count - 1), DayInSpell = 0, Length = 1 }
+                    : SeasonRules.SpellAt(table, seed, season, day, s.spellBlockDays);
+                m_Spell = profile.Spell(m_SpellDay.Spell);
+                m_DryDays = m_Spell != null && m_Spell.dry
+                    ? SeasonRules.RunOfDays(table, seed, season, day, i => profile.Spell(i) is { dry: true }, 14, s.spellBlockDays)
+                    : 0;
+                if (m_SpellOverride >= 0 && m_Spell != null && m_Spell.dry) m_DryDays = Math.Max(m_DryDays, 7);
+            }
+            m_Extra.Clear();
+            if (profile != null) m_Extra.AddRange(profile.extraNext);
+            if (m_Spell != null) m_Extra.AddRange(m_Spell.extraNext);
+            m_State.Spell = m_Spell != null ? (byte)m_SpellDay.Spell : SeasonState.NoSpell;
+            m_State.SpellSeason = (byte)season;
+            m_State.DryDays = (byte)Math.Clamp(m_DryDays, 0, 255);
+            if (changed) SeasonWeather.Reroll = true;
+        }
+
+        /// <summary>The weather seed for this map: the settings' seed mixed with the scene's name (each map its own weather).</summary>
+        int WeatherSeed(SeasonSettings s)
+        {
+            var (_, scene) = ZoneSource != null ? ZoneSource() : DefaultZone();
+            int h = s.weatherSeed;
+            if (!string.IsNullOrEmpty(scene))
+                foreach (char c in scene) h = unchecked(h * 31 + char.ToLowerInvariant(c));
+            return h;
+        }
+
+        /// <summary>The air temperature now (deg C, in the settings' steps), or a GM's.</summary>
+        float TemperatureNow(SeasonSettings s, double now, float clock01, float share, float weatherOffset, long day, bool alwaysWinter)
+        {
+            if (!float.IsNaN(m_TemperatureOverride)) return m_TemperatureOverride;
+            SeasonProfile from = s.Profile(alwaysWinter ? Season.Winter : m_State.From), to = s.Profile(alwaysWinter ? Season.Winter : m_State.To);
+            TemperatureCurve a = from != null ? from.Temperature : new TemperatureCurve { BaseC = 12f, SwingC = 8f };
+            TemperatureCurve b = to != null ? to.Temperature : a;
+            TemperatureCurve curve = TemperatureCurve.Lerp(a, b, m_State.BlendAt(now));
+            float spell = m_Spell != null ? m_Spell.temperatureOffset : 0f;
+            float wobble = SeasonRules.Hash01(WeatherSeed(s) ^ 0x2F6B, day);
+            float t = SeasonRules.TemperatureAt(curve, clock01, share, s.warmestClock, spell, weatherOffset, wobble, s.dayWobble);
+            return SeasonRules.Quantize(t, s.temperatureStep);
+        }
+
+        /// <summary>Today's spell (null = none) and the day within it (tests, GM status).</summary>
+        public WeatherSpell SpellNow => m_Spell;
+        public SpellDay SpellDayNow => m_SpellDay;
 
         /// <summary>The share of the day the sun is up at <paramref name="now"/>: the calendar's seasons, blended (never the climate's).</summary>
         public float DaylightShare(SeasonSettings s, double now)
@@ -221,11 +309,16 @@ namespace KryticalNova.World.Entities
             if (env == null) return (false, default);
             WeatherProfile p = env.WeatherBlendT >= 0.5f ? env.ToWeather : env.FromWeather;
             if (p == null) p = env.ToWeather;
+            float t = env.WeatherBlendT;
+            float offset = (env.FromWeather != null ? env.FromWeather.temperatureOffset : 0f) * (1f - t)
+                           + (env.ToWeather != null ? env.ToWeather.temperatureOffset : 0f) * t;
             return (true, new SeasonWeatherNow
             {
                 Falling = p != null ? p.precipitation : PrecipitationType.None,
                 Intensity = p != null ? p.precipitationIntensity : 0f,
                 Clock01 = env.TimeOfDay01,
+                Day = env.CalendarDay,
+                TemperatureOffset = offset,
             });
         }
 
@@ -302,6 +395,41 @@ namespace KryticalNova.World.Entities
             SeasonView.Server = m_State;
             Send();
             return true;
+        }
+
+        /// <summary>Holds the air at a temperature (deg C) for GM shows and tests (NaN = back to the weather's). False with no settings.</summary>
+        public bool SetTemperature(float celsius)
+        {
+            m_TemperatureOverride = float.IsNaN(celsius) ? float.NaN : Math.Clamp(celsius, -40f, 50f);
+            if (!Step()) return false;
+            Send();
+            return true;
+        }
+
+        /// <summary>Holds today's spell (its index in the showing season's list; below 0 = the seed's). The weather rolls again at once.</summary>
+        public bool SetSpell(int index)
+        {
+            m_SpellOverride = index < 0 ? -1 : index;
+            if (!Step()) return false;
+            Send();
+            return true;
+        }
+
+        /// <summary>The spells of the coming days from today (the seed's, not a GM hold), for gm.season week.</summary>
+        public void Forecast(List<(long day, WeatherSpell spell)> into, int days)
+        {
+            into.Clear();
+            SeasonSettings s = Config;
+            if (s == null || !m_Started) return;
+            bool alwaysWinter = m_State.AlwaysWinter;
+            Season season = alwaysWinter ? Season.Winter : m_State.DominantAt(Now);
+            SeasonProfile profile = s.Profile(season);
+            if (profile == null) return;
+            (bool ok, SeasonWeatherNow w) = WeatherSource != null ? WeatherSource() : DefaultWeather();
+            long today = ok ? w.Day : (long)Math.Floor(Now / 3600.0);
+            int seed = WeatherSeed(s);
+            for (int i = 0; i < days; i++)
+                into.Add((today + i, profile.Spell(SeasonRules.SpellAt(profile.SpellTable, seed, season, today + i, s.spellBlockDays).Spell)));
         }
 
         /// <summary>Sets this map's climate until the server restarts (Auto = from the settings' always-winter list).</summary>

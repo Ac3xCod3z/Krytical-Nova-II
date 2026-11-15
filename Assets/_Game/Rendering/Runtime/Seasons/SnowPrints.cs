@@ -3,7 +3,7 @@ using UnityEngine;
 namespace KryticalNova.Rendering
 {
     /// <summary>The shape a foot leaves (owner, 14 Nov 2026: players, NPCs and mounts each with their own print).</summary>
-    public enum SnowPrintShape : byte { Boot = 0, Paw = 1 }
+    public enum SnowPrintShape : byte { Boot = 0, Paw = 1, Path = 2 }
 
     /// <summary>
     /// Footprints waiting to be pressed into the snow (owner, 14 Nov 2026: a print where each foot actually plants, turned to its heading,
@@ -49,6 +49,25 @@ namespace KryticalNova.Rendering
             float r = yawDegrees * Mathf.Deg2Rad;
             s_Where[s_Count] = new Vector4(foot.x, foot.z, Mathf.Sin(r), Mathf.Cos(r));
             s_Shape[s_Count] = new Vector4(Mathf.Max(0.02f, size.x * 0.5f), Mathf.Max(0.02f, size.y * 0.5f), (float)shape, Mathf.Clamp01(press));
+            s_Count++;
+            Added++;
+        }
+
+        /// <summary>
+        /// A body ploughed through deep snow from <paramref name="from"/> to <paramref name="to"/> (owner, 14 Nov 2026: deeper than a
+        /// print's depth, a walker leaves a continuous path, body-wide, wider for mounts). <paramref name="halfWidth"/> in metres.
+        /// </summary>
+        public static void AddPath(Vector3 from, Vector3 to, float halfWidth, float press = 1f)
+        {
+            if (!Wanted) return;
+            if (s_Count >= MaxPerFrame)
+            {
+                System.Array.Copy(s_Where, 1, s_Where, 0, MaxPerFrame - 1);
+                System.Array.Copy(s_Shape, 1, s_Shape, 0, MaxPerFrame - 1);
+                s_Count = MaxPerFrame - 1;
+            }
+            s_Where[s_Count] = new Vector4(from.x, from.z, to.x, to.z);
+            s_Shape[s_Count] = new Vector4(Mathf.Max(0.05f, halfWidth), 0f, (float)SnowPrintShape.Path, Mathf.Clamp01(press));
             s_Count++;
             Added++;
         }

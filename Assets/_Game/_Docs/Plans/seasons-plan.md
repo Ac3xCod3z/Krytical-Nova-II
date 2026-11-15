@@ -418,3 +418,15 @@ Built 14 Nov 2026 in one PR (all six steps' code; the Unity checks are one Play 
   Autumn with mixed colours, leaves blowing), perf note.
 - [ ] Winter: deciduous trees are now bare through Winter (owner, 14 Nov: "leaves almost all gone prior to winter"), replacing the 13 Nov
   "frosted, leaves kept" answer; flagged to the Master.
+
+## Part 2 (owner 14 Nov, coder 21-2): real-life seasons, code landed on PR #280 (not yet seen in Unity)
+- [x] A. Temperature: season mean + day swing (coldest before dawn, warmest 15:00) + spell + weather offset + daily wobble, sent in 0.5 C steps; snow builds at or below 0.5 C, holds dry below 0, thaws above 0 (per degree, sun x1.6, rain x3). `gm.season temp <C>|auto`.
+- [x] B/J. Weather spells: per-season tables in SP_*.asset (Spring Showers/Mixed/Bright/Storm, Summer Heatwave/Dry/Mixed/Wet/Storm, Autumn Mixed/Wet/Crisp/Storm, Winter Snowy/Blizzard/Cold Clear/Thaw), rolled per in-game day from `weatherSeed` + map name; new worst tier `WP_Storm` (catalog index 11). `gm.season spell <name>|auto`, `gm.season week`. 0.4 m stays the ceiling.
+- [x] C. Drifts: wavy drift field, ripples, thinner on slopes; shelter map (canopies thin, windward piles against walls, roads), 160 m round the camera, off on Low.
+- [x] D. Prints every stride (0.8 m, alternating feet; the walk clip no longer decides); deeper than 0.12 m a ploughed path that presses the raised snow down.
+- [x] K. Town roads: renderers whose material/mesh name matches `roadNameContains` get rendering layer bit 6 at runtime and a road box in the shelter map: 15 % of the snow, packed, slushy.
+- [x] F. Spring: grass brown and short after the snow -> green and full by 40 %; buds; blossom on Emberleaf (pink), Gildleaf (white), Duskleaf (lilac); petals drift via the leaf emitters.
+- [x] G (part). Golden grass on dry runs (3-7 days) in Summer; `SeasonPresenter.HeatHaze` published for the haze pass.
+- [ ] G. Heat haze half-res screen pass (renderer feature, tiered, off on Low), dust/pollen motes, dusk fireflies, warmer sun on hot afternoons.
+- [ ] E/H. Synty Shader Graph copies + Move/Put Back builder; fall check on town trees. Roof middles a bit deeper.
+- [ ] I. One Unity showcase turn (clips per season and stage, Zone01 + a field map, perf Low/High), Encyclopedia, launcher news.

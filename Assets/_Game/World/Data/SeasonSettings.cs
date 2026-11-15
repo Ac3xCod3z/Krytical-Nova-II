@@ -55,16 +55,28 @@ namespace KryticalNova.World
         [Range(0f, 90f)] public float snowNoneAboveDegrees = 55f;
         [Tooltip("How much of the depth is shown as a real raised layer, per World Effects tier (Low, Medium, High, Ultra). 0 = colour only.")]
         public float[] snowLiftByTier = { 0f, 1f, 1f, 1f };
-        [Tooltip("Minutes for full cover to melt on a dry day, outside Winter.")]
-        [Min(0.1f)] public float meltMinutesDay = 30f;
-        [Tooltip("Melt at night, times the day's (outside Winter).")]
-        [Range(0f, 1f)] public float nightMeltFactor = 0.25f;
-        [Tooltip("Melt while it rains, times the day's.")]
+
+        [Header("Temperature and thaw (server; owner 14 Nov: build-up and defrost periods)")]
+        [Tooltip("Snow settles only at or below this air temperature (deg C); warmer snow is sleet and thaws.")]
+        [Range(-5f, 3f)] public float snowBelowTemperature = 0.5f;
+        [Tooltip("Minutes full cover takes to thaw at +1 C in the shade (at +4 C it takes a quarter of that). Dry at or below 0 C it holds.")]
+        [Min(1f)] public float thawMinutesPerDegree = 240f;
+        [Tooltip("Thaw in sunshine, times more than in the shade (0.6 = 60 % faster by day).")]
+        [Range(0f, 3f)] public float sunThawBonus = 0.6f;
+        [Tooltip("Thaw while it rains (or sleets), times the dry thaw.")]
         [Min(0f)] public float rainMeltFactor = 3f;
-        [Tooltip("Minutes for full cover to melt on a dry Winter day.")]
-        [Min(0.1f)] public float winterMeltMinutesDay = 240f;
-        [Tooltip("Melt on a Winter night, times the Winter day's (0 = none).")]
-        [Range(0f, 1f)] public float winterNightMeltFactor = 0f;
+        [Tooltip("The warmest hour of the day as a share of the clock (0.625 = 15:00); the coldest is just before sunrise.")]
+        [Range(0.4f, 0.9f)] public float warmestClock = 0.625f;
+        [Tooltip("Each day is up to this many degrees warmer or colder than its season and spell (from the world's seed).")]
+        [Range(0f, 10f)] public float dayWobble = 2.5f;
+        [Tooltip("The temperature is sent in steps this big (the snow's trend and the clients' heat change only per step).")]
+        [Range(0.1f, 2f)] public float temperatureStep = 0.5f;
+
+        [Header("Weather spells (server; owner 14 Nov: runs of days, a worst storm tier)")]
+        [Tooltip("The world's weather seed: with the map's name it decides every day's spell, the same on every restart.")]
+        public int weatherSeed = 20261114;
+        [Tooltip("Spells are rolled in blocks of this many in-game days (a spell is cut at a block's end).")]
+        [Range(8, 256)] public int spellBlockDays = 64;
         [Tooltip("An always-winter map never has less cover than this.")]
         [Range(0f, 1f)] public float alwaysWinterFloor = 0.6f;
 
@@ -86,6 +98,82 @@ namespace KryticalNova.World
         [Range(0.05f, 1f)] public float grassHeightUnderSnow = 0.35f;
         [Tooltip("How much each tree turns before or after the others (0 = the whole forest at once).")]
         [Range(0f, 1f)] public float leafTurnSpread = 0.25f;
+
+        [Header("Drifts (every client; owner 14 Nov: the max is a ceiling, never a flat sheet)")]
+        [Tooltip("Metres across a drift and dip of the low wavy field.")]
+        [Min(2f)] public float driftSize = 18f;
+        [Tooltip("How much deeper and shallower drifts and dips are than the snow's mean (0.4 = +-40 %); the max depth stays the ceiling.")]
+        [Range(0f, 1f)] public float driftAmount = 0.4f;
+        [Tooltip("Small ripples on top, share of the depth.")]
+        [Range(0f, 0.5f)] public float rippleAmount = 0.12f;
+        [Tooltip("How much thinner snow lies under a tree's canopy (1 = none under it).")]
+        [Range(0f, 1f)] public float underCanopyThinning = 0.65f;
+        [Tooltip("How much deeper snow piles against the windward side of walls, buildings and rocks (share of the depth).")]
+        [Range(0f, 1.5f)] public float windwardPile = 0.6f;
+        [Tooltip("Metres a pile reaches out from the wall it lies against.")]
+        [Range(0.5f, 8f)] public float pileReach = 2.5f;
+        [Tooltip("Slopes hold thinner snow than flat ground before they shed it (share at the steepest angle that holds any).")]
+        [Range(0f, 1f)] public float slopeThinning = 0.5f;
+        [Tooltip("Roof middles hold this share more than their edges (ridges and eaves shed).")]
+        [Range(0f, 0.5f)] public float roofMiddle = 0.15f;
+        [Tooltip("While it thaws, surfaces facing the sun lose their snow this much sooner.")]
+        [Range(0f, 0.5f)] public float sunFacingThaw = 0.25f;
+        [Tooltip("Metres round the camera the shelter map (canopies, walls, roads) covers, and its texels across per World Effects tier.")]
+        [Min(32f)] public float shelterMetres = 160f;
+        public int[] shelterTexelsByTier = { 0, 256, 512, 512 };
+        [Tooltip("Shapes stamped into the shelter map at most (nearest the camera first).")]
+        [Range(16, 512)] public int shelterShapesMax = 256;
+
+        [Header("Town roads (every client; owner 14 Nov: thinner, trodden roads)")]
+        [Tooltip("Renderers whose material (or mesh) name contains any of these are roads and paths: much less snow, packed and slushy.")]
+        public List<string> roadNameContains = new List<string> { "Road", "Street", "Pavement", "Sidewalk", "Path", "Plaza", "Crossing", "Curb", "Kerb" };
+        [Tooltip("Share of the snow a road keeps (0.15 = a thin trodden layer while open ground and roofs fill).")]
+        [Range(0f, 1f)] public float roadSnowShare = 0.15f;
+        [Tooltip("The packed, slushy colour of trodden snow (multiplies the snow colour).")]
+        public Color slushColor = new Color(0.62f, 0.6f, 0.6f);
+
+        [Header("Ploughed paths (every client; owner 14 Nov: deep snow leaves a path, not prints)")]
+        [Tooltip("Snow deeper than this (m) at the feet makes a continuous path instead of footprints; blended near it.")]
+        [Range(0.02f, 0.4f)] public float printMaxDepth = 0.12f;
+        [Tooltip("Half the path's width for a person (m); mounts and beasts times their size.")]
+        [Range(0.1f, 1.5f)] public float pathHalfWidth = 0.32f;
+        [Tooltip("How far down a path presses the raised snow (1 = to the ground).")]
+        [Range(0f, 1f)] public float pathPress = 0.8f;
+        [Tooltip("Metres of a stride for a person (a print every stride, left and right in turn, whatever the walk clip does); times the body's size.")]
+        [Range(0.3f, 2f)] public float strideMetres = 0.8f;
+
+        [Header("Spring (every client; owner 14 Nov: the world comes back to life)")]
+        [Tooltip("Share of Spring by which the grass is green and full height again, and its height at the end of Winter (share of full).")]
+        [Range(0.05f, 1f)] public float springGrassBy = 0.4f;
+        [Range(0.1f, 1f)] public float winterGrassHeight = 0.45f;
+        [Tooltip("The brown, flattened tone of grass after the snow (multiplies the art), and the fresh spring green it turns to.")]
+        public Color thawGrass = new Color(0.72f, 0.62f, 0.42f);
+        public Color springGreen = new Color(0.9f, 1.12f, 0.8f);
+        [Tooltip("Pale-green buds on bare trees early in Spring.")]
+        public Color budColor = new Color(0.62f, 0.82f, 0.42f);
+        [Tooltip("Shares of Spring when blossom opens, is at its fullest and is gone (the petals fall in the last part).")]
+        public Vector3 blossomShares = new Vector3(0.05f, 0.22f, 0.5f);
+        [Tooltip("Petals drifting while blossom drops, times the falling-leaf rate.")]
+        [Range(0f, 2f)] public float petalDrift = 0.8f;
+
+        [Header("Summer (every client; owner 14 Nov: lush, hot afternoons shimmer)")]
+        [Tooltip("Temperatures (deg C) where the heat haze starts and is at its strongest (only by day).")]
+        public Vector2 heatHazeFromTo = new Vector2(27f, 34f);
+        [Tooltip("Heat haze strength per World Effects tier (Low, Medium, High, Ultra). 0 = off (Low).")]
+        public float[] heatHazeByTier = { 0f, 0.6f, 1f, 1f };
+        [Tooltip("Metres from the camera where the shimmer begins and where it is full.")]
+        public Vector2 heatHazeDistance = new Vector2(25f, 90f);
+        [Tooltip("Dry days in a row where the grass starts to go golden, and where it is fully golden.")]
+        public Vector2 goldenGrassDays = new Vector2(3f, 7f);
+        public Color goldenGrass = new Color(1.12f, 0.92f, 0.52f);
+        [Tooltip("A touch more warmth in the sunlight on hot afternoons (multiplies the sun's colour at full heat).")]
+        public Color hotSunWarmth = new Color(1.06f, 1f, 0.9f);
+        [Tooltip("Dust and pollen motes by day in Summer and late Spring, and fireflies in the grass at dusk; the counts per World Effects tier.")]
+        public Material motesMaterial;
+        public int[] motesByTier = { 0, 40, 90, 140 };
+        public int[] firefliesByTier = { 0, 30, 70, 110 };
+        [Tooltip("Fireflies come out at or above this temperature (deg C) from sunset to the middle of the night.")]
+        [Range(0f, 30f)] public float fireflyTemperature = 14f;
 
         [Header("Leaves through the year (owner 14 Nov: fall turns every kind its own colour, bare before Winter)")]
         [Tooltip("Share of Autumn by which the leaves have fully turned.")]
@@ -165,11 +253,10 @@ namespace KryticalNova.World
             HeavyBuildPerSecond = 1f / (heavyBuildMinutes * 60f),
             LightCap = lightCap,
             HeavyCap = heavyCap,
-            MeltDay = 1f / (meltMinutesDay * 60f),
-            NightFactor = nightMeltFactor,
+            SnowBelowC = snowBelowTemperature,
+            ThawPerDegreeSecond = 1f / (thawMinutesPerDegree * 60f),
+            SunThawBonus = sunThawBonus,
             RainFactor = rainMeltFactor,
-            WinterMeltDay = 1f / (winterMeltMinutesDay * 60f),
-            WinterNightFactor = winterNightMeltFactor,
         };
 
         /// <summary>True when a map of this region or scene keeps Winter all year.</summary>
@@ -197,6 +284,25 @@ namespace KryticalNova.World
         /// <summary>Characters watched for footprints on a World Effects tier.</summary>
         public int PrintWalkers(WorldEffects tier) => (int)ByTier(printWalkersByTier, (int)tier, 12);
 
+        /// <summary>Shelter map texels on a World Effects tier (0 = none: Low keeps the plain field).</summary>
+        public int ShelterTexels(WorldEffects tier) => (int)ByTier(shelterTexelsByTier, (int)tier, 0);
+
+        /// <summary>Heat haze strength on a World Effects tier (0 = off).</summary>
+        public float HeatHaze(WorldEffects tier) => ByTier(heatHazeByTier, (int)tier, 0f);
+
+        /// <summary>Dust motes and fireflies on a World Effects tier.</summary>
+        public int Motes(WorldEffects tier) => (int)ByTier(motesByTier, (int)tier, 0);
+        public int Fireflies(WorldEffects tier) => (int)ByTier(firefliesByTier, (int)tier, 0);
+
+        /// <summary>True when a material or mesh name is a road's (<see cref="roadNameContains"/>).</summary>
+        public bool IsRoadName(string name)
+        {
+            if (string.IsNullOrEmpty(name) || roadNameContains == null) return false;
+            for (int i = 0; i < roadNameContains.Count; i++)
+                if (!string.IsNullOrEmpty(roadNameContains[i]) && name.IndexOf(roadNameContains[i], StringComparison.OrdinalIgnoreCase) >= 0) return true;
+            return false;
+        }
+
         /// <summary>Falling-leaf rate at the height of Autumn on a World Effects tier.</summary>
         public float FallLeaves(WorldEffects tier) => ByTier(fallLeavesByTier, (int)tier, 1f);
 
@@ -204,6 +310,7 @@ namespace KryticalNova.World
         public FoliageCurve Foliage => new FoliageCurve
         {
             TurnBy = autumnTurnBy, DropFrom = autumnDropFrom, Bare = bareCanopy, LeafOutBy = springLeafOutBy, DullBy = autumnDullBy,
+            GrassBy = springGrassBy, BlossomFrom = blossomShares.x, BlossomPeak = blossomShares.y, BlossomGone = blossomShares.z,
         };
 
         static float ByTier(float[] values, int tier, float fallback) =>

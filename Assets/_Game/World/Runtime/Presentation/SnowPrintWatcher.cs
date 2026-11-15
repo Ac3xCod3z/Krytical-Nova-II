@@ -7,7 +7,7 @@ namespace KryticalNova.World
     /// <summary>
     /// Footprints in the snow (owner, 14 Nov 2026: "foot prints instead of the trail effect ... we know foot placement"). Watches the feet
     /// of the characters nearest the camera (players, NPCs, Hostiles, mounts; how many is the World Effects tier's
-    /// <see cref="SeasonSettings.PrintWalkers"/>) and, each time a foot comes down, adds a print at that foot turned to the body's heading
+    /// <see cref="SeasonSettings.PrintWalkers"/>) and, every stride, adds a print at that side's foot turned to the body's heading (in deep snow a ploughed path instead)
     /// (<see cref="SnowPrints"/>; the track map stamps it). Humanoids are watched by their foot bones (where the foot IK put them), beasts and
     /// mounts by their foot, hoof or paw bones (a paw print), anything with neither by its stride (left, right, left).
     /// <para>
@@ -18,11 +18,6 @@ namespace KryticalNova.World
     public sealed class SnowPrintWatcher : MonoBehaviour
     {
         const float ScanSeconds = 1f;
-        const float StrideMetres = 0.7f;   // the fallback's step length, times the body's size
-        const float PlantAbove = 0.035f;   // a foot is down within this of its lowest height (metres, times size)
-        const float LiftAbove = 0.09f;     // and lifted past this
-        const float StillShare = 0.3f;     // a foot moving slower than this share of the body is planted (it stays put while the body goes on)
-        const float SwingShare = 0.8f;     // and one moving faster than this share is in the air
 
         sealed class Walker
         {
@@ -38,6 +33,7 @@ namespace KryticalNova.World
             public bool Skip;
             public Vector3[] LastFoot;
             public Vector3 LastBody;
+            public Vector3 LastPath;
         }
 
         readonly List<Walker> m_Walkers = new List<Walker>(32);
@@ -53,7 +49,7 @@ namespace KryticalNova.World
         /// <summary>
         /// Once a frame from the season presenter: watch feet round <paramref name="centre"/>, or stop (null: no snow).
         /// </summary>
-        public void Watch(Vector3? centre, SeasonSettings settings)
+        public void Watch(Vector3? centre, SeasonSettings settings, float depthMetres = 0f)
         {
             if (centre == null || settings == null)
             {
@@ -70,7 +66,7 @@ namespace KryticalNova.World
             {
                 Walker w = m_Walkers[i];
                 if (w.Animator == null || !w.Animator.isActiveAndEnabled) continue;
-                Step(w, settings);
+                Step(w, settings, depthMetres);
             }
         }
 
@@ -103,7 +99,7 @@ namespace KryticalNova.World
 
         Walker Make(Animator a)
         {
-            var w = new Walker { Animator = a, LastStride = a.transform.position, LastBody = a.transform.position };
+            var w = new Walker { Animator = a, LastStride = a.transform.position, LastBody = a.transform.position, LastPath = a.transform.position };
             // a generic animator over or under a humanoid one (a body's "Visuals" holder) is the same feet: watch them once, as boots
             if (!a.isHuman)
             {
@@ -154,59 +150,63 @@ namespace KryticalNova.World
             return false;
         }
 
-        void Step(Walker w, SeasonSettings settings)
+        void Step(Walker w, SeasonSettings settings, float depthMetres)
         {
             if (w.Skip) return;
             Transform body = w.Animator.transform;
             float yaw = body.eulerAngles.y;
             Vector3 heading = body.forward;
             heading.y = 0f;
+            if (heading.sqrMagnitude < 1e-6f) heading = Vector3.forward;
+            heading.Normalize();
             Vector2 size = (w.Paw ? settings.pawPrint : settings.bootPrint) * w.Size;
             SnowPrintShape shape = w.Paw ? SnowPrintShape.Paw : SnowPrintShape.Boot;
 
-            if (w.Feet == null)
+            // owner 14 Nov: deeper than a print's depth the body ploughs a path; prints and path blend near it
+            float printMax = Mathf.Max(0.01f, settings.printMaxDepth);
+            float path = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(printMax * 0.8f, printMax * 1.25f, depthMetres));
+            Vector3 pathMoved = body.position - w.LastPath;
+            pathMoved.y = 0f;
+            if (pathMoved.sqrMagnitude > 25f) w.LastPath = body.position;   // a teleport: no path across the map
+            else if (path > 0.01f && pathMoved.sqrMagnitude >= 0.25f * 0.25f)
             {
-                // nothing to watch: a print each stride, left and right of the path
-                Vector3 moved = body.position - w.LastStride;
-                moved.y = 0f;
-                if (moved.sqrMagnitude < StrideMetres * StrideMetres * w.Size * w.Size) return;
-                w.LastStride = body.position;
-                w.Side = 1 - w.Side;
-                Vector3 side = Vector3.Cross(Vector3.up, heading.normalized) * (w.Side == 0 ? -0.12f : 0.12f) * w.Size;
-                SnowPrints.Add(body.position + side, yaw, size, shape);
-                return;
+                SnowPrints.AddPath(w.LastPath, body.position, settings.pathHalfWidth * w.Size * (w.Paw ? 1.6f : 1f), path);
+                w.LastPath = body.position;
             }
+            else if (path <= 0.01f) w.LastPath = body.position;
 
-            float dt = Mathf.Max(Time.deltaTime, 1e-4f);
-            Vector3 bodyStep = body.position - w.LastBody;
-            bodyStep.y = 0f;
-            w.LastBody = body.position;
-            float bodySpeed = bodyStep.magnitude / dt;
-            bool walking = bodySpeed > 0.4f * w.Size;
-            for (int i = 0; i < w.Feet.Length; i++)
+            // a print every stride, left and right in turn (owner 14 Nov: every step leaves a print; the walk clip plants a foot only
+            // every ~4 m at run speed, so the stride decides, and a watched foot bone only says where that side's foot is)
+            Vector3 moved = body.position - w.LastStride;
+            moved.y = 0f;
+            float stride = Mathf.Max(0.2f, settings.strideMetres) * w.Size;
+            if (moved.sqrMagnitude > 25f) { w.LastStride = body.position; return; }   // a teleport
+            if (moved.sqrMagnitude < stride * stride) return;
+            w.LastStride = body.position;
+            w.Side = 1 - w.Side;
+            if (path >= 0.99f) return;   // deep snow: the path only
+            Vector3 right = Vector3.Cross(Vector3.up, heading);
+            Vector3 at = body.position + right * ((w.Side == 0 ? -0.12f : 0.12f) * w.Size);
+            if (w.Feet != null && w.Feet.Length >= 2)
             {
-                Transform foot = w.Feet[i];
-                if (foot == null) continue;
-                Vector3 footStep = foot.position - w.LastFoot[i];
-                footStep.y = 0f;
-                w.LastFoot[i] = foot.position;
-                float footSpeed = footStep.magnitude / dt;
-                float height = foot.position.y - body.position.y;
-                // its lowest height lately (the ankle stands above the sole): creeps back up so a slope or a jump never fools it for long
-                w.Rest[i] = Mathf.Min(w.Rest[i] == float.MaxValue ? height : w.Rest[i] + dt * 0.05f, height);
-                float above = height - w.Rest[i];
-                // a foot is in the air when it rises or (walking) swings past the body; it is down when it is low and (walking) stays put
-                bool swinging = above > LiftAbove * w.Size || (walking && footSpeed > SwingShare * bodySpeed);
-                bool planted = above < LiftAbove * w.Size && (walking ? footSpeed < StillShare * bodySpeed : above < PlantAbove * w.Size);
-                if (w.Lifted[i] && planted)
+                // the foot on this side, where the animation and foot IK put it, if it is near the body's path
+                Transform foot = null;
+                float best = float.MinValue;
+                for (int i = 0; i < w.Feet.Length; i++)
                 {
-                    w.Lifted[i] = false;
-                    // the ankle is over the heel: the print's middle is a little ahead of it
-                    Vector3 at = foot.position + heading.normalized * size.x * 0.2f;
-                    SnowPrints.Add(at, yaw, size, shape);
+                    if (w.Feet[i] == null) continue;
+                    float side = Vector3.Dot(w.Feet[i].position - body.position, right) * (w.Side == 0 ? -1f : 1f);
+                    if (side > best) { best = side; foot = w.Feet[i]; }
                 }
-                else if (!w.Lifted[i] && swinging) w.Lifted[i] = true;
+                if (foot != null)
+                {
+                    Vector3 f = foot.position;
+                    f.y = body.position.y;
+                    if ((f - body.position).sqrMagnitude < 0.6f * 0.6f * w.Size * w.Size)
+                        at = body.position + right * Vector3.Dot(f - body.position, right) + heading * Mathf.Clamp(Vector3.Dot(f - body.position, heading), -0.2f, 0.35f) * w.Size;
+                }
             }
+            SnowPrints.Add(at + heading * (size.x * 0.2f), yaw, size, shape, 1f - path * 0.7f);
         }
     }
 }

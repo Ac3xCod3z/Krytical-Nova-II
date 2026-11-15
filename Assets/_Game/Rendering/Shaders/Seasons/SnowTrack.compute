@@ -5,6 +5,7 @@
 //   r = how pressed the snow is, 0 untouched .. 1 a fresh print
 // The map moves with the camera in whole texels, so what it holds only needs shifting, never resampling.
 #pragma kernel Track
+#pragma kernel Shelter
 
 Texture2D<float> _Before;
 RWTexture2D<float> _After;
@@ -14,8 +15,8 @@ float4 _Map;            // xy world XZ of texel (0,0)'s corner, z texel size in 
 float4 _Fill;           // x share of a mark left after this frame
 
 #define KN_MAX_PRINTS 64
-float4 _Prints[KN_MAX_PRINTS];       // x, z, sin(yaw), cos(yaw)
-float4 _PrintShapes[KN_MAX_PRINTS];  // half length, half width, shape (0 boot, 1 paw), press
+float4 _Prints[KN_MAX_PRINTS];       // x, z, sin(yaw), cos(yaw); a path: from x, z, to x, z
+float4 _PrintShapes[KN_MAX_PRINTS];  // half length, half width, shape (0 boot, 1 paw, 2 path: x = half width), press
 int    _PrintCount;
 
 // How pressed a point is by one print, in the print's own frame (y along the foot, toe at +y), metres.
@@ -61,6 +62,15 @@ void Track(uint3 id : SV_DispatchThreadID)
     {
         float4 at = _Prints[i];
         float4 shape = _PrintShapes[i];
+        if (shape.z > 1.5)
+        {
+            // a ploughed path (deep snow): a capsule from the last body position to this one, a flat floor and soft walls
+            float2 ab = at.zw - at.xy;
+            float t = saturate(dot(world - at.xy, ab) / max(dot(ab, ab), 1e-6));
+            float dist = length(world - (at.xy + ab * t));
+            mark = max(mark, smoothstep(shape.x, shape.x * 0.55, dist) * shape.w);
+            continue;
+        }
         float2 d = world - at.xy;
         float reach = max(shape.x, shape.y) * 1.3 + _Map.z;
         if (dot(d, d) > reach * reach) continue;
@@ -71,3 +81,54 @@ void Track(uint3 id : SV_DispatchThreadID)
     }
     _After[id.xy] = mark;
 }
+
+// ---------------------------------------------------------------- the shelter map (owner 14 Nov: drifts, canopies, walls, roads)
+// Rebuilt now and then, not every frame: r = under a canopy, g = a pile against a wall's windward side, b = a road (trodden).
+#define KN_MAX_SHAPES 512
+RWTexture2D<float4> _Shelter;
+float4 _Shapes[KN_MAX_SHAPES];       // centre x, z, half size x, z (a box on the ground)
+float4 _ShapeKinds[KN_MAX_SHAPES];   // kind (0 canopy, 1 wall, 2 road), strength
+int    _ShapeCount;
+float4 _ShelterWind;                 // xy where the wind blows to (unit), z how far a pile reaches (m)
+
+[numthreads(8, 8, 1)]
+void Shelter(uint3 id : SV_DispatchThreadID)
+{
+    uint across = (uint)_Map.w;
+    if (id.x >= across || id.y >= across) return;
+    float2 world = _Map.xy + (float2(id.xy) + 0.5) * _Map.z;
+    float canopy = 0.0, pile = 0.0, road = 0.0;
+    float reach = _ShelterWind.z;
+    for (int i = 0; i < _ShapeCount; i++)
+    {
+        float4 box = _Shapes[i];
+        float2 kind = _ShapeKinds[i].xy;
+        float2 d = world - box.xy;
+        float2 q = abs(d) - box.zw;
+        float outside = length(max(q, 0.0));
+        if (kind.x < 0.5)
+        {
+            // a canopy: an ellipse inside its box, soft at the drip line
+            float r = length(d / box.zw);
+            canopy = max(canopy, smoothstep(1.05, 0.55, r) * kind.y);
+        }
+        else if (kind.x < 1.5)
+        {
+            // a wall: the pile lies outside it, on the side the wind blows onto, fading out over the reach
+            if (outside > 0.0 && outside < reach)
+            {
+                float2 n = normalize(max(q, 0.0) * sign(d) + 1e-5);
+                float windward = saturate(dot(n, -_ShelterWind.xy) * 1.4);
+                float lee = saturate(dot(n, _ShelterWind.xy) * 1.4) * 0.35;   // a smaller tail behind it
+                float fade = 1.0 - outside / reach;
+                pile = max(pile, (windward + lee) * fade * fade * kind.y);
+            }
+        }
+        else
+        {
+            road = max(road, smoothstep(0.35, -0.1, outside) * kind.y);
+        }
+    }
+    _Shelter[id.xy] = float4(canopy, pile, road, 1.0);
+}
+

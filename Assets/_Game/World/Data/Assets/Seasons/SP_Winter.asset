@@ -32,6 +32,87 @@ MonoBehaviour:
     weight: 1
   - profile: {fileID: 11400000, guid: d3c115db958a967418f444865d2987de, type: 2}
     weight: 0.5
+  baseTemperature: -4
+  dailySwing: 6
+  spells:
+  - name: Snowy
+    chance: 0.4
+    minDays: 1
+    maxDays: 3
+    temperatureOffset: -1
+    wet: 0
+    dry: 0
+    snowy: 1
+    storm: 0
+    weatherWeights:
+    - profile: {fileID: 11400000, guid: 6c03354b00db91742a0d405e11bbd59e, type: 2}
+      multiplier: 3
+    - profile: {fileID: 11400000, guid: b4de021546bf49644b1fbca9c37be32d, type: 2}
+      multiplier: 1.2
+    - profile: {fileID: 11400000, guid: d3c115db958a967418f444865d2987de, type: 2}
+      multiplier: 1.2
+    extraNext:
+    - profile: {fileID: 11400000, guid: 6c03354b00db91742a0d405e11bbd59e, type: 2}
+      weight: 0.8
+  - name: Blizzard
+    chance: 0.1
+    minDays: 1
+    maxDays: 2
+    temperatureOffset: -5
+    wet: 0
+    dry: 0
+    snowy: 1
+    storm: 1
+    weatherWeights:
+    - profile: {fileID: 11400000, guid: b4de021546bf49644b1fbca9c37be32d, type: 2}
+      multiplier: 5
+    - profile: {fileID: 11400000, guid: 6c03354b00db91742a0d405e11bbd59e, type: 2}
+      multiplier: 2
+    extraNext:
+    - profile: {fileID: 11400000, guid: b4de021546bf49644b1fbca9c37be32d, type: 2}
+      weight: 1
+  - name: Cold Clear
+    chance: 0.3
+    minDays: 2
+    maxDays: 4
+    temperatureOffset: -4
+    wet: 0
+    dry: 1
+    snowy: 0
+    storm: 0
+    weatherWeights:
+    - profile: {fileID: 11400000, guid: 6c03354b00db91742a0d405e11bbd59e, type: 2}
+      multiplier: 0.05
+    - profile: {fileID: 11400000, guid: b4de021546bf49644b1fbca9c37be32d, type: 2}
+      multiplier: 0
+    - profile: {fileID: 11400000, guid: 6eb56a3525e68b84ea754246683459dd, type: 2}
+      multiplier: 2.5
+    - profile: {fileID: 11400000, guid: 6c9b9d0296dfc1643b8e8b9edcb7d19b, type: 2}
+      multiplier: 1.5
+    extraNext: []
+  - name: Thaw
+    chance: 0.2
+    minDays: 1
+    maxDays: 2
+    temperatureOffset: 7
+    wet: 1
+    dry: 0
+    snowy: 0
+    storm: 0
+    weatherWeights:
+    - profile: {fileID: 11400000, guid: 6c03354b00db91742a0d405e11bbd59e, type: 2}
+      multiplier: 0.1
+    - profile: {fileID: 11400000, guid: b4de021546bf49644b1fbca9c37be32d, type: 2}
+      multiplier: 0
+    - profile: {fileID: 11400000, guid: 58a6883fd3a881249b16036e32f178c1, type: 2}
+      multiplier: 3
+    - profile: {fileID: 11400000, guid: 9832740c89d5b9749b94b880a421af43, type: 2}
+      multiplier: 3
+    - profile: {fileID: 11400000, guid: d3c115db958a967418f444865d2987de, type: 2}
+      multiplier: 1.5
+    extraNext:
+    - profile: {fileID: 11400000, guid: 9832740c89d5b9749b94b880a421af43, type: 2}
+      weight: 0.6
   grassTint: {r: 0.8, g: 0.85, b: 0.85, a: 1}
   grassTipFrost: 0.55
   leafColor: {r: 0.55, g: 0.62, b: 0.55, a: 1}

@@ -103,19 +103,19 @@ namespace KryticalNova.Tests
         {
             LightIntensity = 0.5f, HeavyIntensity = 1f, LightBuildPerSecond = 1f / 2400f, HeavyBuildPerSecond = 1f / 480f,
             LightCap = 0.35f, HeavyCap = 1f,
-            MeltDay = 1f / 1800f, NightFactor = 0.25f, RainFactor = 3f, WinterMeltDay = 1f / 14400f, WinterNightFactor = 0f,
+            SnowBelowC = 0.5f, ThawPerDegreeSecond = 1f / 14400f, SunThawBonus = 0.6f, RainFactor = 3f,
         };
 
-        static SnowTrend Trend(PrecipitationType p, float intensity, bool night, Season season, bool alwaysWinter = false, float cover = 0f) =>
-            SeasonRules.SnowTrendOf(Rates, p, intensity, night, season, alwaysWinter, cover);
+        static SnowTrend Trend(PrecipitationType p, float intensity, float tempC = -5f, bool sunUp = true, float cover = 0f) =>
+            SeasonRules.SnowTrendOf(Rates, p, intensity, tempC, sunUp, cover);
 
         /// <summary>Cover after <paramref name="seconds"/> of steady weather, re-anchoring each minute as the server does when the trend changes.</summary>
-        static float Run(PrecipitationType p, float intensity, double seconds, float start = 0f, Season season = Season.Winter)
+        static float Run(PrecipitationType p, float intensity, double seconds, float start = 0f, float tempC = -5f, bool sunUp = true)
         {
             float cover = start;
             for (double t = 0; t < seconds; t += 60)
             {
-                SnowTrend tr = Trend(p, intensity, false, season, false, cover);
+                SnowTrend tr = Trend(p, intensity, tempC, sunUp, cover);
                 cover = SeasonRules.SnowCover(cover, tr.Rate, 0, Math.Min(60, seconds - t), 0f, tr.Ceiling);
             }
             return cover;
@@ -125,8 +125,8 @@ namespace KryticalNova.Tests
         public void SnowBuildUp_LightIsSlowAndLow_HeavyIsFastAndHigh()
         {
             // owner 14 Nov: light snow takes longer and stays low; bad snow builds fast and higher
-            SnowTrend light = Trend(PrecipitationType.Snow, 0.5f, false, Season.Winter);
-            SnowTrend heavy = Trend(PrecipitationType.Snow, 1f, false, Season.Winter);
+            SnowTrend light = Trend(PrecipitationType.Snow, 0.5f);
+            SnowTrend heavy = Trend(PrecipitationType.Snow, 1f);
             Assert.Greater(heavy.Rate, light.Rate * 4f, "a blizzard builds at least four times as fast");
             Assert.AreEqual(0.35f, light.Ceiling, 1e-5, "light snow stops at its cap");
             Assert.AreEqual(1f, heavy.Ceiling, 1e-5, "a blizzard goes all the way");
@@ -139,33 +139,143 @@ namespace KryticalNova.Tests
             Assert.Less(Run(PrecipitationType.Snow, 0.2f, 600), Run(PrecipitationType.Snow, 0.5f, 600), "flurries build slower than light snow");
 
             // deeper than light snow can make (after a blizzard): light snow neither adds nor melts it
-            SnowTrend onDeep = Trend(PrecipitationType.Snow, 0.5f, false, Season.Winter, false, 0.9f);
-            Assert.AreEqual(0f, onDeep.Rate, "light snow on deep snow holds it");
+            Assert.AreEqual(0f, Trend(PrecipitationType.Snow, 0.5f, -5f, true, 0.9f).Rate, "light snow on deep snow holds it");
             Assert.AreEqual(0.9f, Run(PrecipitationType.Snow, 0.5f, 3600, 0.9f), 1e-4);
         }
 
         [Test]
-        public void SnowMelt_ByDayAndRain_LingersAtNight_LastsInWinter_AndKeepsTheFloor()
+        public void SnowByTemperature_BuildsBelowZero_HoldsColdAndDry_ThawsAboveZero_FasterInSunAndRain()
         {
-            float day = Trend(PrecipitationType.None, 0f, false, Season.Spring).Rate;
-            Assert.AreEqual(-1f / 1800f, day, 1e-7, "melts in 30 minutes on a dry day");
-            Assert.AreEqual(0f, Run(PrecipitationType.None, 0f, 1800, 1f, Season.Spring), 1e-4, "gone after the snow stops");
-            Assert.AreEqual(day * 0.25f, Trend(PrecipitationType.None, 0f, true, Season.Autumn).Rate, 1e-7, "lingers at night");
-            Assert.AreEqual(day * 3f, Trend(PrecipitationType.Rain, 0.8f, true, Season.Spring).Rate, 1e-7, "rain washes it off three times as fast");
-            float winterDay = Trend(PrecipitationType.None, 0f, false, Season.Winter).Rate;
-            Assert.AreEqual(-1f / 14400f, winterDay, 1e-7, "lasts about 4 hours on a Winter day");
-            Assert.AreEqual(0f, Trend(PrecipitationType.None, 0f, true, Season.Winter).Rate, "a Winter night keeps it");
-            Assert.AreEqual(winterDay, Trend(PrecipitationType.None, 0f, false, Season.Summer, true).Rate, 1e-9, "an always-winter map melts as in Winter");
-            Assert.AreEqual(1f, Trend(PrecipitationType.None, 0f, false, Season.Spring).Ceiling, "melting is never capped");
+            // owner 14 Nov: build-up and defrost periods
+            Assert.Greater(Run(PrecipitationType.Snow, 1f, 1200, 0f, -4f), 0.9f, "a cold snowy day builds");
+            Assert.AreEqual(0.6f, Run(PrecipitationType.None, 0f, 7200, 0.6f, -6f, false), 1e-5, "a cold clear night holds it");
+            Assert.AreEqual(0.6f, Run(PrecipitationType.None, 0f, 7200, 0.6f, 0f, true), 1e-5, "at 0 C it holds, sun or not");
+            Assert.Less(Run(PrecipitationType.Snow, 1f, 1200, 0.5f, 3f), 0.5f, "warm snow is sleet: it thaws");
+            Assert.AreEqual(0f, Run(PrecipitationType.None, 0f, 7200, 1f, 6f, true), 1e-4, "a warm sunny day after melts it");
+            float shade = Trend(PrecipitationType.None, 0f, 2f, false).Rate, sun = Trend(PrecipitationType.None, 0f, 2f, true).Rate;
+            Assert.Less(sun, shade, "sunshine thaws faster");
+            Assert.Less(Trend(PrecipitationType.None, 0f, 4f, false).Rate, shade, "each degree thaws faster");
+            Assert.Less(Trend(PrecipitationType.Rain, 0.8f, 2f, false).Rate, shade * 2.5f, "rain washes it off");
+            Assert.AreEqual(1f, Trend(PrecipitationType.None, 0f, 5f).Ceiling, "thawing is never capped");
+
+            // a few days of a cold snowy spell, then a thaw: up, then down (one in-game day = an hour of the clock)
+            float cover = 0f, peak = 0f;
+            for (int hour = 0; hour < 72; hour++)
+            {
+                bool snowDay = hour < 24, thaw = hour >= 48;
+                float temp = thaw ? 5f : -5f + (hour % 2 == 0 ? 2f : -2f);
+                cover = Run(snowDay && hour % 3 != 2 ? PrecipitationType.Snow : PrecipitationType.None, 0.7f, 3600, cover, temp, hour % 2 == 0);
+                peak = Math.Max(peak, cover);
+                if (hour == 47) Assert.AreEqual(peak, cover, 1e-4, "the cold dry day after keeps all of it");
+            }
+            Assert.Greater(peak, 0.5f, "the snowy day built it up");
+            Assert.AreEqual(0f, cover, 1e-4, "the thaw took it away");
 
             for (double t = 0; t < 100000; t += 777)
             {
-                float up = SeasonRules.SnowCover(0.3f, 0.01f, 0, t, 0f), down = SeasonRules.SnowCover(0.3f, -0.01f, 0, t, 0f);
-                Assert.That(up, Is.InRange(0f, 1f)); Assert.That(down, Is.InRange(0f, 1f));
                 Assert.GreaterOrEqual(SeasonRules.SnowCover(0.9f, -0.01f, 0, t, 0.6f), 0.6f, "never below an always-winter map floor");
                 Assert.LessOrEqual(SeasonRules.SnowCover(0.1f, 0.01f, 0, t, 0f, 0.35f), 0.35f + 1e-6, "never above the ceiling");
+                Assert.LessOrEqual(SeasonRules.SnowCover(0.5f, 0.5f, 0, t, 0f), 1f, "never above the max depth");
             }
             Assert.AreEqual(0.3f, SeasonRules.SnowCover(0.3f, 0.5f, 10, 5, 0f), 1e-6, "nothing before the anchor");
+        }
+
+        [Test]
+        public void Temperature_ColdestBeforeDawn_WarmestMidAfternoon_Smooth()
+        {
+            var curve = new TemperatureCurve { BaseC = 0f, SwingC = 10f };
+            float share = 0.5f, peak = 0.625f;
+            float dawn = SeasonRules.TemperatureAt(curve, 0.249f, share, peak, 0f, 0f, 0.5f, 0f);
+            float afternoon = SeasonRules.TemperatureAt(curve, 0.625f, share, peak, 0f, 0f, 0.5f, 0f);
+            Assert.AreEqual(-5f, dawn, 0.05f, "coldest just before sunrise");
+            Assert.AreEqual(5f, afternoon, 1e-3, "warmest at 15:00");
+            float last = SeasonRules.DailyCurve(0f, share, peak);
+            for (float t = 0.001f; t < 1f; t += 0.001f)
+            {
+                float v = SeasonRules.DailyCurve(t, share, peak);
+                Assert.Less(Math.Abs(v - last), 0.02f, $"no jump at {t:0.000}");
+                Assert.That(v, Is.InRange(-0.5f, 0.5f));
+                last = v;
+            }
+            Assert.AreEqual(3f, SeasonRules.TemperatureAt(curve, 0.625f, share, peak, -4f, 2f, 0.5f, 3f), 1e-3, "spell and weather offsets add");
+            Assert.AreEqual(1.5f, SeasonRules.Quantize(1.6f, 0.5f), 1e-6);
+        }
+
+        static List<SpellChoice> Table(SeasonProfile p)
+        {
+            var t = new List<SpellChoice>();
+            t.AddRange(p.SpellTable);
+            return t;
+        }
+
+        [Test]
+        public void WeatherSpells_RunOverDays_SpringWetterThanSummer_SummerDrySpellsLonger_WinterSnowsSomeDays_StormsHappen()
+        {
+            SeasonSettings s = Resources.Load<SeasonSettings>(SeasonSettings.ResourcePath);
+            Assert.IsNotNull(s);
+            int seed = s.weatherSeed;
+            const int days = 2000;
+            (int wet, int longestDry, int storms, int snowy, int longestWet) Count(Season season)
+            {
+                SeasonProfile p = s.Profile(season);
+                List<SpellChoice> table = Table(p);
+                int wet = 0, storms = 0, snowy = 0, dryRun = 0, longestDry = 0, wetRun = 0, longestWet = 0;
+                for (long d = 0; d < days; d++)
+                {
+                    SpellDay sd = SeasonRules.SpellAt(table, seed, season, d, s.spellBlockDays);
+                    Assert.That(sd.Spell, Is.InRange(0, table.Count - 1));
+                    Assert.Less(sd.DayInSpell, sd.Length);
+                    WeatherSpell w = p.Spell(sd.Spell);
+                    if (w.wet) wet++;
+                    if (w.storm) storms++;
+                    if (w.snowy) snowy++;
+                    dryRun = w.dry ? dryRun + 1 : 0;
+                    wetRun = w.wet ? wetRun + 1 : 0;
+                    longestDry = Math.Max(longestDry, dryRun);
+                    longestWet = Math.Max(longestWet, wetRun);
+                }
+                return (wet, longestDry, storms, snowy, longestWet);
+            }
+            var spring = Count(Season.Spring);
+            var summer = Count(Season.Summer);
+            var winter = Count(Season.Winter);
+            Assert.Greater(spring.wet, summer.wet * 2, "spring has many more wet days than summer");
+            Assert.Greater(summer.longestDry, spring.longestDry, "summer's longest dry spell beats spring's");
+            Assert.GreaterOrEqual(summer.longestDry, 7, "summer has dry spells of a week or more");
+            Assert.GreaterOrEqual(spring.longestWet, 2, "spring has wet runs of days");
+            Assert.GreaterOrEqual(summer.longestWet, 2, "summer sometimes has a wet run");
+            Assert.Greater(spring.storms + summer.storms, 0, "storms happen");
+            Assert.That(winter.snowy / (float)days, Is.InRange(0.35f, 0.65f), "about half the winter days snow, not every day");
+
+            // the same seed gives the same days; another seed others
+            List<SpellChoice> wt = Table(s.winter);
+            int same = 0, differ = 0;
+            for (long d = 0; d < 200; d++)
+            {
+                if (SeasonRules.SpellAt(wt, seed, Season.Winter, d).Spell == SeasonRules.SpellAt(wt, seed, Season.Winter, d).Spell) same++;
+                if (SeasonRules.SpellAt(wt, seed, Season.Winter, d).Spell != SeasonRules.SpellAt(wt, seed + 1, Season.Winter, d).Spell) differ++;
+            }
+            Assert.AreEqual(200, same, "deterministic");
+            Assert.Greater(differ, 20, "the seed matters");
+            Assert.AreEqual(-1, SeasonRules.SpellAt(new List<SpellChoice>(), seed, Season.Winter, 5).Spell, "no table, no spell");
+            Assert.Greater(SeasonRules.RunOfDays(Table(s.summer), seed, Season.Summer, 500, i => s.summer.Spell(i).dry, 14), -1);
+        }
+
+        [Test]
+        public void Spring_GrassGrowsGreen_BudsThenBlossomThenPetals_Summer_IsFull()
+        {
+            var c = new FoliageCurve { Bare = 0.08f, LeafOutBy = 0.35f, GrassBy = 0.4f, BlossomFrom = 0.05f, BlossomPeak = 0.22f, BlossomGone = 0.5f, TurnBy = 0.45f, DropFrom = 0.5f, DullBy = 0.7f };
+            FoliageNow start = SeasonRules.FoliageAt(Season.Spring, 0f, c), peak = SeasonRules.FoliageAt(Season.Spring, 0.22f, c);
+            FoliageNow late = SeasonRules.FoliageAt(Season.Spring, 0.9f, c), winter = SeasonRules.FoliageAt(Season.Winter, 0.5f, c);
+            Assert.AreEqual(0f, start.Grow, 1e-4, "grass starts short after the snow");
+            Assert.AreEqual(winter.Grow, start.Grow, 1e-4, "no jump from Winter");
+            Assert.Greater(start.Brown, 0.9f, "brown and flattened at first");
+            Assert.AreEqual(1f, late.Grow, 1e-4, "full height by late Spring");
+            Assert.Greater(SeasonRules.FoliageAt(Season.Spring, 0.04f, c).Bud, 0.3f, "buds early");
+            Assert.AreEqual(1f, peak.Blossom, 1e-3, "blossom at its fullest");
+            Assert.AreEqual(0f, late.Blossom, 1e-4, "blossom gone by late Spring");
+            Assert.Greater(SeasonRules.FoliageAt(Season.Spring, 0.36f, c).Petals, 0.5f, "petals fall as it goes");
+            Assert.AreEqual(1f, SeasonRules.FoliageAt(Season.Summer, 0.5f, c).Canopy, "summer: full canopies");
         }
 
         static float Up(float degrees) => (float)Math.Cos(degrees * Math.PI / 180.0);

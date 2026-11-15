@@ -92,6 +92,8 @@ namespace KryticalNova.World
 
         // Per-frame evaluation (read by WorldClock and presentation).
         public float TimeOfDay01 { get; private set; }
+        /// <summary>The world clock's day number now (seasons: weather spells run over days).</summary>
+        public long CalendarDay => state.CalendarDay(Now);
         public WeatherBlend Weather { get; private set; } = WeatherBlend.Clear();
         public WeatherProfile FromWeather { get; private set; }
         public WeatherProfile ToWeather { get; private set; }
@@ -184,6 +186,12 @@ namespace KryticalNova.World
             lastNow = now;
             lastLocalNow = Time.timeAsDouble;
 
+            // a new weather spell (seasons) rolls the weather again at once
+            if (SeasonWeather.Reroll && HasWorldAuthority)
+            {
+                SeasonWeather.Reroll = false;
+                if (autoWeather && !weatherLocked) nextWeatherChangeTime = Math.Min(nextWeatherChangeTime, now);
+            }
             if (HasWorldAuthority && autoWeather && !weatherLocked && now >= nextWeatherChangeTime)
                 AdvanceWeather(now);
 

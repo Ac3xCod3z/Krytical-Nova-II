@@ -892,7 +892,7 @@ namespace KryticalNova.EditorTools.GM
                 string blend = s.From == s.To ? "" : $", blending {s.From} -> {s.To} {Mathf.RoundToInt(s.BlendAt(now) * 100f)} %";
                 string hold = s.GmHold ? " (GM hold)" : "";
                 string zone = s.AlwaysWinter ? ", always-winter map" : "";
-                return $"Now {s.DominantAt(now)}{hold}{blend}; calendar {(KryticalNova.World.Season)s.CalendarSeason} day {day} of {days}; snow {s.SnowAt(now):0.00}{zone}";
+                return $"Now {s.DominantAt(now)}{hold}{blend}; calendar {(KryticalNova.World.Season)s.CalendarSeason} day {day} of {days}; snow {s.SnowAt(now):0.00}; air {s.Temperature:0.#} C{zone}";
             }
         }
 
@@ -929,6 +929,27 @@ namespace KryticalNova.EditorTools.GM
 
         [ButtonGroup(Tabs + "/" + WorldTab + "/Snow"), EnableIf(nameof(HasSeasons)), PropertyOrder(428.2f), LabelText("Climate Auto")]
         private void ClimateAuto() => Run("gm.season climate auto");
+
+        [TabGroup(Tabs, WorldTab), EnableIf(nameof(HasSeasons)), PropertyRange(-30f, 45f), LabelText("Air Temperature (C)"), PropertyOrder(428.5f)]
+        [SerializeField] private float temperaturePick = 34f;
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Air"), EnableIf(nameof(HasSeasons)), PropertyOrder(428.6f), LabelText("Hold Temperature")]
+        private void TemperatureHold() => Run($"gm.season temp {F(temperaturePick)}");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Air"), EnableIf(nameof(HasSeasons)), PropertyOrder(428.7f), LabelText("Weather's Temperature")]
+        private void TemperatureAuto() => Run("gm.season temp auto");
+
+        [TabGroup(Tabs, WorldTab), EnableIf(nameof(HasSeasons)), LabelText("Weather Spell"), PropertyOrder(428.8f)]
+        [SerializeField] private string spellPick = "storm";
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Spell"), EnableIf(nameof(HasSeasons)), PropertyOrder(428.9f), LabelText("Hold Spell")]
+        private void SpellHold() => Run($"gm.season spell {spellPick}");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Spell"), EnableIf(nameof(HasSeasons)), PropertyOrder(428.91f), LabelText("Seed's Spell")]
+        private void SpellAuto() => Run("gm.season spell auto");
+
+        [ButtonGroup(Tabs + "/" + WorldTab + "/Spell"), EnableIf(nameof(HasSeasons)), PropertyOrder(428.92f), LabelText("The Week")]
+        private void SpellWeek() => Run("gm.season week");
 
         // ---------------------------------------------------------------- Townsfolk on Sky Concord (owner's DAY list item 18)
 

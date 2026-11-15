@@ -11,7 +11,9 @@ namespace KryticalNova.World
     /// </summary>
     public struct SeasonState : IEquatable<SeasonState>
     {
-        public const byte FlagGmHold = 1, FlagAlwaysWinter = 2;
+        public const byte FlagGmHold = 1, FlagAlwaysWinter = 2, FlagGmTemperature = 4, FlagGmSpell = 8;
+        /// <summary><see cref="Spell"/> when the season has no spells.</summary>
+        public const byte NoSpell = 255;
 
         public byte FromSeason, ToSeason;
         public double BlendStart;
@@ -30,11 +32,19 @@ namespace KryticalNova.World
         /// <summary>A GM's fixed share of the season (gm.season progress), 0-1; below 0 = the calendar's.</summary>
         public float Progress;
         public byte Flags;
+        /// <summary>The air temperature now (deg C, in the settings' steps; owner 14 Nov: snow builds below 0 and thaws above).</summary>
+        public float Temperature;
+        /// <summary>Today's weather spell: its index in <see cref="SpellSeason"/>'s list (<see cref="NoSpell"/> = none).</summary>
+        public byte Spell, SpellSeason;
+        /// <summary>Dry days in a row up to today (golden summer grass).</summary>
+        public byte DryDays;
 
         public Season From => (Season)FromSeason;
         public Season To => (Season)ToSeason;
         public bool GmHold => (Flags & FlagGmHold) != 0;
         public bool AlwaysWinter => (Flags & FlagAlwaysWinter) != 0;
+        public bool GmTemperature => (Flags & FlagGmTemperature) != 0;
+        public bool GmSpell => (Flags & FlagGmSpell) != 0;
 
         /// <summary>The blend from <see cref="From"/> to <see cref="To"/> at <paramref name="now"/>, 0-1.</summary>
         public float BlendAt(double now) => SeasonRules.Blend(BlendStart, BlendSeconds, now);
@@ -76,7 +86,8 @@ namespace KryticalNova.World
             FromSeason == o.FromSeason && ToSeason == o.ToSeason && BlendStart.Equals(o.BlendStart) && BlendSeconds.Equals(o.BlendSeconds)
             && SeasonStart.Equals(o.SeasonStart) && SeasonSeconds.Equals(o.SeasonSeconds) && CalendarSeason == o.CalendarSeason
             && SnowCover.Equals(o.SnowCover) && SnowAnchor.Equals(o.SnowAnchor) && SnowRate.Equals(o.SnowRate) && SnowFloor.Equals(o.SnowFloor)
-            && SnowCeiling.Equals(o.SnowCeiling) && Progress.Equals(o.Progress) && Flags == o.Flags;
+            && SnowCeiling.Equals(o.SnowCeiling) && Progress.Equals(o.Progress) && Flags == o.Flags && Temperature.Equals(o.Temperature)
+            && Spell == o.Spell && SpellSeason == o.SpellSeason && DryDays == o.DryDays;
 
         public override bool Equals(object obj) => obj is SeasonState o && Equals(o);
 
@@ -119,8 +130,10 @@ namespace KryticalNova.World
     {
         public static Func<WeatherProfile, float> Scale;
         public static IReadOnlyList<WeatherProfile.NextWeather> Extra;
+        /// <summary>Set when a new weather spell begins: the weather rolls again at once instead of waiting out the old weather.</summary>
+        public static bool Reroll;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics() { Scale = null; Extra = null; }
+        static void ResetStatics() { Scale = null; Extra = null; Reroll = false; }
     }
 }

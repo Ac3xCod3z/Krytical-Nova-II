@@ -36,7 +36,32 @@ namespace KryticalNova.World
     public struct SnowRates
     {
         public float LightIntensity, HeavyIntensity, LightBuildPerSecond, HeavyBuildPerSecond, LightCap, HeavyCap;
-        public float MeltDay, NightFactor, RainFactor, WinterMeltDay, WinterNightFactor;
+        /// <summary>Snow only settles at or below this temperature (deg C); warmer snow is sleet and thaws.</summary>
+        public float SnowBelowC;
+        /// <summary>Cover per second that melts for each degree above 0 C (in shade), the share more in sunshine, and the rain's factor.</summary>
+        public float ThawPerDegreeSecond, SunThawBonus, RainFactor;
+    }
+
+    /// <summary>One season's temperature (from its <see cref="SeasonProfile"/>): the mean, and the swing from before dawn to mid-afternoon.</summary>
+    public struct TemperatureCurve
+    {
+        public float BaseC, SwingC;
+
+        public static TemperatureCurve Lerp(in TemperatureCurve a, in TemperatureCurve b, float t) =>
+            new TemperatureCurve { BaseC = a.BaseC + (b.BaseC - a.BaseC) * t, SwingC = a.SwingC + (b.SwingC - a.SwingC) * t };
+    }
+
+    /// <summary>One kind of weather spell a season can roll (from <see cref="WeatherSpell"/>): how often, and how many days it lasts.</summary>
+    public struct SpellChoice
+    {
+        public float Chance;
+        public int MinDays, MaxDays;
+    }
+
+    /// <summary>The spell a day falls in: its index in the season's list (-1 none), the day within it (0 = its first) and its length.</summary>
+    public struct SpellDay
+    {
+        public int Spell, DayInSpell, Length;
     }
 
     /// <summary>Where the snow is heading now: its rate (cover per second, signed) and the cover a build-up stops at.</summary>
@@ -49,20 +74,29 @@ namespace KryticalNova.World
     public struct FoliageCurve
     {
         public float TurnBy, DropFrom, Bare, LeafOutBy, DullBy;
+        /// <summary>Spring: the share by which the grass is green and full again, and blossom's open, fullest and gone shares.</summary>
+        public float GrassBy, BlossomFrom, BlossomPeak, BlossomGone;
     }
 
     /// <summary>
     /// The leaves at a moment: <see cref="Turn"/> 0 green .. 1 every kind's fall colour, <see cref="Canopy"/> 1 full .. bare share,
     /// <see cref="Dull"/> 0 .. 1 the autumn dull tone on grass and leaves, <see cref="Falling"/> 0 .. 1 how many leaves come down.
+    /// Spring (owner 14 Nov: the world comes back to life): <see cref="Grow"/> 0 winter-short .. 1 full grass, <see cref="Brown"/> the
+    /// flattened brown of grass after the snow, <see cref="Fresh"/> the bright new green, <see cref="Bud"/> pale buds on bare twigs,
+    /// <see cref="Blossom"/> flowers on the kinds that blossom, <see cref="Petals"/> how many petals drift down.
     /// </summary>
     public struct FoliageNow
     {
         public float Turn, Canopy, Dull, Falling;
+        public float Grow, Brown, Fresh, Bud, Blossom, Petals;
+
+        static float L(float a, float b, float t) => a + (b - a) * t;
 
         public static FoliageNow Lerp(in FoliageNow a, in FoliageNow b, float t) => new FoliageNow
         {
-            Turn = a.Turn + (b.Turn - a.Turn) * t, Canopy = a.Canopy + (b.Canopy - a.Canopy) * t,
-            Dull = a.Dull + (b.Dull - a.Dull) * t, Falling = a.Falling + (b.Falling - a.Falling) * t,
+            Turn = L(a.Turn, b.Turn, t), Canopy = L(a.Canopy, b.Canopy, t), Dull = L(a.Dull, b.Dull, t), Falling = L(a.Falling, b.Falling, t),
+            Grow = L(a.Grow, b.Grow, t), Brown = L(a.Brown, b.Brown, t), Fresh = L(a.Fresh, b.Fresh, t), Bud = L(a.Bud, b.Bud, t),
+            Blossom = L(a.Blossom, b.Blossom, t), Petals = L(a.Petals, b.Petals, t),
         };
     }
 
@@ -131,16 +165,16 @@ namespace KryticalNova.World
         }
 
         /// <summary>
-        /// Where the snow cover is heading now (owner, 14 Nov 2026: like real life, light snow builds slowly and stays low, bad snow
-        /// builds fast and high). While it snows it builds toward a ceiling: light snow slowly to a low ceiling, a blizzard fast to a high
-        /// one (blended between by intensity; flurries under light snow build slower still). Snow already deeper than the ceiling stays as
-        /// it is while it snows. Otherwise it melts by day, lingers at night, washes off in rain and lasts in Winter (an always-winter map
-        /// melts as in Winter).
+        /// Where the snow cover is heading now (owner, 14 Nov 2026: build-up and defrost periods, like real life). While it snows at or below
+        /// <see cref="SnowRates.SnowBelowC"/> it builds toward a ceiling: light snow slowly to a low ceiling, a blizzard fast to a high one
+        /// (blended by intensity; flurries under light snow build slower still); snow already deeper than the ceiling stays. Dry and at or
+        /// below 0 C it holds. Above 0 C it thaws, faster each degree, faster in sunshine, fastest in rain (warm snow is sleet and thaws too).
         /// </summary>
-        public static SnowTrend SnowTrendOf(in SnowRates r, PrecipitationType falling, float intensity, bool night, Season season,
-            bool alwaysWinter, float coverNow)
+        public static SnowTrend SnowTrendOf(in SnowRates r, PrecipitationType falling, float intensity, float temperatureC, bool sunUp,
+            float coverNow)
         {
-            if (falling == PrecipitationType.Snow && intensity > 0.001f)
+            bool snowing = falling == PrecipitationType.Snow && intensity > 0.001f;
+            if (snowing && temperatureC <= r.SnowBelowC)
             {
                 float t = SnowSeverity(r, intensity);
                 float cap = r.LightCap + (r.HeavyCap - r.LightCap) * t;
@@ -148,10 +182,106 @@ namespace KryticalNova.World
                 if (r.LightIntensity > 0.001f && intensity < r.LightIntensity) rate *= intensity / r.LightIntensity;
                 return coverNow >= cap ? new SnowTrend { Rate = 0f, Ceiling = 1f } : new SnowTrend { Rate = rate, Ceiling = cap };
             }
-            bool winter = alwaysWinter || season == Season.Winter;
-            float melt = winter ? r.WinterMeltDay * (night ? r.WinterNightFactor : 1f) : r.MeltDay * (night ? r.NightFactor : 1f);
-            if (falling == PrecipitationType.Rain && intensity > 0.001f) melt = Math.Max(melt, r.MeltDay) * r.RainFactor;
+            if (temperatureC <= 0f) return new SnowTrend { Rate = 0f, Ceiling = 1f };
+            float melt = r.ThawPerDegreeSecond * temperatureC * (sunUp ? 1f + r.SunThawBonus : 1f);
+            bool wet = (falling == PrecipitationType.Rain || falling == PrecipitationType.Snow) && intensity > 0.001f;
+            if (wet) melt = Math.Max(melt, r.ThawPerDegreeSecond) * r.RainFactor;
             return new SnowTrend { Rate = -melt, Ceiling = 1f };
+        }
+
+        /// <summary>
+        /// The day's temperature shape, -0.5 .. +0.5 (owner 14 Nov: coldest before dawn, warmest mid-afternoon): rises from sunrise (the
+        /// warped sun's, <paramref name="daylightShare"/>) to <paramref name="peakClock01"/>, then falls through the night back to sunrise.
+        /// </summary>
+        public static float DailyCurve(float clock01, float daylightShare, float peakClock01)
+        {
+            float t = clock01 - (float)Math.Floor(clock01);
+            float rise = Sunrise(daylightShare);
+            float peak = Math.Clamp(peakClock01, rise + 0.02f, 0.98f);
+            if (t >= rise && t <= peak) return -0.5f * (float)Math.Cos(Math.PI * (t - rise) / (peak - rise));
+            float since = t > peak ? t - peak : t + 1f - peak;
+            return 0.5f * (float)Math.Cos(Math.PI * since / (1f - (peak - rise)));
+        }
+
+        /// <summary>
+        /// The air temperature (deg C): the season's mean (blended), its day swing by the clock, the spell's offset (a cold snap, a
+        /// heatwave), the weather's (clear warmer, storms colder) and the day's own wobble (<paramref name="dayWobble01"/> 0-1 from the seed).
+        /// </summary>
+        public static float TemperatureAt(in TemperatureCurve curve, float clock01, float daylightShare, float peakClock01, float spellOffsetC,
+            float weatherOffsetC, float dayWobble01, float wobbleC)
+        {
+            return curve.BaseC + curve.SwingC * DailyCurve(clock01, daylightShare, peakClock01) + spellOffsetC + weatherOffsetC
+                   + (dayWobble01 * 2f - 1f) * wobbleC;
+        }
+
+        /// <summary>A value in steps (the server re-anchors the snow and resends only when the temperature's step changes).</summary>
+        public static float Quantize(float value, float step) => step <= 0f ? value : (float)Math.Round(value / step) * step;
+
+        /// <summary>A deterministic 0-1 from a seed and a number (SplitMix64): the same on every machine and in tests.</summary>
+        public static float Hash01(int seed, long n)
+        {
+            unchecked
+            {
+                ulong z = (ulong)n * 0x9E3779B97F4A7C15UL + (ulong)(uint)seed * 0xBF58476D1CE4E5B9UL + 0x94D049BB133111EBUL;
+                z = (z ^ (z >> 30)) * 0xBF58476D1CE4E5B9UL;
+                z = (z ^ (z >> 27)) * 0x94D049BB133111EBUL;
+                z ^= z >> 31;
+                return (float)((z >> 40) / (double)(1UL << 24));
+            }
+        }
+
+        /// <summary>
+        /// The weather spell a day falls in (owner, 14 Nov 2026: rainy for a few days in spring, long dry spells in summer, not every winter
+        /// day snows): the days are cut into blocks of <paramref name="blockDays"/>; each block is a run of spells rolled from the seed, each
+        /// spell's kind by its chance and its length between its min and max days (cut at the block's end). Pure and the same on every
+        /// machine; the season is mixed into the seed. Spell -1 with an empty table.
+        /// </summary>
+        public static SpellDay SpellAt(IReadOnlyList<SpellChoice> table, int seed, Season season, long day, int blockDays = 64)
+        {
+            var none = new SpellDay { Spell = -1, DayInSpell = 0, Length = 1 };
+            if (table == null || table.Count == 0) return none;
+            float total = 0f;
+            for (int i = 0; i < table.Count; i++) total += Math.Max(0f, table[i].Chance);
+            if (total <= 0f) return none;
+            int block = Math.Max(1, blockDays);
+            long blockIndex = (long)Math.Floor(day / (double)block);
+            long start = blockIndex * block, end = start + block;
+            int s = unchecked(seed * 31 + ((int)season + 1) * 7919);
+            long d = start;
+            for (int k = 0; k < block; k++)
+            {
+                long n = blockIndex * 1024 + k * 2;
+                float pick = Hash01(s, n) * total;
+                int spell = -1;
+                for (int i = 0; i < table.Count; i++)
+                {
+                    if (table[i].Chance <= 0f) continue;
+                    spell = i;
+                    pick -= table[i].Chance;
+                    if (pick <= 0f) break;
+                }
+                int min = Math.Max(1, table[spell].MinDays), max = Math.Max(min, table[spell].MaxDays);
+                int length = Math.Min(max, min + (int)Math.Floor(Hash01(s, n + 1) * (max - min + 1)));
+                long last = Math.Min(end, d + length);
+                if (day < last) return new SpellDay { Spell = spell, DayInSpell = (int)(day - d), Length = (int)(last - d) };
+                d = last;
+                if (d >= end) break;
+            }
+            return none;
+        }
+
+        /// <summary>How many days in a row up to and including <paramref name="day"/> fall in spells that <paramref name="counts"/> (at most <paramref name="max"/>).</summary>
+        public static int RunOfDays(IReadOnlyList<SpellChoice> table, int seed, Season season, long day, Func<int, bool> counts, int max,
+            int blockDays = 64)
+        {
+            int run = 0;
+            for (long d = day; run < max; d--)
+            {
+                SpellDay sd = SpellAt(table, seed, season, d, blockDays);
+                if (sd.Spell < 0 || !counts(sd.Spell)) break;
+                run++;
+            }
+            return run;
         }
 
         /// <summary>
@@ -202,9 +332,24 @@ namespace KryticalNova.World
             switch (season)
             {
                 case Season.Spring:
-                    return new FoliageNow { Turn = 0f, Canopy = bare + (1f - bare) * Smooth(0f, Math.Max(0.01f, c.LeafOutBy), p) };
+                {
+                    float leafOut = Math.Max(0.01f, c.LeafOutBy);
+                    float grow = Smooth(0f, Math.Max(0.01f, c.GrassBy), p);
+                    float from = Math.Clamp(c.BlossomFrom, 0f, 0.98f);
+                    float peak = Math.Clamp(c.BlossomPeak, from + 0.01f, 0.99f);
+                    float gone = Math.Clamp(c.BlossomGone, peak + 0.01f, 1f);
+                    float blossom = Smooth(from, peak, p) * (1f - Smooth(peak, gone, p));
+                    float petals = p > peak && p < gone ? (float)Math.Sin(Math.PI * (p - peak) / (gone - peak)) : 0f;
+                    return new FoliageNow
+                    {
+                        Turn = 0f, Canopy = bare + (1f - bare) * Smooth(0f, leafOut, p),
+                        Grow = grow, Brown = 1f - grow, Fresh = grow,
+                        Bud = Smooth(0f, 0.06f, p) * (1f - Smooth(leafOut * 0.55f, leafOut, p)),
+                        Blossom = blossom, Petals = petals,
+                    };
+                }
                 case Season.Summer:
-                    return new FoliageNow { Canopy = 1f };
+                    return new FoliageNow { Canopy = 1f, Grow = 1f, Fresh = 1f - 0.5f * p };
                 case Season.Autumn:
                 {
                     float drop = Smooth(Math.Clamp(c.DropFrom, 0f, 0.99f), 1f, p);
@@ -214,10 +359,11 @@ namespace KryticalNova.World
                     return new FoliageNow
                     {
                         Turn = turn, Canopy = 1f - (1f - bare) * drop, Dull = Smooth(0f, Math.Max(0.01f, c.DullBy), p), Falling = falling,
+                        Grow = 1f - 0.3f * Smooth(0.5f, 1f, p),
                     };
                 }
                 default:
-                    return new FoliageNow { Turn = 1f, Canopy = bare, Dull = 1f, Falling = 0f };
+                    return new FoliageNow { Turn = 1f, Canopy = bare, Dull = 1f, Falling = 0f, Grow = 0f, Brown = 1f };
             }
         }
 
