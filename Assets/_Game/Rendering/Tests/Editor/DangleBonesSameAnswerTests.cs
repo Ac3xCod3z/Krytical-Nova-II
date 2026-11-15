@@ -178,7 +178,7 @@ namespace KryticalNova.Rendering.Tests
             TestContext.WriteLine($"worst {worst:E2} rad and {worstMetres:E2} m over {Frames} frames, {jobbed.BoneCount} bones, swing up to {moved:F1} deg");
         }
 
-        // The old code against itself, the second character 10 micrometres to the side: how much float rounding alone
+        // The old code against itself, the second character 10 micrometres to the side and jittered by up to 1 micrometre every frame: how much float rounding alone
         // grows in each phase of the same move (the floor any rewrite of the swing is measured against).
         [TestCase(0, 1f, TestName = "NoiseFloor_FoxTail")]
         [TestCase(1, 1.12f, TestName = "NoiseFloor_CapeScaled")]
@@ -191,9 +191,11 @@ namespace KryticalNova.Rendering.Tests
             var la = new DangleBonesLegacy(a.root); la.Rebind(new[] { a.smr });
             var lb = new DangleBonesLegacy(b.root); lb.Rebind(new[] { b.smr });
             var bins = new float[Frames / 10];
+            var rng = new System.Random(7);
             for (int f = 0; f < Frames; f++)
             {
                 Move(a, f); Move(b, f);
+                b.root.transform.position += new Vector3((float)(rng.NextDouble() - 0.5) * 2e-6f, (float)(rng.NextDouble() - 0.5) * 2e-6f, 0f);
                 la.Step(Dt); lb.Step(Dt);
                 for (int i = 0; i < a.dyn.Count; i++)
                     bins[f / 10] = Mathf.Max(bins[f / 10], Radians(a.dyn[i].rotation, b.dyn[i].rotation));
