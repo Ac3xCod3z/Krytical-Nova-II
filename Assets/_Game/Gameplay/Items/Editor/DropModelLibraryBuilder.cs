@@ -259,22 +259,24 @@ namespace KryticalNova.EditorTools
                 }
                 if (renderers.Length == 0) { Debug.LogWarning($"[DropModels] {fbx} has no mesh."); return null; }
 
-                Bounds bounds = renderers[0].bounds;
-                foreach (Renderer r in renderers) bounds.Encapsulate(r.bounds);
+                // A long thing lies low: its flattest pose is found from its own vertices (Tripo models are often
+                // modelled on a slant), its long side is turned along X, then one end rises so it sits `tilt` degrees
+                // off upright. Anything else stays as modelled.
+                var pivot = new GameObject("Pivot");
+                pivot.transform.SetParent(root.transform, false);
+                body.transform.SetParent(pivot.transform, true);
+                List<Vector3> points = SamplePoints(renderers);
+                if (row.tilt > 0f) pivot.transform.localRotation = LieLow(points, row.tilt);
+                Quaternion turn = pivot.transform.localRotation;
+                var bounds = new Bounds(turn * points[0], Vector3.zero);
+                foreach (Vector3 point in points) bounds.Encapsulate(turn * point);
                 float largest = Mathf.Max(bounds.size.x, Mathf.Max(bounds.size.y, bounds.size.z));
                 float scale = largest > 0.0001f ? row.size / largest : 1f;
-                body.transform.localPosition = -bounds.center;   // centred on the drop
+                pivot.transform.localPosition = -bounds.center;   // centred on the drop
 
-                // A long thing modelled upright is tipped over so it lies low; anything else stays as modelled.
-                bool upright = bounds.size.y >= bounds.size.x && bounds.size.y >= bounds.size.z;
-                float tilt = upright ? row.tilt : 0f;
-                Vector3 half = bounds.extents * scale;
-                float rad = tilt * Mathf.Deg2Rad;
-                float halfHeight = Mathf.Abs(Mathf.Sin(rad)) * half.x + Mathf.Abs(Mathf.Cos(rad)) * half.y;
+                float halfHeight = bounds.extents.y * scale;
                 float lift = Mathf.Max(0f, halfHeight + BobAmplitude + library.groundClearance - library.hover);
-
                 root.transform.localPosition = new Vector3(0f, lift, 0f);
-                root.transform.localRotation = Quaternion.Euler(0f, 0f, tilt);
                 root.transform.localScale = Vector3.one * scale;
                 return PrefabUtility.SaveAsPrefabAsset(root, $"{PrefabsRoot}/Drop_{key}.prefab");
             }
@@ -282,6 +284,65 @@ namespace KryticalNova.EditorTools
             {
                 Object.DestroyImmediate(root);
             }
+        }
+
+        /// <summary>Up to about 3000 of the model's vertices in world space (the box corners if a mesh cannot be read).</summary>
+        private static List<Vector3> SamplePoints(Renderer[] renderers)
+        {
+            var points = new List<Vector3>();
+            foreach (Renderer r in renderers)
+            {
+                Mesh mesh = r is SkinnedMeshRenderer skinned ? skinned.sharedMesh : r.GetComponent<MeshFilter>()?.sharedMesh;
+                Vector3[] vertices = null;
+                try { if (mesh != null) vertices = mesh.vertices; } catch (System.Exception) { vertices = null; }
+                if (vertices == null || vertices.Length == 0)
+                {
+                    Bounds b = r.bounds;
+                    for (int i = 0; i < 8; i++)
+                        points.Add(b.center + Vector3.Scale(b.extents, new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1)));
+                    continue;
+                }
+                int step = Mathf.Max(1, vertices.Length / 3000);
+                Matrix4x4 toWorld = r.transform.localToWorldMatrix;
+                for (int i = 0; i < vertices.Length; i += step) points.Add(toWorld.MultiplyPoint3x4(vertices[i]));
+            }
+            return points;
+        }
+
+        /// <summary>The turn that lays the points flat (least height), long side along X, then raised to <paramref name="tilt"/> degrees off upright.</summary>
+        private static Quaternion LieLow(List<Vector3> points, float tilt)
+        {
+            Quaternion best = Quaternion.identity;
+            float bestHeight = float.MaxValue;
+            for (int x = 0; x < 180; x += 5)
+            for (int z = 0; z < 180; z += 5)
+            {
+                Quaternion q = Quaternion.Euler(x, 0f, z);
+                float height = Extent(points, q, Vector3.up);
+                if (height < bestHeight - 0.0001f) { bestHeight = height; best = q; }
+            }
+            Quaternion along = best;
+            float longest = -1f;
+            for (int yaw = 0; yaw < 180; yaw += 5)
+            {
+                Quaternion q = Quaternion.Euler(0f, yaw, 0f) * best;
+                float length = Extent(points, q, Vector3.right);
+                if (length > longest) { longest = length; along = q; }
+            }
+            return Quaternion.Euler(0f, 0f, 90f - tilt) * along;
+        }
+
+        private static float Extent(List<Vector3> points, Quaternion turn, Vector3 axis)
+        {
+            Vector3 a = Quaternion.Inverse(turn) * axis;   // the axis in the points' own frame
+            float min = float.MaxValue, max = float.MinValue;
+            foreach (Vector3 p in points)
+            {
+                float d = Vector3.Dot(p, a);
+                if (d < min) min = d;
+                if (d > max) max = d;
+            }
+            return max - min;
         }
 
         private static void HookPrefab(DropModelLibrary library)

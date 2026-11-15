@@ -167,6 +167,8 @@ MonoBehaviour:
   maxDropsPerZone: 200
   visual: {fileID: 2086423379338842956}
   credsVisual: {fileID: 2820601393603944796}
+  dropModels: {fileID: 11400000, guid: 847aebf5d35b25b41b083b251f7b4ec7, type: 2}
+  standIn: {fileID: 841951675916840869}
 --- !u!1001 &838050564308922999
 PrefabInstance:
   m_ObjectHideFlags: 0
