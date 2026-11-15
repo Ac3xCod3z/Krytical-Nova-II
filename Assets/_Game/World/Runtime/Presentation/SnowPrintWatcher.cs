@@ -21,6 +21,8 @@ namespace KryticalNova.World
         const float StrideMetres = 0.7f;   // the fallback's step length, times the body's size
         const float PlantAbove = 0.035f;   // a foot is down within this of its lowest height (metres, times size)
         const float LiftAbove = 0.09f;     // and lifted past this
+        const float StillShare = 0.3f;     // a foot moving slower than this share of the body is planted (it stays put while the body goes on)
+        const float SwingShare = 0.8f;     // and one moving faster than this share is in the air
 
         sealed class Walker
         {
@@ -33,6 +35,9 @@ namespace KryticalNova.World
             public Vector3 LastStride;
             public int Side;
             public bool Seen;
+            public bool Skip;
+            public Vector3[] LastFoot;
+            public Vector3 LastBody;
         }
 
         readonly List<Walker> m_Walkers = new List<Walker>(32);
@@ -98,7 +103,15 @@ namespace KryticalNova.World
 
         Walker Make(Animator a)
         {
-            var w = new Walker { Animator = a, LastStride = a.transform.position };
+            var w = new Walker { Animator = a, LastStride = a.transform.position, LastBody = a.transform.position };
+            // a generic animator over or under a humanoid one (a body's "Visuals" holder) is the same feet: watch them once, as boots
+            if (!a.isHuman)
+            {
+                foreach (Animator other in a.GetComponentsInChildren<Animator>())
+                    if (other != a && other.isHuman) { w.Skip = true; return w; }
+                Animator parent = a.transform.parent != null ? a.transform.parent.GetComponentInParent<Animator>() : null;
+                if (parent != null && parent.isHuman) { w.Skip = true; return w; }
+            }
             w.Size = Mathf.Clamp(a.transform.lossyScale.y, 0.3f, 6f);
             if (a.isHuman && a.avatar != null)
             {
@@ -123,6 +136,8 @@ namespace KryticalNova.World
             if (w.Feet != null)
             {
                 w.Lifted = new bool[w.Feet.Length];
+                w.LastFoot = new Vector3[w.Feet.Length];
+                for (int i = 0; i < w.Feet.Length; i++) w.LastFoot[i] = w.Feet[i] != null ? w.Feet[i].position : a.transform.position;
                 w.Rest = new float[w.Feet.Length];
                 for (int i = 0; i < w.Rest.Length; i++) w.Rest[i] = float.MaxValue;
             }
@@ -141,6 +156,7 @@ namespace KryticalNova.World
 
         void Step(Walker w, SeasonSettings settings)
         {
+            if (w.Skip) return;
             Transform body = w.Animator.transform;
             float yaw = body.eulerAngles.y;
             Vector3 heading = body.forward;
@@ -161,23 +177,35 @@ namespace KryticalNova.World
                 return;
             }
 
-            float dt = Time.deltaTime;
+            float dt = Mathf.Max(Time.deltaTime, 1e-4f);
+            Vector3 bodyStep = body.position - w.LastBody;
+            bodyStep.y = 0f;
+            w.LastBody = body.position;
+            float bodySpeed = bodyStep.magnitude / dt;
+            bool walking = bodySpeed > 0.4f * w.Size;
             for (int i = 0; i < w.Feet.Length; i++)
             {
                 Transform foot = w.Feet[i];
                 if (foot == null) continue;
+                Vector3 footStep = foot.position - w.LastFoot[i];
+                footStep.y = 0f;
+                w.LastFoot[i] = foot.position;
+                float footSpeed = footStep.magnitude / dt;
                 float height = foot.position.y - body.position.y;
                 // its lowest height lately (the ankle stands above the sole): creeps back up so a slope or a jump never fools it for long
                 w.Rest[i] = Mathf.Min(w.Rest[i] == float.MaxValue ? height : w.Rest[i] + dt * 0.05f, height);
                 float above = height - w.Rest[i];
-                if (w.Lifted[i] && above < PlantAbove * w.Size)
+                // a foot is in the air when it rises or (walking) swings past the body; it is down when it is low and (walking) stays put
+                bool swinging = above > LiftAbove * w.Size || (walking && footSpeed > SwingShare * bodySpeed);
+                bool planted = above < LiftAbove * w.Size && (walking ? footSpeed < StillShare * bodySpeed : above < PlantAbove * w.Size);
+                if (w.Lifted[i] && planted)
                 {
                     w.Lifted[i] = false;
                     // the ankle is over the heel: the print's middle is a little ahead of it
                     Vector3 at = foot.position + heading.normalized * size.x * 0.2f;
                     SnowPrints.Add(at, yaw, size, shape);
                 }
-                else if (!w.Lifted[i] && above > LiftAbove * w.Size) w.Lifted[i] = true;
+                else if (!w.Lifted[i] && swinging) w.Lifted[i] = true;
             }
         }
     }

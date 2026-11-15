@@ -75,7 +75,7 @@ namespace KryticalNova.World
 
         [Header("Look (every client)")]
         [Tooltip("The flat comic colour of snow (no texture).")]
-        public Color snowColor = new Color(0.6f, 0.65f, 0.74f);
+        public Color snowColor = new Color(0.44f, 0.48f, 0.56f);
         [Tooltip("Roofs and ledges show snow this much sooner than the ground.")]
         [Range(0f, 0.5f)] public float roofBias = 0.1f;
         [Tooltip("How soft the snow's ragged edge is.")]
