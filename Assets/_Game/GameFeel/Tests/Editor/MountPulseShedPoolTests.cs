@@ -104,7 +104,7 @@ namespace KryticalNova.Tests
             m_Pulse.Shed(m_Prefab, 1f, 0f);
             m_Pulse.Shed(m_Prefab, 1f, 2f);   // warm up the reuse path too
             var made = new GameObject[20];
-            System.Action oldWay = () =>
+            TestDelegate oldWay = () =>
             {
                 for (int i = 0; i < 20; i++)
                 {
@@ -113,7 +113,7 @@ namespace KryticalNova.Tests
                 }
             };
             float t = 2f;
-            System.Action newWay = () => { for (int i = 0; i < 20; i++) m_Pulse.Shed(m_Prefab, 1f, t += 2f); };
+            TestDelegate newWay = () => { for (int i = 0; i < 20; i++) m_Pulse.Shed(m_Prefab, 1f, t += 2f); };
 
             long before = GC.GetTotalMemory(false); oldWay(); long oldBytes = GC.GetTotalMemory(false) - before;
             foreach (var g in made) Object.DestroyImmediate(g);
