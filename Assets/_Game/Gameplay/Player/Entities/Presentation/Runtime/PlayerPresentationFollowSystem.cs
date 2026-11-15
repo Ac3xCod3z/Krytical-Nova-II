@@ -181,7 +181,7 @@ namespace KryticalNova.Player.Entities.Presentation
                 // The walk goes in straight lines between path corners, so on uneven ground it floats or sinks between them; the old
                 // NavMeshAgent stood on the mesh every frame, and the feet's grounding IK expects that (owner's feel test 30 Oct:
                 // "an issue with the ground on each step"). Drawn only: the ghost's X and Z stay the server's.
-                var agent = entry.Body.GetComponent<UnityEngine.AI.NavMeshAgent>();
+                entry.TryGetPart(out UnityEngine.AI.NavMeshAgent agent);   // kept on the entry (perf chunk 9 part 3)
                 float baseOffset = agent != null ? agent.baseOffset : 0f;
                 if (!airborne && !onWater && !onWall && UnityEngine.AI.NavMesh.SamplePosition(new Vector3(p.x, p.y - baseOffset, p.z), out var ground, GroundSampleM,
                         agent != null ? agent.areaMask : UnityEngine.AI.NavMesh.AllAreas))
@@ -211,20 +211,21 @@ namespace KryticalNova.Player.Entities.Presentation
                     state.InputFromPoseAhead = fromAhead;
                     state.InJump = inJump;
                     state.JumpArcErrorM = inJump ? math.distance(entry.Follow.Position, ghostPos) : 0f;
-                    ShowJump(state, entry.Body.GetComponent<IGhostMotionView>(), in jump, jumpMicros, in curves);
-                    ShowVault(state, entry.Body.GetComponent<IGhostMotionView>(), in vault, inVault, drawnProgress, move.SpeedMmps);
+                    entry.TryGetPart(out IGhostMotionView view);   // null when the body has none, as GetComponent was
+                    ShowJump(state, view, in jump, jumpMicros, in curves);
+                    ShowVault(state, view, in vault, inVault, drawnProgress, move.SpeedMmps);
                     byte wallPhase = tilt.Tilted ? tilt.Phase : (byte)0;
                     if (state.ShownWallPhase != wallPhase)
                     {
                         state.ShownWallPhase = wallPhase;
-                        entry.Body.GetComponent<IGhostMotionView>()?.WallPhase(wallPhase, tilt.PhaseMillis * 0.001f);
+                        view?.WallPhase(wallPhase, tilt.PhaseMillis * 0.001f);
                     }
                     if (state.ShownOnWater != onWater)
                     {
                         // a change during or just after a jump is a jump off the water or onto it: the splash too
                         state.ShownOnWater = onWater;
                         bool byJump = jump.Kind == MotionKind.Jump && jumpMicros >= 0 && jumpMicros < curves.LandMicros + 1000000;
-                        entry.Body.GetComponent<IGhostMotionView>()?.WaterStriding(onWater, byJump);
+                        view?.WaterStriding(onWater, byJump);
                     }
                     state.State = new PlayerAnimState
                     {

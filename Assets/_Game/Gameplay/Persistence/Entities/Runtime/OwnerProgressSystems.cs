@@ -19,8 +19,23 @@ namespace KryticalNova.Persistence.Entities
         public static OwnerProgress? Read(GameObject body)
         {
             if (body == null) return null;
-            var wallet = body.GetComponent<IWallet>();
-            var progression = body.GetComponent<PlayerCharacterProgression>();
+            return Build(body.GetComponent<IWallet>(), body.GetComponent<PlayerCharacterProgression>());
+        }
+
+        /// <summary>
+        /// The same read from the registry entry's kept parts (perf clean-ups round 2, chunk 9 part 3: the server read the wallet and the
+        /// progression with GetComponent for every player every tick). Null when the body is gone or has neither part.
+        /// </summary>
+        public static OwnerProgress? Read(GhostBodyEntry entry)
+        {
+            if (entry == null || entry.Body == null) return null;
+            entry.TryGetPart(out IWallet wallet);
+            entry.TryGetPart(out PlayerCharacterProgression progression);
+            return Build(wallet, progression);
+        }
+
+        static OwnerProgress? Build(IWallet wallet, PlayerCharacterProgression progression)
+        {
             if (wallet == null && progression == null) return null;
             ProgressionState s = progression != null ? progression.State : default;
             return new OwnerProgress
@@ -31,9 +46,14 @@ namespace KryticalNova.Persistence.Entities
         }
 
         /// <summary>The Serums of the server's <paramref name="body"/>, kind by kind (M8 8.3.4); null without a Serums part.</summary>
-        public static OwnerSerums? ReadSerums(GameObject body)
+        public static OwnerSerums? ReadSerums(GameObject body) => BuildSerums(body != null ? body.GetComponent<PlayerSerums>() : null);
+
+        /// <summary>The same Serums read from the registry entry's kept part (chunk 9 part 3).</summary>
+        public static OwnerSerums? ReadSerums(GhostBodyEntry entry) =>
+            BuildSerums(entry != null && entry.Body != null && entry.TryGetPart(out PlayerSerums serums) ? serums : null);
+
+        static OwnerSerums? BuildSerums(PlayerSerums serums)
         {
-            var serums = body != null ? body.GetComponent<PlayerSerums>() : null;
             if (serums == null) return null;
             SerumState s = serums.State;
             return new OwnerSerums
@@ -57,8 +77,22 @@ namespace KryticalNova.Persistence.Entities
         public static void Mirror(GameObject body, in OwnerProgress p)
         {
             if (body == null || p.Level < 1) return;
-            body.GetComponent<IWalletMirror>()?.MirrorCreds(p.Creds);
-            body.GetComponent<PlayerCharacterProgression>()?.MirrorState(new ProgressionState
+            Mirror(body.GetComponent<IWalletMirror>(), body.GetComponent<PlayerCharacterProgression>(), p);
+        }
+
+        /// <summary>The same mirror through the registry entry's kept parts (chunk 9 part 3).</summary>
+        public static void Mirror(GhostBodyEntry entry, in OwnerProgress p)
+        {
+            if (entry == null || entry.Body == null || p.Level < 1) return;
+            entry.TryGetPart(out IWalletMirror wallet);
+            entry.TryGetPart(out PlayerCharacterProgression progression);
+            Mirror(wallet, progression, p);
+        }
+
+        static void Mirror(IWalletMirror wallet, PlayerCharacterProgression progression, in OwnerProgress p)
+        {
+            wallet?.MirrorCreds(p.Creds);
+            if (progression != null) progression.MirrorState(new ProgressionState
             {
                 level = p.Level, experience = p.Experience, statPoints = p.StatPoints, skillPoints = p.SkillPoints, renown = p.Renown,
                 strength = p.Strength, vitality = p.Vitality, agility = p.Agility, spirit = p.Spirit,
@@ -80,9 +114,9 @@ namespace KryticalNova.Persistence.Entities
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
                 if (!ReferenceEquals(entry.World, World) || !em.Exists(entry.Ghost) || !em.HasComponent<OwnerProgress>(entry.Ghost)) continue;
-                OwnerProgress? now = OwnerProgressBridge.Read(entry.Body);
+                OwnerProgress? now = OwnerProgressBridge.Read(entry);
                 // the Serums taken, for the owner's stat sheet (M8 8.3.4)
-                if (em.HasComponent<OwnerSerums>(entry.Ghost) && OwnerProgressBridge.ReadSerums(entry.Body) is OwnerSerums serums
+                if (em.HasComponent<OwnerSerums>(entry.Ghost) && OwnerProgressBridge.ReadSerums(entry) is OwnerSerums serums
                     && !OwnerProgressBridge.Same(serums, em.GetComponentData<OwnerSerums>(entry.Ghost)))
                     em.SetComponentData(entry.Ghost, serums);
                 // the Nova everyone sees: the halo and the Standing worn (M8 8.3.5)
@@ -128,7 +162,7 @@ namespace KryticalNova.Persistence.Entities
                 OwnerProgress p = em.GetComponentData<OwnerProgress>(entry.Ghost);
                 if (p.Level < 1 || (m_Shown.TryGetValue(entry.Body, out OwnerProgress had) && OwnerProgressBridge.Same(had, p))) continue;
                 m_Shown[entry.Body] = p;
-                OwnerProgressBridge.Mirror(entry.Body, p);
+                OwnerProgressBridge.Mirror(entry, p);
                 Mirrored++;
             }
         }
