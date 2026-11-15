@@ -142,7 +142,7 @@ namespace KryticalNova.Mounts.Entities
             foreach (GhostBodyEntry entry in GhostBodyRegistry.Entries)
             {
                 if (!ReferenceEquals(entry.World, World) || entry.Body == null || !em.Exists(entry.Ghost) || !em.HasComponent<LocalTransform>(entry.Ghost)
-                    || !entry.Body.TryGetComponent(out PlayerMounts mounts)) continue;
+                    || !entry.TryGetPart(out PlayerMounts mounts)) continue;   // kept on the entry (perf chunk 9 part 3)
                 m_Seen.Add(entry.Body);
                 m_Live.TryGetValue(entry.Body, out Live live);
                 IBodyMountCompanion c = mounts;
