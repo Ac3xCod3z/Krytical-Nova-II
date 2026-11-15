@@ -95,6 +95,27 @@ MonoBehaviour:
   stripUnityChromaticAberration: 0
   stripUnityDistortion: 0
   stripUnityDebugVariants: 0
+--- !u!114 &-1334508368362979999
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c8a63bfc4364ffb9c5402d5c4f16418, type: 3}
+  m_Name: HeatHaze
+  m_EditorClassIdentifier: KryticalNova.Rendering::KryticalNova.Rendering.HeatHazeFeature
+  m_Active: 1
+  settings:
+    renderPassEvent: 550
+    downsample: 2
+    amplitude: 0.0035
+    noiseScale: {x: 70, y: 26}
+    riseSpeed: 1.8
+    skyFade: 0.12
+  shader: {fileID: 4800000, guid: 3ce6bf711a344c05af55de87f88f6dab, type: 3}
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -129,7 +150,8 @@ MonoBehaviour:
   - {fileID: 4601918301690530619}
   - {fileID: -4323589378594971989}
   - {fileID: 6218960072797517718}
-  m_RendererFeatureMap: ad6b866f10d7b46ca50226fd55143914271a73ed58c31e86691a2da7b3952e59e192bcff6f271f128d613fc5678a32d03b0ba239504cdd3fabde31165e86ffc396f76e9b3c2f4e56l
+  - {fileID: -1334508368362979999}
+  m_RendererFeatureMap: ad6b866f10d7b46ca50226fd55143914271a73ed58c31e86691a2da7b3952e59e192bcff6f271f128d613fc5678a32d03b0ba239504cdd3fabde31165e86ffc396f76e9b3c2f4e56613df0a1b5df7aedl
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
   m_AssetVersion: 3
