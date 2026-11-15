@@ -291,7 +291,8 @@ def wait_for_page(page, what):
 
 
 def bots_in_status(status):
-    return re.findall(r'\{"id":(\d+),"name":"(Knbot\d+)"', status or "")
+    # The entity server's /api/status writes ids as strings ("id":"1"); bare numbers too (coder-2, phase 0: no bot was ever matched)
+    return re.findall(r'\{"id":"?(\d+)"?,"name":"(Knbot\d+)"', status or "")
 
 
 # ------------------------------------------------------------------ the result page
