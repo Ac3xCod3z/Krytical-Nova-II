@@ -168,6 +168,7 @@ namespace KryticalNova.Rendering.Tests
             {
                 Move(oldBody, f); Move(newBody, f);
                 legacy.Step(Dt); jobbed.Step(Dt);
+                Dump(kind, f, oldBody, newBody);
                 for (int i = 0; i < newBody.dyn.Count; i++)
                 {
                     float rad = Radians(oldBody.dyn[i].rotation, newBody.dyn[i].rotation);
@@ -185,6 +186,29 @@ namespace KryticalNova.Rendering.Tests
             TestContext.WriteLine($"worst {worst:E2} rad ({where}), {worstMetres:E2} m; the old code against itself: {floor:E2} rad; per 10 frames: {bySteps}");
             Assert.LessOrEqual(worst, MaxRadiansThrown, $"{where}: {worst:E2} rad from the old code (its own rounding floor here {floor:E2}); per 10 frames: {bySteps}");
             Assert.LessOrEqual(worstMetres, MaxMetresThrown, $"{worstMetres:E2} m from the old code");
+        }
+
+        // With KN_DANGLE_DUMP naming a folder, every frame's body and dangle bone positions of both characters, in the
+        // character's own space, go to dangle_<kind>.csv there (the owner's old-against-new picture is drawn from them).
+        private static void Dump(int kind, int frame, Body oldBody, Body newBody)
+        {
+            string folder = System.Environment.GetEnvironmentVariable("KN_DANGLE_DUMP");
+            if (string.IsNullOrEmpty(folder)) return;
+            System.IO.Directory.CreateDirectory(folder);
+            string path = System.IO.Path.Combine(folder, $"dangle_{kind}.csv");
+            var text = new System.Text.StringBuilder();
+            if (frame == 0) { System.IO.File.Delete(path); text.AppendLine("frame,which,bone,parent,x,y,z"); }
+            var inv = System.Globalization.CultureInfo.InvariantCulture;
+            foreach (var (which, b) in new[] { ("old", oldBody), ("new", newBody) })
+                foreach (var t in b.root.GetComponentsInChildren<Transform>())
+                {
+                    if (t == b.root.transform || t.GetComponent<SkinnedMeshRenderer>() != null) continue;
+                    var p = b.root.transform.InverseTransformPoint(t.position);
+                    text.Append(frame).Append(',').Append(which).Append(',').Append(t.name).Append(',').Append(t.parent.name).Append(',')
+                        .Append(p.x.ToString("F5", inv)).Append(',').Append(p.y.ToString("F5", inv)).Append(',')
+                        .Append(p.z.ToString("F5", inv)).AppendLine();
+                }
+            System.IO.File.AppendAllText(path, text.ToString());
         }
 
         // The old code against itself, the second character jittered by up to 1 micrometre every frame (the size of float
