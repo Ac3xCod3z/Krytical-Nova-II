@@ -3,17 +3,6 @@ using UnityEngine;
 
 namespace KryticalNova.Rendering
 {
-    /// <summary>What kind of thing a mesh in the world is, for how its detail falls away with distance.</summary>
-    public enum LodCategory : byte
-    {
-        Tree,
-        Bush,
-        Rock,
-        Building,
-        Prop,
-        SmallProp,
-    }
-
     /// <summary>
     /// Level of detail for every mesh drawn at a distance (owner, 17 Oct 2026: "no matter what we need LOD", "for all
     /// meshes at a distance"). The Synty packs ship almost no LODs, so <c>EnvironmentLodBuilder</c> gives every world
