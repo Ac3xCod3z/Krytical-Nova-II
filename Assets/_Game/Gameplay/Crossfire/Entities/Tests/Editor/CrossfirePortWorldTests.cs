@@ -23,6 +23,17 @@ namespace KryticalNova.Crossfire.Entities.Tests
         double m_Now;
         readonly List<GameObject> m_Made = new List<GameObject>();
 
+        /// <summary>
+        /// The rig's test assets are made once per run (new scenes, an asset refresh, the subscene's import), and that work, still running
+        /// into the first test, destroyed the objects that test had made (its settings copy). Made and loaded once here, before any test.
+        /// </summary>
+        [OneTimeSetUp]
+        public void WarmUp()
+        {
+            using PlayerRig warm = PlayerRig.Create(1);
+            warm.Tick(10);
+        }
+
         [SetUp]
         public void SetUp()
         {
