@@ -242,7 +242,7 @@ namespace KryticalNova.Tests
             var list = new NativeList<int>(16, Allocator.TempJob);
             var copy = new NativeList<PlayerSeparation.Body>(standing.Length, Allocator.TempJob);
             copy.AddRange(standing.AsArray());
-            PlayerSeparation.ScheduleFindActive(copy, Radius, slackMm, list, Allocator.TempJob, default).Complete();
+            PlayerSeparation.ScheduleFindActive(copy, copy.Length, Radius, slackMm, list, Allocator.TempJob, default).Complete();
             copy.Dispose();
             active = list.Length;
             slide.S.Mark();

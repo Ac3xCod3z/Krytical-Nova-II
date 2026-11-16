@@ -248,11 +248,13 @@ namespace KryticalNova.Player.Entities
         /// Steps 3-5 scheduled after <paramref name="dependsOn"/> (which fills <paramref name="standing"/>): <paramref name="active"/>
         /// gets the bodies of every group with a pair too close, ascending; empty when everyone stands apart.
         /// </summary>
-        public static JobHandle ScheduleFindActive(NativeList<Body> standing, int radiusMm, double slackMm, NativeList<int> active,
+        /// <paramref name="capacity"/>: how many bodies there can be (the players); passed in because <paramref name="standing"/> may be
+        /// written by a job already scheduled, and the main thread must not touch it until that job is done.
+        public static JobHandle ScheduleFindActive(NativeList<Body> standing, int capacity, int radiusMm, double slackMm, NativeList<int> active,
             Allocator allocator, JobHandle dependsOn)
         {
             long cell = 2L * radiusMm;
-            var grid = new Grid(standing.Capacity, allocator);
+            var grid = new Grid(capacity, allocator);
             JobHandle h = new GridJob { Standing = standing, Cell = cell, Grid = grid }.Schedule(dependsOn);
             h = new CloseScanJob
             {

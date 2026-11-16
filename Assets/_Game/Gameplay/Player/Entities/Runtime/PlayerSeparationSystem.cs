@@ -120,29 +120,42 @@ namespace KryticalNova.Player.Entities
             var standing = new NativeList<PlayerSeparation.Body>(math.max(count, 1), Allocator.TempJob);
             var active = new NativeList<int>(math.max(count, 1), Allocator.TempJob);
 
-            // 1. who stands still (parallel over the players' chunks)
-            JobHandle handle = new PlayerSeparationGatherJob
+            JobHandle handle = Dependency;
+            try
             {
-                Plans = SystemAPI.GetComponentLookup<MotionPlan>(true),
-                Vitals = SystemAPI.GetComponentLookup<PlayerVitals>(true),
-                Out = gathered,
-            }.ScheduleParallel(m_Players, Dependency);
-            // 2. since when (the same bookkeeping as before, in the old order)
-            handle = new PlayerSeparation.StoodSinceJob
+                // 1. who stands still (parallel over the players' chunks)
+                handle = new PlayerSeparationGatherJob
+                {
+                    Plans = SystemAPI.GetComponentLookup<MotionPlan>(true),
+                    Vitals = SystemAPI.GetComponentLookup<PlayerVitals>(true),
+                    Out = gathered,
+                }.ScheduleParallel(m_Players, handle);
+                // 2. since when (the same bookkeeping as before, in the old order)
+                handle = new PlayerSeparation.StoodSinceJob
+                {
+                    Gathered = gathered, StoodSince = m_StoodSince, Carry = m_Carry, Tick = tick, Standing = standing,
+                }.Schedule(handle);
+                // 3. the grid, the parallel search of every cell for a pair too close, the groups those pairs stand in
+                handle = PlayerSeparation.ScheduleFindActive(standing, math.max(count, 1), radiusMm, PlayerSeparation.SlackMm(radiusMm), active, Allocator.TempJob, handle);
+            }
+            finally
             {
-                Gathered = gathered, StoodSince = m_StoodSince, Carry = m_Carry, Tick = tick, Standing = standing,
-            }.Schedule(handle);
-            // 3. the grid, the parallel search of every cell for a pair too close, the groups those pairs stand in
-            handle = PlayerSeparation.ScheduleFindActive(standing, radiusMm, PlayerSeparation.SlackMm(radiusMm), active, Allocator.TempJob, handle);
-            // the walkable surface is NavMesh (main thread only) and the poses are written here: the result is needed now
-            handle.Complete();
-            Dependency = handle;
-
-            gathered.Dispose();
-            Active = active.Length;
-            if (active.Length > 0) Resolve(standing, active, radiusMm, stepMm, surface);
-            standing.Dispose();
-            active.Dispose();
+                // the walkable surface is NavMesh (main thread only) and the poses are written here: the result is needed now. Always
+                // completed, even when scheduling threw, so one bad tick never leaves a job holding the maps for every tick after it.
+                handle.Complete();
+                Dependency = handle;
+                gathered.Dispose();
+            }
+            try
+            {
+                Active = active.Length;
+                if (active.Length > 0) Resolve(standing, active, radiusMm, stepMm, surface);
+            }
+            finally
+            {
+                standing.Dispose();
+                active.Dispose();
+            }
         }
 
         void Resolve(NativeList<PlayerSeparation.Body> standing, NativeList<int> active, int radiusMm, double stepMm, IWalkableSurface surface)
