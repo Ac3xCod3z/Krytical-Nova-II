@@ -124,13 +124,42 @@ namespace KryticalNova.Networking.Entities
         public static float2 Flat(float3 position) => position.xz;
     }
 
+    /// <summary>One sent pair from a connection's part of the fill, and whether it was not sent before.</summary>
+    public struct RelevancyTaken
+    {
+        public RelevantGhostForConnection Pair;
+        public byte Became;
+    }
+
+    /// <summary>The fill's grid of ghost places and its owner lookup (perf round 3: built once, read by every connection's part).</summary>
+    [BurstCompile]
+    struct RelevancyGridJob : IJob
+    {
+        [ReadOnly] public NativeArray<RelevancyGhost> Ghosts;
+        public float CellSize;
+        public NativeParallelMultiHashMap<int2, int> Grid;
+        public NativeParallelMultiHashMap<int, int> Owned;
+
+        public void Execute()
+        {
+            for (int i = 0; i < Ghosts.Length; i++)
+            {
+                Grid.Add(RelevancyRules.Cell(Ghosts[i].At, CellSize), i);
+                if (Ghosts[i].Owner != 0) Owned.Add(Ghosts[i].Owner, i);
+            }
+        }
+    }
+
     /// <summary>
-    /// The fill itself: from the ghosts, the in-game connections, the always-relevant pairs and the set sent so far, the new set.
+    /// The fill itself, one connection per index, on the job workers (perf round 3: 200 players in one place cost ~22 ms a fill on the
+    /// main thread): from the ghosts, the always-relevant pairs and the set sent so far, the pairs of that connection.
     /// A connection's place is where the ghost it owns stands; with no ghost of its own (signed in, no body yet) it has no place and
-    /// gets only its always-relevant pairs. The ghosts a connection owns are always in, whatever the distance.
+    /// gets only its always-relevant pairs. The ghosts a connection owns are always in, whatever the distance. Each connection writes
+    /// its own stream slot in the order: its own ghosts, its always-relevant ones, then the near ones cell by cell, so the merge gives
+    /// exactly the order of the one-thread fill.
     /// </summary>
     [BurstCompile]
-    public struct RelevancyFillJob : IJob
+    public struct RelevancyFillJob : IJobParallelFor
     {
         [ReadOnly] public NativeArray<RelevancyGhost> Ghosts;
         /// <summary>The NetworkId of every in-game connection.</summary>
@@ -138,93 +167,132 @@ namespace KryticalNova.Networking.Entities
         [ReadOnly] public NativeArray<RelevancyAlways> Always;
         /// <summary>What is sent now (the last fill): the hysteresis reads it.</summary>
         [ReadOnly] public NativeParallelHashMap<RelevantGhostForConnection, int> Old;
+        [ReadOnly] public NativeParallelMultiHashMap<int2, int> Grid;
+        [ReadOnly] public NativeParallelMultiHashMap<int, int> Owned;
         public RelevancyConfig Config;
+        public float CellSize;
 
-        /// <summary>Out: every (connection, ghost) pair to send, each once.</summary>
+        /// <summary>Out: slot v holds connection v's pairs.</summary>
+        public NativeStream.Writer Out;
+
+        public void Execute(int v)
+        {
+            int id = Viewers[v];
+            Out.BeginForEachIndex(v);
+
+            // What it is given besides the near ones (own and always-relevant ghosts), to keep each ghost once. A near ghost is in
+            // exactly one cell and its own ghosts are skipped there, so only a connection with always-relevant ghosts needs the check.
+            bool hasAlways = false;
+            for (int a = 0; a < Always.Length && !hasAlways; a++) hasAlways = Always[a].NetworkId == id && Always[a].GhostId != 0;
+            var special = new NativeHashSet<int>(hasAlways ? 16 : 1, Allocator.Temp);
+
+            // its own ghosts: always, and its place
+            // ONE owner = ONE ghost today (the player's body; pinned by OneOwnedGhostLintTests): the place is the first owned
+            // ghost found. The day a pet, mount or stand becomes an owned ghost, the place must be the BODY's, picked on purpose.
+            bool hasPlace = false;
+            float2 place = default;
+            if (Owned.TryGetFirstValue(id, out int ownIndex, out NativeParallelMultiHashMapIterator<int> ownIt))
+            {
+                do
+                {
+                    if (!hasPlace) { hasPlace = true; place = Ghosts[ownIndex].At; }
+                    TakeSpecial(id, Ghosts[ownIndex].GhostId, ref special);
+                }
+                while (Owned.TryGetNextValue(out ownIndex, ref ownIt));
+            }
+
+            // whoever it must always see
+            if (hasAlways)
+                for (int a = 0; a < Always.Length; a++)
+                    if (Always[a].NetworkId == id && Always[a].GhostId != 0) TakeSpecial(id, Always[a].GhostId, ref special);
+
+            // everything near its place
+            if (hasPlace)
+            {
+                int2 cell = RelevancyRules.Cell(place, CellSize);
+                for (int dx = -1; dx <= 1; dx++)
+                for (int dz = -1; dz <= 1; dz++)
+                {
+                    if (!Grid.TryGetFirstValue(cell + new int2(dx, dz), out int index, out NativeParallelMultiHashMapIterator<int2> it)) continue;
+                    do
+                    {
+                        RelevancyGhost ghost = Ghosts[index];
+                        if (ghost.Owner == id) continue;   // its own: taken above
+                        if (hasAlways && special.Contains(ghost.GhostId)) continue;   // already given as always-relevant
+                        float radius = ghost.Owner != 0 ? Config.PlayerRadius : Config.ObjectRadius;
+                        var pair = new RelevantGhostForConnection(id, ghost.GhostId);
+                        bool sentBefore = Old.ContainsKey(pair);   // looked up once: the hysteresis and "became" both read it
+                        if (RelevancyRules.Sees(math.distancesq(place, ghost.At), radius, Config.LeaveMargin, sentBefore))
+                            Out.Write(new RelevancyTaken { Pair = pair, Became = (byte)(sentBefore ? 0 : 1) });
+                    }
+                    while (Grid.TryGetNextValue(out index, ref it));
+                }
+            }
+            special.Dispose();
+            Out.EndForEachIndex();
+        }
+
+        void TakeSpecial(int connection, int ghostId, ref NativeHashSet<int> special)
+        {
+            if (!special.Add(ghostId)) return;
+            var pair = new RelevantGhostForConnection(connection, ghostId);
+            Out.Write(new RelevancyTaken { Pair = pair, Became = (byte)(Old.ContainsKey(pair) ? 0 : 1) });
+        }
+    }
+
+    /// <summary>The connections' slots, in connection order, into the pair and "became" lists, and the most for one connection.</summary>
+    [BurstCompile]
+    struct RelevancyMergeJob : IJob
+    {
+        public NativeStream.Reader In;
+        public int Connections;
         public NativeList<RelevantGhostForConnection> Pairs;
-        /// <summary>Out: the pairs of <see cref="Pairs"/> that are not in <see cref="Old"/>.</summary>
         public NativeList<RelevantGhostForConnection> Became;
-        /// <summary>Out: the most ghosts any one connection is sent.</summary>
         public NativeReference<int> MostForOne;
 
         public void Execute()
         {
-            float reach = math.max(Config.PlayerRadius, Config.ObjectRadius) + Config.LeaveMargin;
-            float cellSize = math.max(1f, reach);   // nothing can be seen from farther than one cell away
-
-            var grid = new NativeParallelMultiHashMap<int2, int>(math.max(1, Ghosts.Length), Allocator.Temp);
-            var owned = new NativeParallelMultiHashMap<int, int>(math.max(1, Ghosts.Length), Allocator.Temp);
-            for (int i = 0; i < Ghosts.Length; i++)
-            {
-                grid.Add(RelevancyRules.Cell(Ghosts[i].At, cellSize), i);
-                if (Ghosts[i].Owner != 0) owned.Add(Ghosts[i].Owner, i);
-            }
-
-            var mine = new NativeHashSet<int>(256, Allocator.Temp);
             int most = 0;
-            for (int v = 0; v < Viewers.Length; v++)
+            for (int v = 0; v < Connections; v++)
             {
-                int id = Viewers[v];
-                mine.Clear();
-
-                // its own ghosts: always, and its place
-                // ONE owner = ONE ghost today (the player's body; pinned by OneOwnedGhostLintTests): the place is the first owned
-                // ghost found. The day a pet, mount or stand becomes an owned ghost, the place must be the BODY's, picked on purpose.
-                bool hasPlace = false;
-                float2 place = default;
-                if (owned.TryGetFirstValue(id, out int ownIndex, out NativeParallelMultiHashMapIterator<int> ownIt))
+                int count = In.BeginForEachIndex(v);
+                most = math.max(most, count);
+                for (int i = 0; i < count; i++)
                 {
-                    do
-                    {
-                        if (!hasPlace) { hasPlace = true; place = Ghosts[ownIndex].At; }
-                        Take(id, Ghosts[ownIndex].GhostId, ref mine);
-                    }
-                    while (owned.TryGetNextValue(out ownIndex, ref ownIt));
+                    RelevancyTaken taken = In.Read<RelevancyTaken>();
+                    Pairs.Add(taken.Pair);
+                    if (taken.Became != 0) Became.Add(taken.Pair);
                 }
-
-                // whoever it must always see
-                for (int a = 0; a < Always.Length; a++)
-                    if (Always[a].NetworkId == id && Always[a].GhostId != 0) Take(id, Always[a].GhostId, ref mine);
-
-                // everything near its place
-                if (hasPlace)
-                {
-                    int2 cell = RelevancyRules.Cell(place, cellSize);
-                    for (int dx = -1; dx <= 1; dx++)
-                    for (int dz = -1; dz <= 1; dz++)
-                    {
-                        if (!grid.TryGetFirstValue(cell + new int2(dx, dz), out int index, out NativeParallelMultiHashMapIterator<int2> it)) continue;
-                        do
-                        {
-                            RelevancyGhost ghost = Ghosts[index];
-                            if (ghost.Owner == id) continue;   // its own: taken above
-                            float radius = ghost.Owner != 0 ? Config.PlayerRadius : Config.ObjectRadius;
-                            bool sentBefore = Old.ContainsKey(new RelevantGhostForConnection(id, ghost.GhostId));
-                            if (RelevancyRules.Sees(math.distancesq(place, ghost.At), radius, Config.LeaveMargin, sentBefore))
-                                Take(id, ghost.GhostId, ref mine);
-                        }
-                        while (grid.TryGetNextValue(out index, ref it));
-                    }
-                }
-                most = math.max(most, mine.Count);
+                In.EndForEachIndex();
             }
             MostForOne.Value = most;
         }
+    }
 
-        void Take(int connection, int ghostId, ref NativeHashSet<int> mine)
+    /// <summary>The package's set made to hold exactly the pairs, in Burst (56,000 pairs at 200 players in one place).</summary>
+    [BurstCompile]
+    struct RelevancyWriteJob : IJob
+    {
+        public NativeParallelHashMap<RelevantGhostForConnection, int> Set;
+        [ReadOnly] public NativeArray<RelevantGhostForConnection> Pairs;
+
+        public void Execute()
         {
-            if (!mine.Add(ghostId)) return;
-            var pair = new RelevantGhostForConnection(connection, ghostId);
-            Pairs.Add(pair);
-            if (!Old.ContainsKey(pair)) Became.Add(pair);
+            Set.Clear();
+            if (Pairs.Length > Set.Capacity) Set.Capacity = math.max(Pairs.Length, Set.Capacity * 2);
+            for (int i = 0; i < Pairs.Length; i++) Set.TryAdd(Pairs[i], 1);
         }
     }
 
     public static class RelevancyFill
     {
+        /// <summary>Connections per job batch of the parallel fill.</summary>
+        const int ConnectionsPerBatch = 8;
+
         /// <summary>
-        /// Runs the fill now, on this thread (Burst). <paramref name="pairs"/> and <paramref name="became"/> are emptied first; the
-        /// return value is the most ghosts any one connection is sent.
+        /// Runs the fill now, in Burst: the connections' parts on the job workers, then merged in connection order on this thread, so the
+        /// answer and its order are the one-thread fill's. <paramref name="pairs"/> and <paramref name="became"/> are emptied first;
+        /// the return value is the most ghosts any one connection is sent.
         /// </summary>
         public static int Build(NativeArray<RelevancyGhost> ghosts, NativeArray<int> viewers, NativeArray<RelevancyAlways> always,
             NativeParallelHashMap<RelevantGhostForConnection, int> old, in RelevancyConfig config,
@@ -232,27 +300,41 @@ namespace KryticalNova.Networking.Entities
         {
             pairs.Clear();
             became.Clear();
+            float reach = math.max(config.PlayerRadius, config.ObjectRadius) + config.LeaveMargin;
+            float cellSize = math.max(1f, reach);   // nothing can be seen from farther than one cell away
+            var grid = new NativeParallelMultiHashMap<int2, int>(math.max(1, ghosts.Length), Allocator.TempJob);
+            var owned = new NativeParallelMultiHashMap<int, int>(math.max(1, ghosts.Length), Allocator.TempJob);
+            var stream = new NativeStream(math.max(1, viewers.Length), Allocator.TempJob);
             var most = new NativeReference<int>(Allocator.TempJob);
-            new RelevancyFillJob
+            try
             {
-                Ghosts = ghosts, Viewers = viewers, Always = always, Old = old, Config = config,
-                Pairs = pairs, Became = became, MostForOne = most,
-            }.Run();
-            int result = most.Value;
-            most.Dispose();
-            return result;
+                new RelevancyGridJob { Ghosts = ghosts, CellSize = cellSize, Grid = grid, Owned = owned }.Run();
+                if (viewers.Length > 0)
+                {
+                    new RelevancyFillJob
+                    {
+                        Ghosts = ghosts, Viewers = viewers, Always = always, Old = old, Grid = grid, Owned = owned,
+                        Config = config, CellSize = cellSize, Out = stream.AsWriter(),
+                    }.Schedule(viewers.Length, ConnectionsPerBatch).Complete();
+                    new RelevancyMergeJob { In = stream.AsReader(), Connections = viewers.Length, Pairs = pairs, Became = became, MostForOne = most }.Run();
+                }
+                return most.Value;
+            }
+            finally
+            {
+                most.Dispose();
+                stream.Dispose();
+                owned.Dispose();
+                grid.Dispose();
+            }
         }
 
         /// <summary>
-        /// Makes <paramref name="set"/> hold exactly <paramref name="pairs"/>. The set's room only ever grows, by doubling, never per
-        /// fill.
+        /// Makes <paramref name="set"/> hold exactly <paramref name="pairs"/>, in Burst. The set's room only ever grows, by doubling, never
+        /// per fill.
         /// </summary>
-        public static void Write(NativeParallelHashMap<RelevantGhostForConnection, int> set, NativeList<RelevantGhostForConnection> pairs)
-        {
-            set.Clear();
-            if (pairs.Length > set.Capacity) set.Capacity = math.max(pairs.Length, set.Capacity * 2);
-            for (int i = 0; i < pairs.Length; i++) set.TryAdd(pairs[i], 1);
-        }
+        public static void Write(NativeParallelHashMap<RelevantGhostForConnection, int> set, NativeList<RelevantGhostForConnection> pairs) =>
+            new RelevancyWriteJob { Set = set, Pairs = pairs.AsArray() }.Run();
     }
 
     /// <summary>The ghosts with an owner (players): id, owner, place; and their part of the signature.</summary>
