@@ -2,15 +2,34 @@
   "build": 19,
   "items": [
     {
-      "title": "Known Issue: Can't Get In",
-      "body": "If nobody can get into the server after a lot of players drop at once (a crash or a network cut), restart the server. A fix is coming."
+      "title": "No More Server Crashes",
+      "body": "The server no longer stops by itself after 20 to 40 minutes of play. In build 18 it went down about every half hour and threw everyone out; now it keeps running for as long as you play."
+    },
+    {
+      "title": "Back In After a Drop",
+      "body": "If your game crashes or your connection cuts out, you can get straight back in, and so can everyone else. Before, a lot of players dropping at once could lock everybody out until the server was restarted."
+    },
+    {
+      "title": "A Lighter Server",
+      "body": "The server no longer carries the sky, weather, plants, music or drawing parts of the game. Your game still shows and plays all of them exactly as before, and the server has more room for players."
     }
   ],
   "patchNotes": [
     {
-      "heading": "Known issues",
+      "heading": "Fixed",
       "lines": [
-        "If nobody can get into the server after a lot of players drop at once (a crash or a network cut), restart the server. A fix is coming."
+        "The server no longer crashes after 20 to 40 minutes. In build 18 it went down about every half hour, with or without players on.",
+        "After players drop all at once (a game crash, a power cut, a lost connection), everyone can still join. Before, nobody could get in again until the server was restarted.",
+        "Closed a way someone outside the game could lock every player out of the server."
+      ]
+    },
+    {
+      "heading": "Changed",
+      "lines": [
+        "The server no longer carries the sky, weather, plants, music or drawing parts of the game. Your game still shows and plays them all exactly as before.",
+        "Cadence, the bonus for pressing a skill on the beat of the fight music, keeps the same shared beat as before; the server now keeps that beat on its own clock.",
+        "Sky Concord's buildings are now kept with the rest of the game's files, so every build ships the whole city.",
+        "Players and monsters within 150 m of you still reach your screen as in build 18."
       ]
     }
   ],
