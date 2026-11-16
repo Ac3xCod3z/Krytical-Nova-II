@@ -79,6 +79,19 @@ namespace KryticalNova.Vegetation.Grass
                  "the distance LOD falls by 40% of the point where it appears). Wider is softer, but more half-grown blades.")]
         [Range(0.05f, 1f)] public float softFadeBand = 0.4f;
 
+        [Header("Tiles (client-only ECS, grass plan step 3)")]
+        [Tooltip("The ground is cut into tiles (entities in the client world) that Burst jobs stream, cull and pick a look for " +
+                 "on every core. Off: no tile entities.")]
+        public bool ecsTiles = true;
+        [Tooltip("Metres across a tile.")]
+        [Range(8f, 128f)] public float tileSize = 32f;
+        [Tooltip("Tiles across a section (a section's tiles share a chunk and are culled together first).")]
+        [Range(1, 32)] public int sectionTiles = 8;
+        [Tooltip("Metres past an edge before a tile changes its look, so a tile on a boundary never flips back and forth.")]
+        [Range(0f, 16f)] public float tileHysteresis = 4f;
+        [Tooltip("Tiles built per frame as they come into range, nearest first.")]
+        [Range(1, 16)] public int tileStreamBudget = 2;
+
         [Header("Far grass (smoke and mirrors)")]
         [Tooltip("Cheap tufts that carry the field past the real grass, following the same mask, biomes and types.")]
         public bool farGrass = true;

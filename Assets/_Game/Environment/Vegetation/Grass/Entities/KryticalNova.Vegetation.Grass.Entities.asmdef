@@ -1,0 +1,23 @@
+{
+    "name": "KryticalNova.Vegetation.Grass.Entities",
+    "rootNamespace": "KryticalNova.Vegetation.Grass.Entities",
+    "references": [
+        "KryticalNova.Runtime",
+        "KryticalNova.Vegetation.Grass",
+        "Unity.Burst",
+        "Unity.Collections",
+        "Unity.Mathematics",
+        "Unity.Entities"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "!UNITY_SERVER"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

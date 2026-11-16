@@ -34,6 +34,17 @@ namespace KryticalNova.Vegetation.Grass
 
         public static GrassRenderer Instance { get; private set; }
         public GrassRuleSet Rules => rules;
+        public Terrain Terrain => terrain;
+        /// <summary>Metres where real grass ends, as drawn now (the ECS tiles read it).</summary>
+        public float NearEnd => NearDistance;
+        /// <summary>Metres where far tufts end, as drawn now (real grass's end without far grass).</summary>
+        public float FarEnd => rules != null && rules.farGrass && rules.farMesh != null ? Mathf.Max(rules.farDistance, NearDistance + 10f) : NearDistance;
+        /// <summary>The density in force (rule set or override, times the player's setting).</summary>
+        public float CurrentDensity => Density;
+        /// <summary>The ECS tiles' debug line (KryticalNova.Vegetation.Grass.Entities writes it; grass.tiles reads it).</summary>
+        public static string TileLine = "grass tiles: not running";
+        /// <summary>Set by grass.tiles after reading: the tiles restart their averages.</summary>
+        public static bool TileLineRead;
 
         /// <summary>0 off, 1 placement (green dense → yellow sparse, red = no grass allowed), 2 LOD bands (blue = far tufts), 3 biomes.</summary>
         public static int DebugMode
