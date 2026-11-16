@@ -25,6 +25,9 @@ namespace KryticalNova.Hostiles.Entities
         // crowding by body size (owner pick A, 7 Nov 2026): HostileRingRules
         public float SlotStandGap, SlotRingFill, BruiserArcFactor, PlayerRadius;
         public float WaitRingMin, WaitRingMax;
+        // sticky spots (owner pick, 15 Nov 2026)
+        public float SlotHoldBack, SlotHoldDeadBand, SlotStrikeArrive, SlotSettle, SlotReseatDistance;
+        public uint SlotStepInTicks;
 
         public static HostileBrainConfig From(HostileBrainSettings s, int tickRate)
         {
@@ -57,6 +60,12 @@ namespace KryticalNova.Hostiles.Entities
                 AttackCostHeavy = s.attackCostHeavy,
                 WaitRingMin = s.waitRingRadius.x,
                 WaitRingMax = math.max(s.waitRingRadius.x, s.waitRingRadius.y),
+                SlotHoldBack = math.max(0f, s.slotHoldBack),
+                SlotHoldDeadBand = math.max(0.05f, s.slotHoldDeadBand),
+                SlotStrikeArrive = math.max(0.05f, s.slotStrikeArrive),
+                SlotSettle = math.max(0.02f, s.slotSettle),
+                SlotReseatDistance = math.max(0.5f, s.slotReseatDistance),
+                SlotStepInTicks = math.max(1u, Ticks(s.slotStepInSeconds)),
             };
         }
     }
