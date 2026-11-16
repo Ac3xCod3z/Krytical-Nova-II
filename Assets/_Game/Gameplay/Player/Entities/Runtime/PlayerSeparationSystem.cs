@@ -1,5 +1,8 @@
+using System.Diagnostics;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.NetCode;
 using Unity.Transforms;
@@ -12,6 +15,13 @@ namespace KryticalNova.Player.Entities
     /// touch. Only the server moves anyone (the owner's prediction takes the corrected pose from the next snapshot); a walk, a jump, a
     /// wall or the water is never touched. The rule itself is <see cref="PlayerSeparation"/> (pure, tested). Numbers: MovementSettings
     /// (personalSpaceRadius, slideOutSpeed) through <see cref="PlayerMoveSettings"/>.
+    ///
+    /// Perf round 4 (owner, 15 Nov: the work on all cores): who stands still, the grid and the search for every standing pair that is
+    /// too close run as Burst jobs, the search in parallel over the grid's cells. Only the players in a group that has such a pair go
+    /// to the main thread, where the walkable surface (NavMesh, main thread only) checks every slide, in the old pair order; a crowd
+    /// that already stands apart costs the main thread nothing. The answer is the old loop's exactly
+    /// (<see cref="PlayerSeparation.ResolveActive{T}"/>, PlayerSeparationGridTests). <c>-knseparation-serial</c> on the command line
+    /// runs the old main-thread pass instead (the same build's before/after); <c>separation_ms</c> in the server CSV is its time.
     /// </summary>
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
     [UpdateInGroup(typeof(PredictedSimulationSystemGroup))]
@@ -22,10 +32,20 @@ namespace KryticalNova.Player.Entities
         /// <summary>The part of a millimetre each sliding player has not moved yet (the pose is whole mm; a step may not be).</summary>
         NativeHashMap<Entity, double2> m_Carry;
         PlayerServerPlanSystem m_Plans;
+        EntityQuery m_Players;
+        bool m_Serial;
+        KryticalNova.Diagnostics.GaugeWindow m_Gauge;
 
         /// <summary>Slides made; pairs the walkable surface kept from sliding either way (tests, diagnostics).</summary>
         public int Slides { get; private set; }
         public int Blocked { get; private set; }
+        /// <summary>Players the last tick sent to the main thread's checked slides (0 when everyone stands apart); diagnostics.</summary>
+        public int Active { get; private set; }
+        /// <summary>Ticks whose groups moved too far to be kept apart and were run again over every player (the old pass).</summary>
+        public int FellBack { get; private set; }
+
+        /// <summary>The old main-thread pass instead of the jobs (tests and the before/after run).</summary>
+        public bool Serial { get => m_Serial; set => m_Serial = value; }
 
         protected override void OnCreate()
         {
@@ -33,6 +53,9 @@ namespace KryticalNova.Player.Entities
             RequireForUpdate<PlayerMoveSettings>();
             m_StoodSince = new NativeHashMap<Entity, uint>(64, Allocator.Persistent);
             m_Carry = new NativeHashMap<Entity, double2>(16, Allocator.Persistent);
+            m_Players = SystemAPI.QueryBuilder().WithAll<MoveState, PlayerPose, PlayerGhostTag>().Build();
+            foreach (string arg in System.Environment.GetCommandLineArgs())
+                if (arg == "-knseparation-serial") m_Serial = true;
         }
 
         protected override void OnDestroy()
@@ -55,6 +78,7 @@ namespace KryticalNova.Player.Entities
             if (cfg.PersonalRadiusMm <= 0 || cfg.SlideOutMmps <= 0) return;
             NetworkTime time = SystemAPI.GetSingleton<NetworkTime>();
             if (!time.ServerTick.IsValid) return;
+            long started = Stopwatch.GetTimestamp();
             uint tick = time.ServerTick.TickIndexForValidTick;
             int tickRate = TickRateOf(SystemAPI.TryGetSingleton(out ClientServerTickRate rate), rate);
             double stepMm = PlayerSeparation.StepMm(cfg.SlideOutMmps, tickRate);
@@ -62,6 +86,149 @@ namespace KryticalNova.Player.Entities
             // the walkable surface the server's walk is planned on (NavMeshPathPlanner); none = a flat test world, nothing to clamp to
             IWalkableSurface surface = m_Plans != null ? m_Plans.Planner as IWalkableSurface : null;
 
+            if (m_Serial) SerialUpdate(tick, cfg.PersonalRadiusMm, stepMm, surface);
+            else JobUpdate(tick, cfg.PersonalRadiusMm, stepMm, surface);
+            m_Gauge.Add(KryticalNova.Diagnostics.PerformanceLog.GaugeNames.SeparationMs, started);
+        }
+
+        void JobUpdate(uint tick, int radiusMm, double stepMm, IWalkableSurface surface)
+        {
+            int count = m_Players.CalculateEntityCount();
+            var gathered = new NativeArray<PlayerSeparation.Gathered>(count, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
+            var standing = new NativeList<PlayerSeparation.Body>(math.max(count, 1), Allocator.TempJob);
+            var active = new NativeList<int>(math.max(count, 1), Allocator.TempJob);
+
+            // 1. who stands still (parallel over the players' chunks)
+            JobHandle handle = new PlayerSeparationGatherJob
+            {
+                Plans = SystemAPI.GetComponentLookup<MotionPlan>(true),
+                Vitals = SystemAPI.GetComponentLookup<PlayerVitals>(true),
+                Out = gathered,
+            }.ScheduleParallel(m_Players, Dependency);
+            // 2. since when (the same bookkeeping as before, in the old order)
+            handle = new PlayerSeparation.StoodSinceJob
+            {
+                Gathered = gathered, StoodSince = m_StoodSince, Carry = m_Carry, Tick = tick, Standing = standing,
+            }.Schedule(handle);
+            // 3. the grid, the parallel search of every cell for a pair too close, the groups those pairs stand in
+            handle = PlayerSeparation.ScheduleFindActive(standing, radiusMm, PlayerSeparation.SlackMm(radiusMm), active, Allocator.TempJob, handle);
+            // the walkable surface is NavMesh (main thread only) and the poses are written here: the result is needed now
+            handle.Complete();
+            Dependency = handle;
+
+            gathered.Dispose();
+            Active = active.Length;
+            if (active.Length > 0) Resolve(standing, active, radiusMm, stepMm, surface);
+            standing.Dispose();
+            active.Dispose();
+        }
+
+        void Resolve(NativeList<PlayerSeparation.Body> standing, NativeList<int> active, int radiusMm, double stepMm, IWalkableSurface surface)
+        {
+            var slide = new ServerSlide
+            {
+                Surface = surface,
+                Carry = m_Carry,
+                Pending = new NativeHashMap<Entity, double2>(active.Length, Allocator.Temp),
+                Dropped = new NativeHashSet<Entity>(8, Allocator.Temp),
+                Moved = new NativeHashSet<Entity>(active.Length, Allocator.Temp),
+            };
+            Blocked += PlayerSeparation.ResolveActive(standing, active, radiusMm, stepMm, PlayerSeparation.SlackMm(radiusMm), ref slide, out bool fellBack);
+            if (fellBack) FellBack++;
+            Commit(standing, ref slide);
+        }
+
+        /// <summary>The slides were made on the list; now the carry and every moved player's pose.</summary>
+        void Commit(NativeList<PlayerSeparation.Body> standing, ref ServerSlide slide)
+        {
+            foreach (Entity e in slide.Dropped) m_Carry.Remove(e);
+            foreach (KVPair<Entity, double2> kv in slide.Pending) m_Carry[kv.Key] = kv.Value;
+            if (slide.Moved.Count > 0)
+            {
+                ComponentLookup<PlayerPose> poses = SystemAPI.GetComponentLookup<PlayerPose>();
+                ComponentLookup<LocalTransform> transforms = SystemAPI.GetComponentLookup<LocalTransform>();
+                for (int k = 0; k < standing.Length; k++)
+                {
+                    PlayerSeparation.Body b = standing[k];
+                    if (!slide.Moved.Contains(b.Entity)) continue;
+                    PlayerPose pose = poses[b.Entity];
+                    pose.XMm = b.XMm;
+                    pose.ZMm = b.ZMm;
+                    poses[b.Entity] = pose;
+                    LocalTransform transform = transforms[b.Entity];
+                    transform.Position = new float3(b.XMm, pose.YMm, b.ZMm) * 0.001f;
+                    transforms[b.Entity] = transform;
+                }
+            }
+            Slides += slide.Slides;
+            slide.Pending.Dispose();
+            slide.Dropped.Dispose();
+            slide.Moved.Dispose();
+        }
+
+        /// <summary>The server's slide: the walkable surface and the carry. Nothing is written to a player until <see cref="Commit"/>,
+        /// so a pass that has to be run again over everyone (<see cref="PlayerSeparation.IUndoableSlide.Undo"/>) leaves no trace.</summary>
+        struct ServerSlide : PlayerSeparation.IUndoableSlide
+        {
+            public IWalkableSurface Surface;
+            public NativeHashMap<Entity, double2> Carry;
+            public NativeHashMap<Entity, double2> Pending;
+            public NativeHashSet<Entity> Dropped;
+            public NativeHashSet<Entity> Moved;
+            public int Slides;
+
+            bool CarryOf(Entity e, out double2 carry)
+            {
+                carry = default;
+                if (Dropped.Contains(e)) return false;
+                if (Pending.TryGetValue(e, out carry)) return true;
+                return Carry.TryGetValue(e, out carry);
+            }
+
+            void SetCarry(Entity e, double2 carry) { Pending[e] = carry; Dropped.Remove(e); }
+            void DropCarry(Entity e) { Pending.Remove(e); Dropped.Add(e); }
+
+            public bool TrySlide(NativeList<PlayerSeparation.Body> standing, int at, double2 moveMm)
+            {
+                PlayerSeparation.Body b = standing[at];
+                CarryOf(b.Entity, out double2 carry);
+                int2 whole = PlayerSeparation.Carry(ref carry, moveMm);
+                if (whole.x == 0 && whole.y == 0) { SetCarry(b.Entity, carry); return true; }   // under a millimetre this tick: kept for the next
+                var from = new int3(b.XMm, b.YMm, b.ZMm);
+                var to = new int3(b.XMm + whole.x, b.YMm, b.ZMm + whole.y);
+                if (Surface != null)
+                {
+                    if (!Surface.TryClampStep(from, to, out int3 reached) || (reached.x == from.x && reached.z == from.z))
+                    {
+                        DropCarry(b.Entity);
+                        return false;
+                    }
+                    if (reached.x != to.x || reached.z != to.z) carry = double2.zero;   // stopped at the edge: no leftover pushes it on
+                    to = new int3(reached.x, b.YMm, reached.z);
+                }
+                SetCarry(b.Entity, carry);
+                b.XMm = to.x;
+                b.ZMm = to.z;
+                standing[at] = b;
+                Moved.Add(b.Entity);
+                Slides++;
+                return true;
+            }
+
+            public void Undo()
+            {
+                Pending.Clear();
+                Dropped.Clear();
+                Moved.Clear();
+                Slides = 0;
+            }
+        }
+
+        // ---- the old main-thread pass (before perf round 4), kept for the same build's before/after ----
+
+        void SerialUpdate(uint tick, int radiusMm, double stepMm, IWalkableSurface surface)
+        {
+            CompleteDependency();
             var standing = new NativeList<PlayerSeparation.Body>(16, Allocator.Temp);
             var seen = new NativeHashSet<Entity>(16, Allocator.Temp);
             foreach (var (move, pose, entity) in SystemAPI.Query<RefRO<MoveState>, RefRO<PlayerPose>>().WithAll<PlayerGhostTag>().WithEntityAccess())
@@ -82,25 +249,24 @@ namespace KryticalNova.Player.Entities
             NativeArray<Entity> keys = m_StoodSince.GetKeyArray(Allocator.Temp);
             for (int k = 0; k < keys.Length; k++) if (!seen.Contains(keys[k])) { m_StoodSince.Remove(keys[k]); m_Carry.Remove(keys[k]); }
 
-            // every standing pair that is close enough, in the old i < j order, found through a grid (perf night chunk 6: was every pair)
-            var slide = new ServerSlide { System = this, Surface = surface };
-            Blocked += PlayerSeparation.ResolvePairs(standing, cfg.PersonalRadiusMm, stepMm, ref slide);
+            Active = standing.Length;
+            var slide = new SerialSlide { System = this, Surface = surface };
+            Blocked += PlayerSeparation.ResolvePairs(standing, radiusMm, stepMm, ref slide);
         }
 
-        /// <summary>The server's slide for <see cref="PlayerSeparation.ResolvePairs{T}"/>: the walkable surface, the carry, the pose.</summary>
-        struct ServerSlide : PlayerSeparation.ISlide
+        struct SerialSlide : PlayerSeparation.ISlide
         {
             public PlayerSeparationSystem System;
             public IWalkableSurface Surface;
-            public bool TrySlide(NativeList<PlayerSeparation.Body> standing, int at, double2 moveMm) => System.TrySlide(standing, at, moveMm, Surface);
+            public bool TrySlide(NativeList<PlayerSeparation.Body> standing, int at, double2 moveMm) => System.SerialTrySlide(standing, at, moveMm, Surface);
         }
 
-        bool TrySlide(NativeList<PlayerSeparation.Body> standing, int at, double2 moveMm, IWalkableSurface surface)
+        bool SerialTrySlide(NativeList<PlayerSeparation.Body> standing, int at, double2 moveMm, IWalkableSurface surface)
         {
             PlayerSeparation.Body b = standing[at];
             m_Carry.TryGetValue(b.Entity, out double2 carry);
             int2 whole = PlayerSeparation.Carry(ref carry, moveMm);
-            if (whole.x == 0 && whole.y == 0) { m_Carry[b.Entity] = carry; return true; }   // under a millimetre this tick: kept for the next
+            if (whole.x == 0 && whole.y == 0) { m_Carry[b.Entity] = carry; return true; }
             var from = new int3(b.XMm, b.YMm, b.ZMm);
             var to = new int3(b.XMm + whole.x, b.YMm, b.ZMm + whole.y);
             if (surface != null)
@@ -110,7 +276,7 @@ namespace KryticalNova.Player.Entities
                     m_Carry.Remove(b.Entity);
                     return false;
                 }
-                if (reached.x != to.x || reached.z != to.z) carry = double2.zero;   // stopped at the edge: no leftover pushes it on
+                if (reached.x != to.x || reached.z != to.z) carry = double2.zero;
                 to = new int3(reached.x, b.YMm, reached.z);
             }
             m_Carry[b.Entity] = carry;
@@ -128,7 +294,7 @@ namespace KryticalNova.Player.Entities
     }
 
     /// <summary>The rule of <see cref="PlayerSeparationSystem"/>, in integers (mm): pure, so it is tested without a world.</summary>
-    public static class PlayerSeparation
+    public static partial class PlayerSeparation
     {
         public struct Body
         {
@@ -142,6 +308,12 @@ namespace KryticalNova.Player.Entities
         public interface ISlide
         {
             bool TrySlide(NativeList<Body> standing, int at, double2 moveMm);
+        }
+
+        /// <summary>A slide that can forget every slide since it was made (or last undone), carries included.</summary>
+        public interface IUndoableSlide : ISlide
+        {
+            void Undo();
         }
 
         /// <summary>
@@ -242,7 +414,7 @@ namespace KryticalNova.Player.Entities
         {
             which = 0;
             moveMm = double2.zero;
-            if (math.abs(a.YMm - b.YMm) > 1500) return false;
+            if (math.abs(a.YMm - b.YMm) > LevelMm) return false;
             long dx = (long)b.XMm - a.XMm, dz = (long)b.ZMm - a.ZMm;
             long apart = 2L * radiusMm;
             long d2 = dx * dx + dz * dz;
@@ -269,6 +441,9 @@ namespace KryticalNova.Player.Entities
             moveMm = away * step;
             return true;
         }
+
+        /// <summary>Two bodies further apart in height than this never push each other (a ledge above).</summary>
+        public const int LevelMm = 1500;
 
         /// <summary>One tick's slide in mm at <paramref name="slideMmps"/>, fractional (1500 mm/s at 45 ticks is 33.3 mm).</summary>
         public static double StepMm(int slideMmps, int tickRate) => tickRate > 0 ? (double)slideMmps / tickRate : 0;

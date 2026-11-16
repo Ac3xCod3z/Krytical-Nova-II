@@ -2,6 +2,7 @@
     "name": "KryticalNova.Player.Entities",
     "rootNamespace": "KryticalNova.Player.Entities",
     "references": [
+        "KryticalNova.Runtime",
         "Unity.Entities",
         "Unity.Entities.Hybrid",
         "Unity.Scenes",
