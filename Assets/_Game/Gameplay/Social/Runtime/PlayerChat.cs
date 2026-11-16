@@ -196,7 +196,17 @@ namespace KryticalNova.Social
         }
 
         // A server body of the entity netcode is never network-spawned: NGO's owner RPCs never run there, the line goes to its player.
-        private void ToOwner(in BodyChatLine line) => ChatOwnerLink.Current?.Line(this, line);
+        private void ToOwner(in BodyChatLine line)
+        {
+            ServerHeard?.Invoke(line);
+            ChatOwnerLink.Current?.Line(this, line);
+        }
+
+        /// <summary>
+        /// Server only (War Bots, 16 Nov 2026): every line sent to this server body's player, as its owner would read it. A player the
+        /// server runs itself has no owner to send it to; this is how it hears its squad leader's orders.
+        /// </summary>
+        public event System.Action<BodyChatLine> ServerHeard;
 
         [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
         private void SendRpc(ChatChannel channel, string text, string whisperTarget)

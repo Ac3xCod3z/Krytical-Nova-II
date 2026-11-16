@@ -1,0 +1,114 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b3d7d8fac934c35abe41b65008a24ae, type: 3}
+  m_Name: WarBotSettings
+  m_EditorClassIdentifier: KryticalNova.WarBots::KryticalNova.WarBots.WarBotSettings
+  thinkSeconds: 0.25
+  reactionMinSeconds: 0.25
+  reactionMaxSeconds: 0.8
+  skillMin: 0.35
+  skillMax: 0.9
+  slipChanceAtZeroSkill: 0.45
+  aggressiveWeight: 3
+  carefulWeight: 3
+  supportWeight: 2
+  loneWolfWeight: 2
+  sightMeters: 60
+  isolatedMeters: 12
+  isolatedBonusMeters: 15
+  lowHealthBonusMeters: 25
+  helpTeammateBonusMeters: 20
+  crowdPenaltyMeters: 6
+  dangerMeters: 15
+  loseMargin: 3
+  stimHealth: 0.45
+  stimItems:
+  - 9042
+  - 9041
+  stimsEach: 6
+  stimRetrySeconds: 5
+  retreatHealthCareful: 0.4
+  retreatHealthAggressive: 0.15
+  swarmedBy: 3
+  returnHealth: 0.7
+  kiteWithinMeters: 5
+  kiteToMeters: 11
+  tankLeashMeters: 14
+  skillGapMinSeconds: 3
+  skillGapMaxSeconds: 6
+  buffBetweenFights: 1
+  beatErrorBestSeconds: 0.03
+  beatErrorWorstSeconds: 0.25
+  comboTryChance: 0.85
+  inviteAnswerMinSeconds: 1
+  inviteAnswerMaxSeconds: 3.5
+  acceptPlayerInvites: 1
+  botPartySize: 3
+  followMeters: 6
+  holdMeters: 15
+  followWords:
+  - follow
+  - on me
+  - regroup
+  holdWords:
+  - hold
+  - stay
+  - wait
+  attackWords:
+  - attack
+  - go
+  - charge
+  - push
+  regroupWhenOutnumbered: 1
+  mountShare: 0.3
+  rideBeyondMeters: 40
+  chatGapSeconds: 25
+  emoteGapSeconds: 20
+  chatChance: 0.35
+  emoteChance: 0.5
+  killEmotes:
+  - E/Celebrate/Beat Chest
+  - E/Celebrate/Dust Shoulder
+  - E/Taunt/Laugh And Point
+  - E/Celebrate/Finger Guns Single
+  winEmotes:
+  - E/Celebrate/Air Guitar
+  - E/Celebrate/Clapping Polite
+  - E/Celebrate/Amped Skitter
+  leaderEmotes:
+  - E/Greet/Salute
+  - E/Greet/Salute Stomp
+  lowLines:
+  - Low, backing off!
+  - Falling back!
+  - Need help here!
+  - Pulling out, cover me!
+  regroupLines:
+  - Regroup on me!
+  - Too many, regroup!
+  - On the leader!
+  joinLines:
+  - With you.
+  - On you, lead.
+  - Ready.
+  - Let's go.
+  killLines:
+  - Got one.
+  - Down!
+  - Target down.
+  - One less.
+  uniqueNames: 1
+  damageAttributes: {x: 0.6, y: 0.3, z: 0.1, w: 0}
+  tankAttributes: {x: 0.25, y: 0.65, z: 0.1, w: 0}
+  rangedAttributes: {x: 0.2, y: 0.25, z: 0.55, w: 0}
+  scorePerRarity: 200
+  noEconomy: 1
