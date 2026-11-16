@@ -5,6 +5,7 @@
         "KryticalNova.Runtime",
         "KryticalNova.Combat",
         "KryticalNova.World",
+        "KryticalNova.World.Presentation",
         "Unity.Netcode.Runtime",
         "Unity.Networking.Transport",
         "Unity.Collections",

@@ -426,7 +426,9 @@ namespace KryticalNova.Housing
             area = HomeArea.Lawn;
             if (was)
             {
+#if !UNITY_SERVER   // the rain is World.Presentation's, client only
                 PrecipitationController.Indoors = false;
+#endif
                 if (mover != null && !duringTrip) mover.WorldClicksParked = false;
                 Changed?.Invoke();
             }
@@ -446,7 +448,9 @@ namespace KryticalNova.Housing
                 if (views[(int)which] != null) views[(int)which].enabled = which == next;
                 if (rooms[(int)which] != null) rooms[(int)which].SetShown(which == next);
             }
+#if !UNITY_SERVER
             PrecipitationController.Indoors = indoors;
+#endif
             Changed?.Invoke();
         }
 

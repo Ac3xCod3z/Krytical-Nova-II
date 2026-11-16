@@ -10,6 +10,7 @@
         "KryticalNova.Progression",
         "KryticalNova.Rendering",
         "KryticalNova.World",
+        "KryticalNova.World.Presentation",
         "Unity.Netcode.Runtime",
         "Unity.Networking.Transport",
         "Unity.Collections",

@@ -62,6 +62,7 @@ namespace KryticalNova.Player
             if (current == this) current = null;
         }
 
+#if !UNITY_SERVER   // the time of day it follows is World.Presentation's, client only (the light is never added on a server)
         private void LateUpdate()
         {
             float hours = EnvironmentPresenter.PresentedTimeOfDay01 * 24f;
@@ -74,5 +75,6 @@ namespace KryticalNova.Player
             if (fill.enabled != on) fill.enabled = on;
             if (on) fill.intensity = intensity;
         }
+#endif
     }
 }

@@ -16,6 +16,7 @@
         "KryticalNova.Rendering",
         "KryticalNova.UI",
         "KryticalNova.World",
+        "KryticalNova.World.Presentation",
         "MoreMountains.Tools",
         "Unity.Cinemachine",
         "Unity.Netcode.Runtime",

@@ -61,7 +61,11 @@ namespace KryticalNova.DevTools
             var s = SkyEventSettings.Default;
             int count = s != null && s.nebulas != null ? s.nebulas.Length : 0;
             if (look >= count) return $"Look {look} does not exist (0-{count - 1}, or -1).";
+#if !UNITY_SERVER   // the sky is drawn by World.Presentation, client only
             SkyEventPresenter.NebulaLookOverride = look < 0 ? -1 : look;
+#else
+            return "A server draws no sky: use sky.nebula.look on a player's machine.";
+#endif
             return look < 0 ? "Nebula back to the calendar's pick." : $"This client shows {s.nebulas[look].name} on nebula nights (others see the calendar's pick).";
         }
 

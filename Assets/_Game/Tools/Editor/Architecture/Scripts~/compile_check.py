@@ -243,7 +243,10 @@ def make(asm):
     elif ".Editor" in asm:
         template_name = "KryticalNova.Editor"
     else:
-        template_name = "KryticalNova.Runtime"
+        # a new runtime assembly split off another (KryticalNova.World.Presentation from KryticalNova.World) borrows that one's
+        # project: its package references are the closest (Core's has no Netcode, for one)
+        parents = [e for e in existing if asm.startswith(e + ".")]
+        template_name = max(parents, key=len) if parents else "KryticalNova.Runtime"
     with open(os.path.join(PROJECTS, template_name + ".csproj"), encoding="utf-8-sig") as f:
         text = f.read()
     # drop the Editor's file list; the checkout's comes below
