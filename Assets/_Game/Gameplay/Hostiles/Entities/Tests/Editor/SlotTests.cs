@@ -45,7 +45,7 @@ namespace KryticalNova.Hostiles.Entities.Tests
         {
             HostileLife life = w.Em.GetComponentData<HostileLife>(h);
             float r = life.RadiusMm * 0.001f;
-            float stand = HostileRingRules.Stand(c.PlayerRadius, r, c.SlotStandGap, life.AttackRange + c.ReachSlack);
+            float stand = HostileRingRules.Stand(c.PlayerRadius, r, c.SlotStandGap);
             return HostileRingRules.Arc(r, stand, life.Tier == (byte)HostileTier.Bruiser ? c.BruiserArcFactor : 1f);
         }
 
@@ -59,12 +59,15 @@ namespace KryticalNova.Hostiles.Entities.Tests
             Assert.AreEqual(0.2f, c.SlotStandGap, 1e-5f);
             Assert.AreEqual(0.9f, c.SlotRingFill, 1e-5f);
             Assert.AreEqual(2f, c.BruiserArcFactor, 1e-5f);
-            float stand = HostileRingRules.Stand(c.PlayerRadius, 0.45f, c.SlotStandGap, 2.3f);
+            float stand = HostileRingRules.Stand(c.PlayerRadius, 0.45f, c.SlotStandGap);
             Assert.AreEqual(1.15f, stand, 1e-5f);
             float arc = HostileRingRules.Arc(0.45f, stand, 1f);
             Assert.AreEqual(7, (int)(HostileRingRules.Room(c.SlotRingFill) / arc), "seven 0.45 m bodies round a player");
-            Assert.AreEqual(2.2f, HostileRingRules.Stand(c.PlayerRadius, 1.5f, c.SlotStandGap, 4f), 1e-5f, "a big body stands farther out by itself");
-            Assert.AreEqual(2.3f, HostileRingRules.Stand(c.PlayerRadius, 3f, c.SlotStandGap, 2.3f), 1e-5f, "never beyond its reach");
+            Assert.AreEqual(2.2f, HostileRingRules.Stand(c.PlayerRadius, 1.5f, c.SlotStandGap), 1e-5f, "a big body stands farther out by itself");
+            // sticky spots (15 Nov 2026): never pulled inside the player by a short reach; its reach grows to where it touches instead
+            Assert.AreEqual(3.7f, HostileRingRules.Stand(c.PlayerRadius, 3f, c.SlotStandGap), 1e-5f, "a 3 m body stands clear of the player");
+            Assert.AreEqual(3.7f, HostileRingRules.Reach(2.3f, 3.7f), 1e-5f, "and reaches from there");
+            Assert.AreEqual(2.3f, HostileRingRules.Reach(2.3f, 1.15f), 1e-5f, "a normal body keeps its own range");
             Assert.AreEqual(2f * arc, HostileRingRules.Arc(0.45f, stand, 2f), 1e-5f, "a Bruiser's arc counts double");
         }
 
@@ -84,7 +87,7 @@ namespace KryticalNova.Hostiles.Entities.Tests
                 for (int i = 0; i < n; i++)
                 {
                     float r = rng.NextFloat(0.2f, 2.5f);
-                    float stand = HostileRingRules.Stand(c.PlayerRadius, r, c.SlotStandGap, 10f);
+                    float stand = HostileRingRules.Stand(c.PlayerRadius, r, c.SlotStandGap);
                     float arc = HostileRingRules.Arc(r, stand, rng.NextBool() ? c.BruiserArcFactor : 1f);
                     if (used + arc > HostileRingRules.Room(c.SlotRingFill)) break;
                     used += arc;
@@ -93,15 +96,18 @@ namespace KryticalNova.Hostiles.Entities.Tests
                 int m = radii.Count;
                 var bearingList = new List<float>();
                 for (int i = 0; i < m; i++) bearingList.Add(rng.NextFloat(-math.PI, math.PI));
+                // they join one by one, as in a fight: each takes the free spot nearest its bearing, the ring makes room when none is wide enough
                 var order = new List<int>();
                 for (int i = 0; i < m; i++) order.Add(i);
-                order.Sort((a, b) => bearingList[a].CompareTo(bearingList[b]));
-                var bearings = new NativeArray<float>(m, Allocator.Temp);
                 var arcs = new NativeArray<float>(m, Allocator.Temp);
                 var places = new NativeArray<float>(m, Allocator.Temp);
-                for (int k = 0; k < m; k++) { bearings[k] = bearingList[order[k]]; arcs[k] = arcList[order[k]]; }
-                HostileRingRules.Layout(bearings, arcs, places);
-                bearings.Dispose();
+                for (int k = 0; k < m; k++)
+                {
+                    HostileRingRules.FreeSpot(places, arcs, k, arcList[k], bearingList[k], out float spot);
+                    places[k] = spot;
+                    arcs[k] = arcList[k];
+                    HostileRingRules.Spread(places, arcs, k + 1);
+                }
                 arcs.Dispose();
                 for (int a = 0; a < m; a++)
                     for (int b = a + 1; b < m; b++)
@@ -122,7 +128,7 @@ namespace KryticalNova.Hostiles.Entities.Tests
         public void ATwentyMobSwarm_NeverAboveTheStrikeCap_NorTheRing_AndTheyTakeTurns()
         {
             HostileBrainConfig c = Config();
-            using var w = new HostileTestWorld();
+            using var w = new HostileTestWorld { MoveSpeed = 4f };   // they walk to their spots (sticky spots, 15 Nov 2026)
             w.SetPlayers((float3.zero, Alive));
             List<Entity> swarm = Ring(w, 14, 1.5f);
             swarm.AddRange(Ring(w, 6, 1.9f, radiusMm: 900, firstId: 40));   // bigger bodies in the same swarm
@@ -157,7 +163,7 @@ namespace KryticalNova.Hostiles.Entities.Tests
         {
             using var w = new HostileTestWorld();
             w.SetPlayers((float3.zero, Alive));
-            List<Entity> pack = Ring(w, 12, 1.5f);
+            List<Entity> pack = Ring(w, 7, 1.5f);   // sticky spots (15 Nov 2026): the seven that fit round the player keep their spots
             var swings = new int[pack.Count];
             uint longest = 0;
             for (int t = 0; t < 3000; t++)
@@ -171,10 +177,10 @@ namespace KryticalNova.Hostiles.Entities.Tests
                     if (t > 120 && s.WaitingSinceTick != 0) longest = math.max(longest, w.Tick - s.WaitingSinceTick);
                 }
             }
-            // fair rotation: 12 Hostiles, 3 swinging at once, so nobody waits more than three swing cycles (tell 4 + windup 12 + recover 6 here)
+            // fair rotation: 7 Hostiles, 3 swinging at once, so nobody waits more than three swing cycles (tell 4 + windup 12 + recover 6 here)
             // plus a few ticks; the plan's "2 s" held before Q3's tell (7 Nov 2026: 66-68 ticks with it). The capacities are the owner's to tune.
             Assert.LessOrEqual(longest, 3u * (4u + 12u + 6u) + 6u, "nobody waits longer than three others' swings");
-            for (int i = 0; i < pack.Count; i++) Assert.Greater(swings[i], 20, "every one of the twelve gets its turns (" + i + ")");
+            for (int i = 0; i < pack.Count; i++) Assert.Greater(swings[i], 20, "every one of the seven gets its turns (" + i + ")");
         }
 
         [Test]
