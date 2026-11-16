@@ -80,8 +80,7 @@ namespace KryticalNova.Crossfire.Entities
             foreach (GhostBodyEntry e in GhostBodyRegistry.Entries)
             {
                 if (!ReferenceEquals(e.World, World) || !ReferenceEquals(e.Body, body) || !em.Exists(e.Ghost) || !em.HasComponent<PlayerLevelTag>(e.Ghost)) continue;
-                IFactionMember member = body.GetComponentInParent<IFactionMember>();
-                return Port(e.Ghost, em.GetComponentData<PlayerLevelTag>(e.Ghost).Level, member != null ? member.Faction : FactionId.None, portalId, out result);
+                return Port(e.Ghost, em.GetComponentData<PlayerLevelTag>(e.Ghost).Level, HomeOf(body), portalId, out result);
             }
             return false;
         }
@@ -98,10 +97,12 @@ namespace KryticalNova.Crossfire.Entities
             if (answer == CrossfirePortAnswer.NotThisPort || answer == CrossfirePortAnswer.NotCalled) return false;
             string message = CrossfirePort.Message(settings, answer, level);
             EntityManager em = EntityManager;
-            if (answer == CrossfirePortAnswer.Land && SideFull(faction))
+            if (answer == CrossfirePortAnswer.Land && !m_Sides.TryGetSide(ghost, out _) && SideFull(faction))
             {
                 Refused++;
-                result = new ZoneTransferResult(false, Fill(settings.sideFullText, settings, m_Sides.Real(faction)));
+                bool offered = TryOfferMerc(ghost, faction, settings);
+                result = new ZoneTransferResult(false, offered ? null : Fill(settings.sideFullText, settings, m_Sides.Real(faction)));
+                FlushTells();
                 return true;
             }
             if (answer != CrossfirePortAnswer.Land || !em.Exists(ghost) || !em.HasComponent<TeleportRequest>(ghost))

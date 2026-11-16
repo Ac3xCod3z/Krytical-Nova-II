@@ -55,6 +55,20 @@ namespace KryticalNova.Crossfire
         [Tooltip("Told to a real player who takes a War Bot's place on their side.")]
         [TextArea] public string tookBotsPlaceText = "Crossfire: you take a War Bot's place on your side.";
 
+        [Header("Mercs (owner, 16 Nov 2026): a full side's next player is offered a place on a short side")]
+        [Tooltip("On: a real player refused by their full side is offered a Merc place on the shortest side (declining misses this war). Off: they are only refused.")]
+        public bool offerMercs = true;
+        [Tooltip("Seconds the Merc offer waits for an answer (no answer: they miss this war).")]
+        [Min(1f)] public float mercOfferSeconds = 20f;
+        [Tooltip("The small heading of the Merc offer's accept / decline panel.")]
+        public string mercEyebrow = "MERC";
+        [Tooltip("The offer. {side}: the short side; {cap}: the cap.")]
+        [TextArea] public string mercOfferText = "Your side is full ({cap} of {cap}). Fight this war as a Merc for the {side}?";
+        [Tooltip("Told to a player who took a Merc place. {side} as above.")]
+        [TextArea] public string mercJoinedText = "Crossfire: you fight this war as a Merc for the {side}.";
+        [Tooltip("Told to a player who declined (or let the offer run out): they miss this war.")]
+        [TextArea] public string mercDeclinedText = "Crossfire: your side is full, so you miss this war.";
+
         [Header("The War Bot vote of a short side (before the gates open)")]
         [Tooltip("Seconds a short side has to vote, from the Rally's start (it always closes a second before the gates open). Nobody answering is a no.")]
         [Min(1f)] public float voteSeconds = 20f;

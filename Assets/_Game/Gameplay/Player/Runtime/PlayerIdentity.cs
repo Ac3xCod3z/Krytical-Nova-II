@@ -82,7 +82,29 @@ namespace KryticalNova.Player
             }
             return shownName;
         }
-        public FactionId Faction => current.faction;
+        /// <summary>
+        /// The side the player fights for: their home faction, or the side they fight for as a Crossfire Merc while a war runs (owner,
+        /// 16 Nov 2026). Hostility, namecards, targets and the Callout strip all follow it; the save and gear keep the home faction.
+        /// </summary>
+        public FactionId Faction => warSide != FactionId.None ? warSide : current.faction;
+        /// <summary>The faction the character belongs to (saved, chosen in the creator), whatever side they fight for now.</summary>
+        public FactionId HomeFaction => current.faction;
+        /// <summary>Gear belongs to the home faction, Merc or not.</summary>
+        FactionId IGearWearer.Faction => current.faction;
+        /// <summary>The Crossfire side a Merc fights for now; None outside a war or for a player on their own side.</summary>
+        public FactionId WarSide => warSide;
+        /// <summary>The war side changed (a Merc's war began or ended). Not <c>Changed</c>: the look does not change.</summary>
+        public event System.Action WarSideChanged;
+        private FactionId warSide;
+
+        /// <summary>Crossfire (server; and each client from the server's ghost): the side this player fights for in the war, None for their home.</summary>
+        public void SetWarSide(FactionId side)
+        {
+            if (side == current.faction) side = FactionId.None;
+            if (warSide == side) return;
+            warSide = side;
+            WarSideChanged?.Invoke();
+        }
         public byte LineageId => current.lineage;
         public LineageDefinition Lineage => lineage;
         public BodyFit Body => lineage != null ? lineage.body : BodyFit.None;
