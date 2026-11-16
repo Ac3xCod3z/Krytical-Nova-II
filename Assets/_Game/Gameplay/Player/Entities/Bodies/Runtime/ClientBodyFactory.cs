@@ -92,6 +92,7 @@ namespace KryticalNova.Player.Entities.Bodies
             if (request.IsLocal && ShowBanner) body.AddComponent<NotYetNetworkedBanner>();
             Made++;
             BodyMade?.Invoke(body, request);
+            Presentation.BodySpawnCost.Mark(Presentation.BodySpawnCost.Step.Hooks);   // the look, camera and HUD hooks
             return body;
         }
 
