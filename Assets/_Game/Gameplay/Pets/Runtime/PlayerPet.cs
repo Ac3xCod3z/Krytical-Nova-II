@@ -44,7 +44,7 @@ namespace KryticalNova.Pets
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(PlayerInventory), typeof(PlayerEquipment))]
-    public sealed class PlayerPet : NetworkBehaviour, IItemUseHandler, IPetPresenter, IBodyPet
+    public sealed class PlayerPet : NetworkBehaviour, IItemUseHandler, IPetPresenter, IBodyPet, IGrowthShare
     {
         private const string ReasonNoPet = "You have no pet out to feed.";
         private const string ReasonNotHungry = "Your pet is not hungry.";
@@ -560,6 +560,13 @@ namespace KryticalNova.Pets
             if (pet == null || !HasAuthority) return;
             AddXpUnits(won ? Tuning.EventWinXp : Tuning.EventLossXp);
         }
+
+        // ---- IGrowthShare (Crossfire's pay, owner 16 Nov 2026)
+        public GrowthShareKind Kind => GrowthShareKind.Pet;
+        public bool HasActive => pet != null;
+        public bool IsFullyGrown => pet != null && PetRules.GrowthPercent(state, Tuning) >= 100;
+        public void ServerGrantPercentOfFull(float percent) =>
+            ServerAddXp(Tuning.XpToFull / (float)PetItemState.XpUnitsPerXp * Mathf.Max(0f, percent) / 100f);
 
         /// <summary>Server only (GM): adds pet XP as the design counts it.</summary>
         public void ServerAddXp(float xp)

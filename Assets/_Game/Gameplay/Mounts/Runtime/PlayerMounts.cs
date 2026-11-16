@@ -23,7 +23,7 @@ namespace KryticalNova.Mounts
     /// speed and the look (<see cref="MountRider"/>). The owner alone also gets all four boxes (<see cref="MountBook"/>).
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class PlayerMounts : NetworkBehaviour, IItemUseHandler, ISaveParticipant, IBodyMounts, IBodyMountCompanion
+    public sealed class PlayerMounts : NetworkBehaviour, IItemUseHandler, ISaveParticipant, IBodyMounts, IBodyMountCompanion, IGrowthShare
     {
         // Mounts or dismounts from far too often are ignored: one press every this many seconds is plenty.
         private const float RidePressSeconds = 0.4f;
@@ -702,6 +702,13 @@ namespace KryticalNova.Mounts
             HostileNet hostile = hostileBody.GetComponentInParent<HostileNet>();
             if (hostile != null) companionHelp.Note(hostile, Time.time, acting);
         }
+
+        // ---- IGrowthShare (Crossfire's pay, owner 16 Nov 2026)
+        public GrowthShareKind Kind => GrowthShareKind.Mount;
+        public bool HasActive => selected != 0;
+        public bool IsFullyGrown => selected != 0 && MountRules.GrowthPercent(book.Get(selected), Tuning) >= 100;
+        public void ServerGrantPercentOfFull(float percent) =>
+            ServerAddXp(Tuning.XpToFull / (float)MountState.XpUnitsPerXp * Mathf.Max(0f, percent) / 100f);
 
         /// <summary>Server only (GM): adds EXP to the selected mount as the design counts it.</summary>
         public void ServerAddXp(float xp)

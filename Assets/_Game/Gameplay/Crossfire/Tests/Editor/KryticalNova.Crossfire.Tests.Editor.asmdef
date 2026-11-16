@@ -4,6 +4,7 @@
     "references": [
         "KryticalNova.Runtime",
         "KryticalNova.Crossfire",
+        "KryticalNova.Factions",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

@@ -213,6 +213,8 @@ namespace KryticalNova.Player.Entities
     public struct PvpSwitch : IComponentData
     {
         [GhostField] public byte CrossFactionPvp;
+        /// <summary>The Crossfire side this player fights for as a Merc (a FactionId), 0 for their home (owner, 16 Nov 2026). Written by Crossfire.</summary>
+        [GhostField] public byte WarSide;
     }
 
     /// <summary>A client applies the switch only when its ghost value changes (first sight included), never every frame: on a host the

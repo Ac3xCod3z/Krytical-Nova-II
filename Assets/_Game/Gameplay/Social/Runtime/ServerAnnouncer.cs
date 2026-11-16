@@ -19,6 +19,8 @@ namespace KryticalNova.Social
             ServerHooks.Announce = PlayerChat.ServerBroadcastGm;
             ServerChat.Announce = (kind, text, highlight, rarity) =>
                 PlayerChat.ServerAnnounce(kind, ChatChannel.System, string.Empty, text, highlight, rarity);
+            ServerChat.AnnounceTo = (player, kind, text, highlight, rarity) =>
+                PlayerChat.ServerAnnounceTo(player, kind, ChatChannel.System, string.Empty, text, highlight, rarity);
             ServerChat.SpeakerName = player => player.TryGetComponent(out PlayerChat chat) ? chat.SpeakerName : null;
         }
     }
