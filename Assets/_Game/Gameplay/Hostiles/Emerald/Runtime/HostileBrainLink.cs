@@ -47,11 +47,15 @@ namespace KryticalNova.Hostiles.Emerald
 
         private void OnDestroy() => Listen(false);
 
+        // Enter Play Mode runs without a domain reload: the list is emptied at SubsystemRegistration, never in a BeforeSceneLoad hook
+        // (a built entity server makes its worlds there, in no fixed order with ours).
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() => EmeraldDetection.IgnoredTargetsList.Clear();
+
         // Emerald keeps one list of targets no AI may pick; the game's own list of ignored players is copied into it.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void FollowIgnoredPlayers()
         {
-            EmeraldDetection.IgnoredTargetsList.Clear();
             HostileIgnore.Changed += (player, ignored) =>
             {
                 if (ignored) { if (!EmeraldDetection.IgnoredTargetsList.Contains(player)) EmeraldDetection.IgnoredTargetsList.Add(player); }
