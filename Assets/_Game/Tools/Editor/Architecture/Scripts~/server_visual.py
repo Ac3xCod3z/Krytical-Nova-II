@@ -32,8 +32,6 @@ VISUAL = re.compile(r"(Rendering|Audio|\bUI\b|GameFeel|Presentation|Icons?|Vfx|V
 KNOWN = {
     "KryticalNova.Audio": "the server judges Cadence beats through MusicConductor (BeatClock, MusicStateLink): move the beat clock and "
                           "music state down first, keep only the players in Audio",
-    "KryticalNova.Player.Entities.Presentation": "GhostBodyRegistry / CombatTargetRegistry / GhostCaches / StandInTargets feed server "
-                                                 "systems: move them down to Player.Entities, then the body spawn/follow part goes off",
     "KryticalNova.Rendering": "10 server assemblies call it (LOD, glow, occluder fade, DangleBones): Core seams first, then !UNITY_SERVER",
     "KryticalNova.World": "World/Runtime/Presentation (sky, weather, foliage presenters) to split into KryticalNova.World.Presentation",
 }
