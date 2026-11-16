@@ -1,24 +1,7 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace KryticalNova.World
 {
-    /// <summary>
-    /// Marks something that parts grass as it moves through it (players, NPCs, mobs).
-    /// Presentation only — remote players already have synced transforms, so nothing is networked.
-    /// </summary>
-    [DisallowMultipleComponent]
-    public sealed class FoliageInteractor : MonoBehaviour
-    {
-        [Tooltip("Metres around the feet in which grass bends away.")]
-        [Range(0.2f, 3f)] public float radius = 0.9f;
-
-        internal static readonly List<FoliageInteractor> Active = new List<FoliageInteractor>(64);
-
-        private void OnEnable() => Active.Add(this);
-        private void OnDisable() => Active.Remove(this);
-    }
-
     /// <summary>
     /// Publishes the interactors nearest the camera to the global <c>_KN_Interactors</c> array read by
     /// KryticalNova/Foliage Wind. One SetGlobalVectorArray per frame, no allocations.
