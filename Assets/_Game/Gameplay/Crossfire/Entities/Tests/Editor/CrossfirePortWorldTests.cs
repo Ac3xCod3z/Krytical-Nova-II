@@ -27,6 +27,7 @@ namespace KryticalNova.Crossfire.Entities.Tests
         public void SetUp()
         {
             m_Settings = ScriptableObject.CreateInstance<CrossfireSettings>();
+            m_Settings.hideFlags = HideFlags.DontUnloadUnusedAsset;   // the rig's subscene load unloads unused assets, which took this copy
             m_Settings.anchorToNightfall = false;
             m_Settings.callMinutes = 1f;
             m_Settings.joinWindowMinutes = 1f;   // the whole Call takes players in
