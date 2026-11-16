@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using KryticalNova.Core;
+using KryticalNova.Player.Entities;
+using KryticalNova.Player.Entities.Presentation;
 using KryticalNova.World;
 using Unity.Collections;
 using Unity.Entities;
@@ -16,12 +18,14 @@ namespace KryticalNova.Crossfire.Entities
         public double PhaseStart, PhaseEnd, WarStart, JoinOpensAt;
         public float CallRepeatSeconds;
         public short MinLevel, BracketSize, BracketCount;
+        public ushort KillsHegemony, KillsNull, KillsCovenant;
 
         public static CrossfireStateRpc Of(in CrossfireState s) => new CrossfireStateRpc
         {
             Phase = (byte)s.Now.Phase, PhaseStart = s.Now.PhaseStart, PhaseEnd = s.Now.PhaseEnd, WarStart = s.Now.WarStart,
             JoinOpensAt = s.JoinOpensAt, CallRepeatSeconds = s.CallRepeatSeconds,
             MinLevel = (short)s.MinLevel, BracketSize = (short)s.BracketSize, BracketCount = (short)s.BracketCount,
+            KillsHegemony = (ushort)System.Math.Clamp(s.KillsHegemony, 0, ushort.MaxValue), KillsNull = (ushort)System.Math.Clamp(s.KillsNull, 0, ushort.MaxValue), KillsCovenant = (ushort)System.Math.Clamp(s.KillsCovenant, 0, ushort.MaxValue),
         };
 
         public CrossfireState State => new CrossfireState
@@ -29,11 +33,45 @@ namespace KryticalNova.Crossfire.Entities
             Now = new CrossfireNow { Phase = (CrossfirePhase)Phase, PhaseStart = PhaseStart, PhaseEnd = PhaseEnd, WarStart = WarStart },
             JoinOpensAt = JoinOpensAt, CallRepeatSeconds = CallRepeatSeconds,
             MinLevel = MinLevel, BracketSize = BracketSize, BracketCount = BracketCount, Known = true,
+            KillsHegemony = KillsHegemony, KillsNull = KillsNull, KillsCovenant = KillsCovenant,
         };
 
         public bool SameAs(in CrossfireStateRpc o) => Phase == o.Phase && PhaseStart.Equals(o.PhaseStart) && PhaseEnd.Equals(o.PhaseEnd)
             && WarStart.Equals(o.WarStart) && JoinOpensAt.Equals(o.JoinOpensAt) && CallRepeatSeconds == o.CallRepeatSeconds
-            && MinLevel == o.MinLevel && BracketSize == o.BracketSize && BracketCount == o.BracketCount;
+            && MinLevel == o.MinLevel && BracketSize == o.BracketSize && BracketCount == o.BracketCount
+            && KillsHegemony == o.KillsHegemony && KillsNull == o.KillsNull && KillsCovenant == o.KillsCovenant;
+    }
+
+    /// <summary>Server to one player of a short side: the War Bot vote (owner, 16 Nov 2026), shown on the HUD's accept / decline panel.</summary>
+    public struct CrossfireVoteRpc : IRpcCommand
+    {
+        public FixedString32Bytes Eyebrow;
+        public FixedString512Bytes Text;
+        public float Seconds;
+        public double WarStart;   // which war's vote (an answer to an old one is dropped)
+    }
+
+    /// <summary>Server to one real player refused by their full side: a Merc place on a short side (owner, 16 Nov 2026).</summary>
+    public struct CrossfireMercOfferRpc : IRpcCommand
+    {
+        public FixedString32Bytes Eyebrow;
+        public FixedString512Bytes Text;
+        public float Seconds;
+        public double WarStart;
+    }
+
+    /// <summary>A player's answer to <see cref="CrossfireMercOfferRpc"/>.</summary>
+    public struct CrossfireMercAnswerRpc : IRpcCommand
+    {
+        public byte Yes;
+        public double WarStart;
+    }
+
+    /// <summary>A player's answer to <see cref="CrossfireVoteRpc"/>.</summary>
+    public struct CrossfireVoteAnswerRpc : IRpcCommand
+    {
+        public byte Yes;
+        public double WarStart;
     }
 
     /// <summary>A GM's hand on Crossfire's clock (gm.crossfire, the GM window, the control page).</summary>
@@ -76,8 +114,17 @@ namespace KryticalNova.Crossfire.Entities
         public bool UsingFixedCycle { get; private set; }
         /// <summary>States sent (tests).</summary>
         public int Sends { get; private set; }
-        /// <summary>Announcements made (tests).</summary>
+        /// <summary>Announcements made (tests): one per moment, however many players it went to.</summary>
         public int Announced { get; private set; }
+        /// <summary>Lines told to players (tests): a moment told to three players is three.</summary>
+        public int Told { get; private set; }
+
+        /// <summary>
+        /// Who hears Crossfire's call: each player on this server (their server body) and their level. Unset: the server's player bodies
+        /// (<see cref="GhostBodyRegistry"/>) and their <see cref="PlayerLevelTag"/>. Tests put their own.
+        /// </summary>
+        public Func<IReadOnlyList<(GameObject body, int level)>> Listeners;
+        readonly List<(GameObject body, int level)> m_Listeners = new List<(GameObject, int)>();
 
         CrossfireCaller m_Caller;
 
@@ -107,6 +154,17 @@ namespace KryticalNova.Crossfire.Entities
         public double Now => NowSeconds;
 
         CrossfireSettings Config => Settings != null ? Settings : CrossfireSettings.Instance;
+
+        int m_KillsH, m_KillsN, m_KillsC;
+
+        /// <summary>The war's kills per side (the entry system counts them); they go out with the state, for the HUD's counter.</summary>
+        public void SetScore(int hegemony, int nul, int covenant)
+        {
+            m_KillsH = hegemony; m_KillsN = nul; m_KillsC = covenant;
+        }
+
+        /// <summary>The settings the clock runs on (tests' own, else the Resources asset).</summary>
+        public CrossfireSettings ActiveSettings => Config;
 
         /// <summary>When the wars fall: nightfall on the world clock, or a fixed cycle from this server's start.</summary>
         bool TryCycle(CrossfireSettings s, double now, out CrossfireCycle cycle)
@@ -139,6 +197,7 @@ namespace KryticalNova.Crossfire.Entities
             {
                 Now = at, JoinOpensAt = at.WarStart - t.JoinWindowSeconds, CallRepeatSeconds = s.callRepeatSeconds,
                 MinLevel = s.minLevel, BracketSize = s.bracketSize, BracketCount = s.bracketCount, Known = true,
+                KillsHegemony = m_KillsH, KillsNull = m_KillsN, KillsCovenant = m_KillsC,
             };
         }
 
@@ -162,14 +221,38 @@ namespace KryticalNova.Crossfire.Entities
             return true;
         }
 
-        /// <summary>The call and the gates-closed line, through the game's announcement system (<see cref="ServerChat.Announce"/>).</summary>
+        IReadOnlyList<(GameObject body, int level)> Hearers()
+        {
+            if (Listeners != null) return Listeners();
+            m_Listeners.Clear();
+            EntityManager em = EntityManager;
+            foreach (GhostBodyEntry e in GhostBodyRegistry.Entries)
+                if (ReferenceEquals(e.World, World) && e.Body != null && em.Exists(e.Ghost) && em.HasComponent<PlayerLevelTag>(e.Ghost))
+                    m_Listeners.Add((e.Body, em.GetComponentData<PlayerLevelTag>(e.Ghost).Level));
+            return m_Listeners;
+        }
+
+        /// <summary>
+        /// The call, the countdown and the gates-closed line, through the game's announcement system, to each player in the words of THEIR
+        /// OWN bracket (owner, 16 Nov 2026: a level 112 is told bracket X, a level 10 bracket I; <see cref="CrossfireCaller.Text"/>), one
+        /// player at a time (<see cref="ServerChat.AnnounceTo"/>). The moment is the server's one clock, so every player's minutes agree.
+        /// </summary>
         void Announce(double now)
         {
             CrossfireSettings s = Config;
-            string line = m_Caller.Next(Current, now, Current.Now.WarStart + (s != null ? s.musterSeconds : 0), s, out bool countdown);
-            if (string.IsNullOrEmpty(line)) return;
-            ServerChat.Announce?.Invoke(countdown ? AnnouncementKind.CrossfireCount : AnnouncementKind.Crossfire, line, null, 0);
+            CrossfireCaller.Line line = m_Caller.NextLine(Current, now, Current.Now.WarStart + (s != null ? s.musterSeconds : 0), s);
+            if (line.Kind == CrossfireCaller.LineKind.None) return;
             Announced++;
+            Action<GameObject, AnnouncementKind, string, string, byte> tell = ServerChat.AnnounceTo;
+            AnnouncementKind kind = line.IsCountdown ? AnnouncementKind.CrossfireCount : AnnouncementKind.Crossfire;
+            IReadOnlyList<(GameObject body, int level)> hearers = Hearers();
+            for (int i = 0; i < hearers.Count; i++)
+            {
+                string text = CrossfireCaller.Text(line, s, s.BracketOf(hearers[i].level), Current);
+                if (string.IsNullOrEmpty(text) || tell == null) continue;
+                tell(hearers[i].body, kind, text, null, 0);
+                Told++;
+            }
         }
 
         protected override void OnUpdate()

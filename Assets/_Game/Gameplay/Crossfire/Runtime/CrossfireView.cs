@@ -10,6 +10,8 @@ namespace KryticalNova.Crossfire
         public int MinLevel, BracketSize, BracketCount;
         /// <summary>False until the server has said anything (no war shown).</summary>
         public bool Known;
+        /// <summary>The team deathmatch's kills per side this war (owner, 16 Nov 2026), for the HUD's counter.</summary>
+        public int KillsHegemony, KillsNull, KillsCovenant;
 
         public bool GatesOpen => Known && CrossfireRules.GatesOpen(Now.Phase);
 

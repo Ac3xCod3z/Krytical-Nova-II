@@ -380,6 +380,20 @@ namespace KryticalNova.Social
             return 1;
         }
 
+        /// <summary>
+        /// Server (or offline) only: news for ONE player, delivered exactly as <see cref="ServerAnnounce"/> delivers it to each (a chat line
+        /// and a toast in one message). False when <paramref name="player"/> has no chat or the text is empty.
+        /// </summary>
+        public static bool ServerAnnounceTo(GameObject player, AnnouncementKind kind, ChatChannel channel, string senderName, string text, string highlight = null, byte rarity = 0)
+        {
+            text = ChatRouting.Clean(text);
+            if (text.Length == 0 || player == null || !player.TryGetComponent(out PlayerChat chat) || !chat.isActiveAndEnabled) return false;
+            var network = NetworkManager.Singleton;
+            if (network != null && network.IsListening && !network.IsServer) return false;
+            chat.DeliverAnnounced(kind, channel, senderName, text, highlight != null ? ChatRouting.Clean(highlight) : string.Empty, rarity);
+            return true;
+        }
+
         /// <summary>Server (or offline) only: a notice from the game to this player.</summary>
         public void ServerSystem(string text)
         {
