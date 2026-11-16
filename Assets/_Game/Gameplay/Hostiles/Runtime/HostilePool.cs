@@ -36,15 +36,25 @@ namespace KryticalNova.Hostiles
             }
         }
 
-        // Enter Play Mode runs without a domain reload, so statics must be reset by hand. Netcode clears its own
-        // static event at SubsystemRegistration; this runs after that and before any scene object wakes.
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        // Enter Play Mode runs without a domain reload, so statics must be reset by hand. The reset runs at SubsystemRegistration,
+        // BEFORE any world exists (live bug, 15 Nov 2026: on a built entity server the worlds are made at BeforeSceneLoad and
+        // HostileEntitiesSetup sets BodyOf there; this reset used to run at BeforeSceneLoad too, in no fixed order, and wiped it, so
+        // every zone spawned the plain species body: no EcsHostileBrain, no Hostile ghost, no monster any client could see or target).
+        // HostilePoolStartupTests pins this.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
         {
             free.Clear();
             prefabOf.Clear();
             Created = 0;
             BodyOf = null;
+        }
+
+        // Netcode clears its own static event at SubsystemRegistration; this runs after that and before any scene object wakes. It touches
+        // only the event, never BodyOf.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void HookNetcode()
+        {
             NetworkManager.OnInstantiated -= RegisterHandlers;
             NetworkManager.OnInstantiated += RegisterHandlers;
         }

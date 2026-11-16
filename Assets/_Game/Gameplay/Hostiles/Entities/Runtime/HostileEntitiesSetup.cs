@@ -71,8 +71,37 @@ namespace KryticalNova.Hostiles.Entities
             EcsHostileBrain.GhostIdOfBody = body => GhostIdOf(server, body);
             HostileZone.PlayersOverride = players => ServerPlayers(server, players);   // M6.2: zones wake for this world's players
             if (assets.bodies != null) HostileSpawner.SpeciesOverride = () => SpeciesOf(assets.bodies);   // M6.3: gm.hostile.spawn / list
+            s_Bodies = assets.bodies;
             Debug.Log("[Hostiles] Entity brains installed in " + server.Name + " (" + tickRate + " Hz, server bodies " + (assets.bodies != null ? "on" : "MISSING") + ").");
             return true;
+        }
+
+        // The server bodies this process installed (null: none, or the NGO game); checked once the first scene is in.
+        static HostileBodyCatalog s_Bodies;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetBodies() => s_Bodies = null;
+
+        /// <summary>
+        /// After the first scene (live bug, 15 Nov 2026): a built server made its worlds, and so set <see cref="HostilePool.BodyOf"/>, at
+        /// BeforeSceneLoad, where another startup hook could still wipe it; every zone then spawned bodies with no entity brain and no
+        /// Hostile ghost (no monster seen or targeted on build 17). Says in the log that the hook held, or sets it again and says it was lost.
+        /// </summary>
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        static void CheckBodiesAfterStartup()
+        {
+            if (s_Bodies == null) return;
+            Debug.Log(CheckBodies(s_Bodies));
+        }
+
+        /// <summary>The check itself (tests): sets <see cref="HostilePool.BodyOf"/> again when it was lost; the log line.</summary>
+        public static string CheckBodies(HostileBodyCatalog bodies)
+        {
+            if (HostilePool.BodyOf != null) return "[Hostiles] After startup: the server bodies hook held (zones spawn bodies with entity brains).";
+            HostileBodyCatalog catalog = bodies;
+            HostilePool.BodyOf = species => catalog.BodyOf(species);
+            return "[Hostiles] After startup: the server bodies hook was LOST (a startup reset ran after the world was made); set again. " +
+                   "Bodies spawned before this line have no entity brain.";
         }
 
         /// <summary>The species prefabs of the server body catalog (what NGO's network prefab list gives the GM commands).</summary>
