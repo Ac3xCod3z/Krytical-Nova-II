@@ -79,8 +79,10 @@ namespace KryticalNova.Progression
         private PlayerResources resources;
         private IFactionMember member;
         private ISaveScheduler saveAgent;
+#if !UNITY_SERVER
         private NovaHalo halo;
         private Transform head;
+#endif
         private NovaState state;
         // The moment and the new state travel separately: a reaction that arrives first waits for its Nova.
         private NovaWorkResult pendingReaction;
@@ -136,11 +138,13 @@ namespace KryticalNova.Progression
         /// <summary>True while a Herald is in reach (or the GM switch is on): the window closes when it stops being so.</summary>
         public bool InReach => GmAnywhere || NpcInteractable.IsOffered(NpcOffer.Herald, transform.position, ReachPadding);
         /// <summary>The Nova being worn, or null while there is none.</summary>
+#if !UNITY_SERVER
         public NovaHalo Halo => halo;
         /// <summary>The crown of this character's head in the world.</summary>
         public Vector3 Crown => NovaHalo.CrownOf(transform, ref head);
         /// <summary>How far above the crown the Nova reaches (metres): what a namecard has to clear. 0 with no Nova.</summary>
         public float NovaHeight => halo != null ? halo.TopAboveHead : 0f;
+#endif
 
         // A client view of the entity netcode (the own one and other players') only shows the server's Nova (MirrorState); it never decides.
         private bool HasAuthority => (!IsSpawned || IsServer) && !EntityView;
@@ -246,6 +250,7 @@ namespace KryticalNova.Progression
             NovaRules.AddModifiers(settings, state, statSource, modifiers);
             if (stats != null && isActiveAndEnabled) stats.SetSourceModifiers(statSource, modifiers);
 
+#if !UNITY_SERVER
             if (!Application.isBatchMode && settings != null)
             {
                 // Every player is drawn after the scenery, Nova or none: that is what lets another's Nova hide them.
@@ -258,6 +263,7 @@ namespace KryticalNova.Progression
                     halo.React(pendingReaction.outcome, pendingReaction.newTier);
                 }
             }
+#endif
             Changed?.Invoke();
         }
 
@@ -478,6 +484,7 @@ namespace KryticalNova.Progression
             int tier = NovaRules.Tier(settings.ascension, standing ? state.ascension : result.after);
             if (!standing) React(result, tier);
 
+#if !UNITY_SERVER   // the Nova's moment is presentation; a server has no Feel sink and no head to crown
             NovaLookSettings look = settings.look;
             ClientPresentationRegistry.Feel?.NovaWorked(new NovaFeel
             {
@@ -490,18 +497,21 @@ namespace KryticalNova.Progression
                 NovaPoint = Crown + Vector3.up * look.CentreAboveHead(tier),
                 IsLocalPlayer = isLocalPlayer,
             });
+#endif
         }
 
         /// <summary>The Nova itself answers the attempt, now or as soon as it shows the tier the attempt ended in.</summary>
         private void React(NovaWorkResult result, int tier)
         {
             if (tier <= 0) return;
+#if !UNITY_SERVER
             if (halo != null && halo.Tier == tier)
             {
                 pendingUntil = -1f;
                 halo.React(result.outcome, result.newTier);
                 return;
             }
+#endif
             pendingReaction = result;
             pendingUntil = Time.time + PendingSeconds;
         }

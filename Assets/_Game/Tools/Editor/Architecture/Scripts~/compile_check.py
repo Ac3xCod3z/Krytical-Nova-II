@@ -243,7 +243,10 @@ def make(asm):
     elif ".Editor" in asm:
         template_name = "KryticalNova.Editor"
     else:
-        template_name = "KryticalNova.Runtime"
+        # a new runtime assembly split off another (KryticalNova.World.Presentation from KryticalNova.World) borrows that one's
+        # project: its package references are the closest (Core's has no Netcode, for one)
+        parents = [e for e in existing if asm.startswith(e + ".")]
+        template_name = max(parents, key=len) if parents else "KryticalNova.Runtime"
     with open(os.path.join(PROJECTS, template_name + ".csproj"), encoding="utf-8-sig") as f:
         text = f.read()
     # drop the Editor's file list; the checkout's comes below
@@ -276,6 +279,9 @@ def make(asm):
         refs = [r for r in refs if r.startswith("KryticalNova") or r[:-7] in names]
         present = {r[:-7] for r in refs} | set(re.findall(r'<Reference Include="([^",]+)', text))
         ecs_lines = ecs_references(names, present) + ecs_generators(names)
+    if SERVER:   # Unity drops a reference to an assembly the server leaves out (!UNITY_SERVER): so must this check, or it
+        # compiles client-only code (Rendering, World.Presentation) with UNITY_SERVER defined and reports errors Unity never has
+        refs = [r for r in refs if "!UNITY_SERVER" not in asmdefs.get(r[:-7], {}).get("defineConstraints", [])]
     text = re.sub(r"\s*<ProjectReference Include=\"[^\"]+\" />", "", text)
     lines = []
     uses[asm] = [r[:-7] for r in refs if r.startswith("KryticalNova")]

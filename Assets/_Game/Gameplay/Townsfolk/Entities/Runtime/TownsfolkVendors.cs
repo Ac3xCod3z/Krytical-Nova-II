@@ -3,7 +3,9 @@ using KryticalNova.CharacterCreation;
 using KryticalNova.Items.Visuals;
 using KryticalNova.NPC;
 using KryticalNova.Player.Entities;
+#if !UNITY_SERVER
 using KryticalNova.Rendering;
+#endif
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -318,7 +320,9 @@ namespace KryticalNova.Townsfolk
             go.transform.SetParent(npc.transform, false);
             go.transform.localPosition = Vector3.zero;
             go.transform.localRotation = Quaternion.identity;
+#if !UNITY_SERVER
             CharacterLod.Ensure(go);
+#endif
             animator.applyRootMotion = false;
             animator.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
             uint seed = StableHash(key);

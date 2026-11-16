@@ -71,7 +71,7 @@ MAP_JSON = os.path.join(HERE, "out", "dependency-map.json")
 STAMP = os.path.join(CHECKOUT, "Logs", "kn-check-stamp.json")
 LAST = os.path.join(CHECKOUT, "Logs", "kn-check-last.json")   # the last full run, passed or failed
 DEP_DOC = os.path.join(CHECKOUT, "Assets", "_Game", "_Docs", "Reference", "Dependency-Map.md")
-QUICK = ["organization", "dependencies", "compile", "server"]
+QUICK = ["organization", "dependencies", "startup_race", "server_visual", "compile", "server"]
 FULL = QUICK + ["tests", "editor"]
 
 
@@ -260,6 +260,10 @@ def check_editor():
 CHECKS = {
     "organization": check_organization,
     "dependencies": check_dependencies,
+    # a static reset in a BeforeSceneLoad hook races a built server's world bootstrap (PRs 304, 313): startup_race.py
+    "startup_race": lambda: run_script("startup_race.py"),
+    # no visual assembly in the dedicated server build (owner, 15 Nov 2026): server_visual.py
+    "server_visual": lambda: run_script("server_visual.py"),
     "compile": lambda: run_script("compile_check.py", "--maxcpu", "2"),
     "server": lambda: run_script("compile_check.py", "--server", "--maxcpu", "2"),
     "tests": check_tests,
@@ -333,6 +337,9 @@ NEEDS = {
     "organization": lambda ch: True,
     "dependencies": lambda ch: any(in_game(p) and p.endswith(HELD) for p in ch)
                                or any(p.startswith("Assets/_Game/Tools/Editor/Architecture/Scripts~/") for p in ch),
+    "startup_race": lambda ch: any(p.startswith("Assets/_Game/") and p.endswith(".cs") for p in ch),
+    "server_visual": lambda ch: any(p.startswith("Assets/_Game/") and p.endswith(CODE) for p in ch)
+                                or any(p.endswith("Scripts~/server_visual.py") for p in ch),
     "compile": lambda ch: any(p.startswith("Assets/_Game/") and p.endswith(CODE) for p in ch),
     "server": lambda ch: any(p.startswith("Assets/_Game/") and p.endswith(CODE)
                              and (p.endswith((".asmdef", ".asmref")) or ("/Editor/" not in p and "/Tests/" not in p))

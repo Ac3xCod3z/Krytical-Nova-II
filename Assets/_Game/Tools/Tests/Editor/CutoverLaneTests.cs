@@ -246,5 +246,41 @@ namespace KryticalNova.Tests
             }
             finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
         }
+
+        [Test]
+        public void AMissingNgoCertificateFallsBackToTheReleaseFolderThenTheBackups()
+        {
+            string root = Path.Combine(Path.GetTempPath(), "KnCutoverCertFallback-" + Guid.NewGuid().ToString("N"));
+            try
+            {
+                string ngo = Path.Combine(root, "ngo"), release = Path.Combine(root, "release"), backup = Path.Combine(root, "backup");
+                // nothing anywhere: refused, every place named
+                Assert.IsFalse(EntityReleaseServer.CopyCertificates(ngo, release, new[] { backup }, out string used, out string problem));
+                Assert.IsNull(used);
+                StringAssert.Contains(release, problem);
+                StringAssert.Contains("no backup folder", problem);
+                // only the backup holds them: copied from it
+                Directory.CreateDirectory(backup);
+                File.WriteAllText(Path.Combine(backup, "server.crt"), "BCRT");
+                File.WriteAllText(Path.Combine(backup, "server.key"), "BKEY");
+                Assert.IsTrue(EntityReleaseServer.CopyCertificates(ngo, release, new[] { backup }, out used, out problem));
+                Assert.AreEqual(backup, used);
+                Assert.IsNull(problem);
+                Assert.AreEqual("BCRT", File.ReadAllText(Path.Combine(release, "server.crt")));
+                // the release folder now holds them: kept as they are, the backup is not read again
+                File.WriteAllText(Path.Combine(backup, "server.crt"), "OTHER");
+                Assert.IsTrue(EntityReleaseServer.CopyCertificates(ngo, release, new[] { backup }, out used, out problem));
+                Assert.AreEqual(release, used);
+                Assert.AreEqual("BCRT", File.ReadAllText(Path.Combine(release, "server.crt")));
+                // the NGO folder comes first when it is whole
+                Directory.CreateDirectory(ngo);
+                File.WriteAllText(Path.Combine(ngo, "server.crt"), "NCRT");
+                File.WriteAllText(Path.Combine(ngo, "server.key"), "NKEY");
+                Assert.IsTrue(EntityReleaseServer.CopyCertificates(ngo, release, new[] { backup }, out used, out problem));
+                Assert.AreEqual(ngo, used);
+                Assert.AreEqual("NCRT", File.ReadAllText(Path.Combine(release, "server.crt")));
+            }
+            finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
+        }
     }
 }

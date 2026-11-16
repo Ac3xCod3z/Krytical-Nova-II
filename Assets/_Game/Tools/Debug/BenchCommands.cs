@@ -173,7 +173,9 @@ namespace KryticalNova.DevTools
                         view.Batches = System.Math.Max(view.Batches, batches.Valid ? batches.LastValue : 0);
                     }
                     view.GpuMs = gpuFrames > 0 ? (float)(gpu / gpuFrames) : -1f;
+#if !UNITY_SERVER
                     view.Faded = KryticalNova.Rendering.OccluderFader.Faded.Count;
+#endif
                     into.Add(view);
                 }
 

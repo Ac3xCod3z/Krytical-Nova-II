@@ -32,6 +32,7 @@
         "KryticalNova.Social",
         "KryticalNova.Wallet",
         "KryticalNova.World",
+        "KryticalNova.World.Presentation",
         "KryticalNova.Vegetation.Grass",
         "KryticalNova.GameFeel",
         "QFSW.QC",

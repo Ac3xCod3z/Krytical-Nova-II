@@ -18,12 +18,13 @@ namespace KryticalNova.UI
 
         public static event Action Changed;
 
+        // Enter Play Mode runs without a domain reload: the event is reset at SubsystemRegistration, before anyone can listen
+        // (a built entity server makes its worlds at BeforeSceneLoad, in no fixed order with Load below).
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() => Changed = null;
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void Load()
-        {
-            Changed = null;
-            Apply();
-        }
+        private static void Load() => Apply();
 
         /// <summary>Flashing and pulsing effects, 0 to 1 (1: as made).</summary>
         public static float FlashLevel

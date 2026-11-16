@@ -25,6 +25,7 @@
         "KryticalNova.Social",
         "KryticalNova.Wallet",
         "KryticalNova.World",
+        "KryticalNova.World.Presentation",
         "Unity.Netcode.Runtime",
         "Unity.Collections",
         "UnityEngine.TestRunner",

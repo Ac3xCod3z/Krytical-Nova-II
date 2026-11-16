@@ -26,6 +26,9 @@ namespace KryticalNova.World
     [CreateAssetMenu(menuName = "Krytical Nova/World/Foliage Push Settings", fileName = "FoliagePush_Default")]
     public sealed class FoliagePushSettings : ScriptableObject
     {
+        /// <summary>The most pushes alive at once (FoliagePushes.MaxPushes reads it: the presentation is client only, these settings are not).</summary>
+        public const int MaxPushes = 8;
+
         [Serializable]
         public struct Shape
         {
@@ -93,8 +96,8 @@ namespace KryticalNova.World
         /// <summary>How many pushes may be alive at this World Effects tier (0 Low to 3 Ultra).</summary>
         public int PushesAt(int tier)
         {
-            if (pushesPerTier == null || pushesPerTier.Length == 0) return FoliagePushes.MaxPushes;
-            return Mathf.Clamp(pushesPerTier[Mathf.Clamp(tier, 0, pushesPerTier.Length - 1)], 0, FoliagePushes.MaxPushes);
+            if (pushesPerTier == null || pushesPerTier.Length == 0) return MaxPushes;
+            return Mathf.Clamp(pushesPerTier[Mathf.Clamp(tier, 0, pushesPerTier.Length - 1)], 0, MaxPushes);
         }
     }
 }

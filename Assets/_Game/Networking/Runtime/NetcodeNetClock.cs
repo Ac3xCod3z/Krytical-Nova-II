@@ -16,12 +16,13 @@ namespace KryticalNova.Networking
             instance = null;
         }
 
-        // Also runs after a domain reload where SubsystemRegistration already ran; installs once, re-install is harmless.
+        // Only into an empty slot (NetClock clears it at SubsystemRegistration): a built entity server makes its worlds in the same
+        // BeforeSceneLoad step, in no fixed order with this, and its clock must not be replaced by one that never runs there.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         public static void InstallProvider()
         {
             if (instance == null) instance = new NetcodeNetClock();
-            NetClock.Install(instance);
+            if (NetClock.Provider == null) NetClock.Install(instance);
         }
 
         public bool IsRunning => NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening;

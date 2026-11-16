@@ -388,3 +388,6 @@ good again.
   headline bodies over 300 characters and two patch lines over 400 would have stopped the stage step); the server step
   needs the NGO `certificates` folder (Server Guide 13c: never clean it) and a failed server step can leave ProjectSettings
   changed, which the resume refuses until the file is put back.
+- 16 Nov 2026: before build 18: the server step no longer stops when the NGO `certificates` folder is gone; it uses the
+  release server's own copy or the newest `Documents\KryticalNova-Backups\*\certificates` (Server Guide 13c). The news
+  gate's headings are New / Changed / Fixed; a build with no new feature may leave New out.

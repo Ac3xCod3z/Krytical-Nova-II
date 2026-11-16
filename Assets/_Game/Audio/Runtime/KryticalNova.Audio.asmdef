@@ -5,6 +5,7 @@
         "KryticalNova.Runtime",
         "KryticalNova.Combat",
         "KryticalNova.World",
+        "KryticalNova.World.Presentation",
         "Unity.Netcode.Runtime",
         "Unity.Networking.Transport",
         "Unity.Collections",
@@ -29,7 +30,9 @@
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": [],
+    "defineConstraints": [
+        "!UNITY_SERVER"
+    ],
     "versionDefines": [],
     "noEngineReferences": false
 }

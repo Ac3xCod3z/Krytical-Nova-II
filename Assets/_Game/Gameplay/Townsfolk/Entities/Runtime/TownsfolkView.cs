@@ -3,7 +3,9 @@ using KryticalNova.CharacterCreation;
 using KryticalNova.Factions;
 using KryticalNova.Items.Visuals;
 using KryticalNova.Player.Entities;
+#if !UNITY_SERVER
 using KryticalNova.Rendering;
+#endif
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -70,7 +72,9 @@ namespace KryticalNova.Townsfolk
         public Animator Animator;
         public CharacterAppearance Appearance;
         public CharacterLook Look;
+#if !UNITY_SERVER
         public CharacterLod Lod;
+#endif
         public long LookKey = -1;
         public byte ShownActivity = 255;
         public float Offset;
@@ -299,7 +303,7 @@ namespace KryticalNova.Townsfolk
             EntityManager em = EntityManager;
 
             // the player's Crowd Detail picks the tier's band edges (only what this client draws; the server's crowd is the same)
-            int tier = CrowdDetailRuntime.Tier;
+            int tier = CrowdTier;
             var edges = TownsfolkBands.Edges.Of(s, tier);
             int fullCount = TownsfolkSettings.ByTier(s.fullBodiesByTier, tier, 48);
             int cardCount = TownsfolkSettings.ByTier(s.cardsByTier, tier, 64);
@@ -357,7 +361,9 @@ namespace KryticalNova.Townsfolk
                 if (band > TownsfolkBands.Far) band = TownsfolkBands.Far;   // still a body this frame (it fades out with its LOD group)
                 body.Band = (byte)band;
                 // CLOSE whole + shadows, MEDIUM lighter skinning + shadows, FAR lightest skinning + no shadow (the LOD group draws the mesh)
+#if !UNITY_SERVER
                 if (body.Lod != null) body.Lod.Drive(band, band >= TownsfolkBands.Far);
+#endif
                 body.Show(ghost, s.speedDamp, dt);
                 int every = band == TownsfolkBands.Close ? 1 : band == TownsfolkBands.Medium ? s.mediumAnimateEvery : s.farAnimateEvery;
                 body.Animate(every <= 1, Mathf.Max(1, every), m_Frame, ghost.Seed, dt);
@@ -515,8 +521,10 @@ namespace KryticalNova.Townsfolk
             go.name = name;
             Strip(go, m_Assets.settings);
             var body = go.AddComponent<TownsfolkBody>();
+#if !UNITY_SERVER
             body.Lod = CharacterLod.Ensure(go);
             body.Lod.DrivenExternally = true;   // the view sets its level by Crowd Detail
+#endif
             body.Animator = go.GetComponentInChildren<Animator>(true);
             body.Appearance = go.GetComponent<CharacterAppearance>();
             body.Look = go.GetComponent<CharacterLook>();
@@ -540,7 +548,11 @@ namespace KryticalNova.Townsfolk
         public static void Strip(GameObject go, TownsfolkSettings settings)
         {
             foreach (MonoBehaviour b in go.GetComponentsInChildren<MonoBehaviour>(true))
-                if (!(b is CharacterAppearance) && !(b is CharacterLook) && !(b is FaceBlinker) && !(b is CharacterLod)) Object.DestroyImmediate(b);
+                if (!(b is CharacterAppearance) && !(b is CharacterLook) && !(b is FaceBlinker)
+#if !UNITY_SERVER
+                    && !(b is CharacterLod)
+#endif
+                    ) Object.DestroyImmediate(b);
             foreach (Collider c in go.GetComponentsInChildren<Collider>(true)) Object.DestroyImmediate(c);
             var appearance = go.GetComponent<CharacterAppearance>();
             // the look's own renderer, found the way CharacterAppearance.Awake finds it when none is set (Awake has not run yet here)
@@ -554,10 +566,16 @@ namespace KryticalNova.Townsfolk
             if (appearance != null && settings != null) appearance.ExcludeRegions(settings.noWeaponRegions);
         }
 
+#if UNITY_SERVER
+        static int CrowdTier => 0;   // never runs on a server (ClientSimulation); Crowd Detail is a client setting
+#else
+        static int CrowdTier => CrowdDetailRuntime.Tier;
+#endif
+
         TownsfolkBody Make()
         {
             TownsfolkSettings s = m_Assets.settings;
-            if (m_Made >= Mathf.Max(1, TownsfolkSettings.ByTier(s.fullBodiesByTier, CrowdDetailRuntime.Tier, 48)) + 4) return null;
+            if (m_Made >= Mathf.Max(1, TownsfolkSettings.ByTier(s.fullBodiesByTier, CrowdTier, 48)) + 4) return null;
             m_Made++;
             TownsfolkBody body = Instantiate("Townsperson " + m_Made);
             if (body.Appearance == null) { Object.Destroy(body.gameObject); return null; }
@@ -584,7 +602,9 @@ namespace KryticalNova.Townsfolk
             body.Appearance.RebuildNow();
             if (body.Animator != null) body.Animator.enabled = false;
             if (body.Appearance.Renderer != null) body.Appearance.Renderer.enabled = false;
+#if !UNITY_SERVER
             if (body.Lod != null) body.Lod.Drive(0, true);
+#endif
             body.transform.position = new Vector3(0f, -2000f, 0f);
             // LOD1 and LOD2 baked once per look from its merged mesh, shared by every body wearing it (owner 14 Nov 2026)
             Mesh merged = body.Appearance.CurrentMesh;
