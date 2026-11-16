@@ -5,6 +5,7 @@ using KryticalNova.Economy;
 using KryticalNova.Factions;
 using KryticalNova.Hostiles;
 using KryticalNova.Items;
+using KryticalNova.Player;
 using KryticalNova.Player.Entities;
 using KryticalNova.Player.Entities.Presentation;
 using KryticalNova.Progression;
@@ -41,7 +42,18 @@ namespace KryticalNova.Crossfire.Entities
         System.Random m_Random = new System.Random();
         double m_VoteFor = double.NaN, m_VoteCloses, m_PaidFor = double.NaN;
         bool m_VoteOpen;
-        EntityQuery m_VoteAnswers, m_Connections;
+        EntityQuery m_VoteAnswers, m_Connections, m_MercAnswers;
+        readonly Dictionary<Entity, (FactionId side, double expires, double war)> m_Offers = new Dictionary<Entity, (FactionId, double, double)>();
+        readonly Dictionary<Entity, FactionId> m_Home = new Dictionary<Entity, FactionId>();
+        readonly HashSet<Entity> m_Mercs = new HashSet<Entity>();
+        readonly List<Entity> m_Lapsed = new List<Entity>();
+
+        /// <summary>Merc offers made, taken and declined (tests); players fighting as Mercs now.</summary>
+        public int MercOffers { get; private set; }
+        public int MercsTaken { get; private set; }
+        public int MercsDeclined { get; private set; }
+        public IReadOnlyCollection<Entity> Mercs => m_Mercs;
+        public bool HasOffer(Entity who) => m_Offers.ContainsKey(who);
 
         /// <summary>The faction a real player fights for. Unset: their server body's (<see cref="IFactionMember"/>). Tests put their own.</summary>
         public Func<Entity, FactionId> FactionOf;
@@ -73,6 +85,7 @@ namespace KryticalNova.Crossfire.Entities
         {
             m_VoteAnswers = GetEntityQuery(ComponentType.ReadOnly<CrossfireVoteAnswerRpc>(), ComponentType.ReadOnly<ReceiveRpcCommandRequest>());
             m_Connections = GetEntityQuery(ComponentType.ReadOnly<NetworkId>(), ComponentType.ReadOnly<NetworkStreamInGame>());
+            m_MercAnswers = GetEntityQuery(ComponentType.ReadOnly<CrossfireMercAnswerRpc>(), ComponentType.ReadOnly<ReceiveRpcCommandRequest>());
             CombatEntity.AnyKilled += OnAnyKilled;
         }
 
@@ -99,11 +112,19 @@ namespace KryticalNova.Crossfire.Entities
             return false;
         }
 
+        /// <summary>A real player's HOME faction (never the side they fight for as a Merc).</summary>
         FactionId SideOfReal(Entity ghost)
         {
             if (FactionOf != null) return FactionOf(ghost);
-            if (!TryBodyEntry(ghost, out GhostBodyEntry e) || e.Body == null) return FactionId.None;
-            IFactionMember member = e.Body.GetComponentInParent<IFactionMember>();
+            return TryBodyEntry(ghost, out GhostBodyEntry e) ? HomeOf(e.Body) : FactionId.None;
+        }
+
+        static FactionId HomeOf(GameObject body)
+        {
+            if (body == null) return FactionId.None;
+            PlayerIdentity identity = body.GetComponentInParent<PlayerIdentity>();
+            if (identity != null) return identity.HomeFaction;
+            IFactionMember member = body.GetComponentInParent<IFactionMember>();
             return member != null ? member.Faction : FactionId.None;
         }
 
@@ -147,14 +168,16 @@ namespace KryticalNova.Crossfire.Entities
         {
             CrossfireSettings s = Settings;
             if (s == null) return true;
+            if (m_Sides.TryGetSide(who, out _)) return true;   // already fights (a Merc put on their adopted yard): their entry is kept for the send-back
             FactionId side = SideOfReal(who);
+            m_Home[who] = side;
             CrossfireJoin join = m_Sides.TryJoin(who, side, s.capPerFaction, BotsOn(side));
             switch (join)
             {
                 case CrossfireJoin.Full:
                     m_Refused.Add((who, from));
                     Refused++;
-                    Tell(who, Fill(s.sideFullText, s, m_Sides.Real(side)));
+                    if (!TryOfferMerc(who, side, s)) Tell(who, Fill(s.sideFullText, s, m_Sides.Real(side)));
                     return false;
                 case CrossfireJoin.TookBotsPlace:
                     m_BotsOut.Add(side);   // after the look over every player: a bot leaving changes the world
@@ -183,6 +206,132 @@ namespace KryticalNova.Crossfire.Entities
                 if (em.Exists(who) && em.HasComponent<TeleportRequest>(who))
                     PlayerEntitiesSetup.Teleport(em, who, new Unity.Mathematics.int3(to.Mm.x, to.Mm.y, to.Mm.z), to.YawCdeg);
             m_Refused.Clear();
+        }
+
+        // ------------------------------------------------------------------ Mercs (owner, 16 Nov 2026)
+
+        /// <summary>
+        /// The short side a refused player of <paramref name="home"/> may fight for as a Merc: another faction's side with room (real
+        /// players and bots under the cap), the shortest first; None when every other side is full.
+        /// </summary>
+        FactionId ShortSideFor(FactionId home, CrossfireSettings s)
+        {
+            FactionId best = FactionId.None;
+            int fewest = int.MaxValue;
+            foreach (FactionId f in CrossfireSides<Entity>.Factions)
+            {
+                if (f == home || !CrossfireArea.TryRallyPoint(f, out _)) continue;
+                int n = m_Sides.Real(f) + BotsOn(f);
+                if (n < s.capPerFaction && n < fewest) { fewest = n; best = f; }
+            }
+            return best;
+        }
+
+        /// <summary>Offers a refused player a Merc place on the shortest side (once a war). False when Mercs are off or no side has room.</summary>
+        bool TryOfferMerc(Entity who, FactionId home, CrossfireSettings s)
+        {
+            if (!s.offerMercs || m_Offers.ContainsKey(who)) return m_Offers.ContainsKey(who);
+            FactionId side = ShortSideFor(home, s);
+            if (side == FactionId.None) return false;
+            double war = m_Clock.Current.Now.WarStart;
+            m_Offers[who] = (side, m_Clock.Now + s.mercOfferSeconds, war);
+            m_Home[who] = home;
+            MercOffers++;
+            var rpc = new CrossfireMercOfferRpc
+            {
+                Eyebrow = s.mercEyebrow ?? string.Empty, Text = Fill(s.mercOfferText, s, 0).Replace("{side}", side.ToString()),
+                Seconds = s.mercOfferSeconds, WarStart = war,
+            };
+            SendTo(who, rpc);
+            return true;
+        }
+
+        void SendTo<T>(Entity who, T rpc) where T : unmanaged, IRpcCommand
+        {
+            EntityManager em = EntityManager;
+            if (!em.Exists(who) || !em.HasComponent<GhostOwner>(who)) return;
+            int id = em.GetComponentData<GhostOwner>(who).NetworkId;
+            using NativeArray<Entity> connections = m_Connections.ToEntityArray(Allocator.Temp);
+            foreach (Entity c in connections)
+            {
+                if (em.GetComponentData<NetworkId>(c).Value != id) continue;
+                Entity e = em.CreateEntity();
+                em.AddComponentData(e, rpc);
+                em.AddComponentData(e, new SendRpcCommandRequest { TargetConnection = c });
+            }
+        }
+
+        /// <summary>
+        /// A refused player's answer to their Merc offer (from the panel, or a test). Yes, while the yards still take players and the side
+        /// still has room: they fight for it (in a bot's place if they must) and are put on its Rally Point. No, or too late: they miss this war.
+        /// </summary>
+        public bool AnswerMerc(Entity who, bool yes)
+        {
+            if (!m_Offers.TryGetValue(who, out (FactionId side, double expires, double war) offer)) return false;
+            m_Offers.Remove(who);
+            CrossfireSettings s = Settings;
+            bool open = s != null && m_Clock.Current.JoinOpen(m_Clock.Now) && m_Clock.Current.Now.WarStart.Equals(offer.war);
+            CrossfireJoin join = yes && open ? m_Sides.TryJoin(who, offer.side, s.capPerFaction, BotsOn(offer.side)) : CrossfireJoin.Full;
+            if (join == CrossfireJoin.Full)
+            {
+                MercsDeclined++;
+                if (s != null) Tell(who, s.mercDeclinedText);
+                FlushTells();
+                return false;
+            }
+            if (join == CrossfireJoin.TookBotsPlace) m_BotsOut.Add(offer.side);
+            m_Mercs.Add(who);
+            MercsTaken++;
+            ApplyWarSide(who, offer.side);
+            EntityManager em = EntityManager;
+            if (CrossfireArea.TryRallyPoint(offer.side, out CrossfireArea yard) && em.Exists(who) && em.HasComponent<TeleportRequest>(who))
+            {
+                yard.Landing(out Vector3 at, out float yaw);
+                PlayerEntitiesSetup.Teleport(em, who, new Unity.Mathematics.int3((int)Math.Round(at.x * 1000f), (int)Math.Round(at.y * 1000f), (int)Math.Round(at.z * 1000f)),
+                    (int)Math.Round(Mathf.Repeat(yaw, 360f) * 100f) % 36000);
+            }
+            Tell(who, (s.mercJoinedText ?? string.Empty).Replace("{side}", offer.side.ToString()));
+            SendRefusedBack();
+            return true;
+        }
+
+        /// <summary>The side a Merc fights for, on their ghost (every client applies it to their views) and their server body (hostility).</summary>
+        void ApplyWarSide(Entity who, FactionId side)
+        {
+            EntityManager em = EntityManager;
+            if (em.Exists(who) && em.HasComponent<PvpSwitch>(who))
+            {
+                PvpSwitch pvp = em.GetComponentData<PvpSwitch>(who);
+                pvp.WarSide = (byte)side;
+                em.SetComponentData(who, pvp);
+            }
+            if (TryBodyEntry(who, out GhostBodyEntry e) && e.Body != null && e.Body.TryGetComponent(out PlayerIdentity identity)) identity.SetWarSide(side);
+        }
+
+        void ReadMercAnswers()
+        {
+            EntityManager em = EntityManager;
+            if (!m_MercAnswers.IsEmpty)
+            {
+                using NativeArray<Entity> answers = m_MercAnswers.ToEntityArray(Allocator.Temp);
+                foreach (Entity a in answers)
+                {
+                    CrossfireMercAnswerRpc answer = em.GetComponentData<CrossfireMercAnswerRpc>(a);
+                    Entity from = em.GetComponentData<ReceiveRpcCommandRequest>(a).SourceConnection;
+                    em.DestroyEntity(a);
+                    if (!em.Exists(from) || !em.HasComponent<NetworkId>(from)) continue;
+                    int id = em.GetComponentData<NetworkId>(from).Value;
+                    Entity who = Entity.Null;
+                    foreach (KeyValuePair<Entity, (FactionId, double, double)> o in m_Offers)
+                        if (em.Exists(o.Key) && em.HasComponent<GhostOwner>(o.Key) && em.GetComponentData<GhostOwner>(o.Key).NetworkId == id) { who = o.Key; break; }
+                    if (who != Entity.Null && m_Offers[who].war.Equals(answer.WarStart)) AnswerMerc(who, answer.Yes != 0);
+                }
+            }
+            // offers nobody answered: they miss this war
+            m_Lapsed.Clear();
+            foreach (KeyValuePair<Entity, (FactionId side, double expires, double war)> o in m_Offers)
+                if (m_Clock.Now >= o.Value.expires || !em.Exists(o.Key)) m_Lapsed.Add(o.Key);
+            foreach (Entity who in m_Lapsed) AnswerMerc(who, false);
         }
 
         // ------------------------------------------------------------------ the kills
@@ -335,6 +484,7 @@ namespace KryticalNova.Crossfire.Entities
             EntityManager em = EntityManager;
             m_Sides.ForgetWhere(e => !em.Exists(e));
             ReadVoteAnswers();
+            ReadMercAnswers();
             CrossfirePhase phase = state.Now.Phase;
             double war = state.Now.WarStart;
 
@@ -417,6 +567,10 @@ namespace KryticalNova.Crossfire.Entities
         /// <summary>The war is over (its End ran out, or a GM called it off): its sides, score and bots go.</summary>
         void EndWar()
         {
+            foreach (Entity merc in m_Mercs) ApplyWarSide(merc, FactionId.None);   // every Merc is their home faction again
+            m_Mercs.Clear();
+            m_Offers.Clear();
+            m_Home.Clear();
             m_Sides.Clear();
             m_Votes.Clear();
             m_VoteOpen = false;
@@ -431,18 +585,38 @@ namespace KryticalNova.Crossfire.Entities
     public partial class CrossfireVoteClientSystem : SystemBase
     {
         public const string PromptId = "crossfire-vote";
-        EntityQuery m_Votes;
+        public const string MercPromptId = "crossfire-merc";
+        EntityQuery m_Votes, m_Offers;
 
         /// <summary>Votes shown (tests).</summary>
         public int Shown { get; private set; }
 
-        protected override void OnCreate() =>
+        protected override void OnCreate()
+        {
             m_Votes = GetEntityQuery(ComponentType.ReadOnly<CrossfireVoteRpc>(), ComponentType.ReadOnly<ReceiveRpcCommandRequest>());
+            m_Offers = GetEntityQuery(ComponentType.ReadOnly<CrossfireMercOfferRpc>(), ComponentType.ReadOnly<ReceiveRpcCommandRequest>());
+        }
+
+        /// <summary>Merc offers shown (tests).</summary>
+        public int OffersShown { get; private set; }
 
         protected override void OnUpdate()
         {
-            if (m_Votes.IsEmpty) return;
             EntityManager em = EntityManager;
+            if (!m_Offers.IsEmpty)
+            {
+                using NativeArray<Entity> offers = m_Offers.ToEntityArray(Allocator.Temp);
+                foreach (Entity o in offers)
+                {
+                    CrossfireMercOfferRpc offer = em.GetComponentData<CrossfireMercOfferRpc>(o);
+                    em.DestroyEntity(o);
+                    OffersShown++;
+                    double offerWar = offer.WarStart;
+                    Unity.Entities.World w = World;
+                    ClientPresentationRegistry.Prompts?.Show(MercPromptId, offer.Eyebrow.ToString(), offer.Text.ToString(), offer.Seconds, yes => AnswerMerc(w, offerWar, yes));
+                }
+            }
+            if (m_Votes.IsEmpty) return;
             using NativeArray<Entity> votes = m_Votes.ToEntityArray(Allocator.Temp);
             foreach (Entity v in votes)
             {
@@ -455,6 +629,16 @@ namespace KryticalNova.Crossfire.Entities
             }
         }
 
+        /// <summary>Sends the player's answer to a Merc offer to the server.</summary>
+        public static void AnswerMerc(Unity.Entities.World world, double warStart, bool yes)
+        {
+            if (world == null || !world.IsCreated) return;
+            EntityManager em = world.EntityManager;
+            Entity e = em.CreateEntity();
+            em.AddComponentData(e, new CrossfireMercAnswerRpc { Yes = (byte)(yes ? 1 : 0), WarStart = warStart });
+            em.AddComponentData(e, new SendRpcCommandRequest());
+        }
+
         /// <summary>Sends the player's answer to the server.</summary>
         public static void Answer(Unity.Entities.World world, double warStart, bool yes)
         {
@@ -463,6 +647,32 @@ namespace KryticalNova.Crossfire.Entities
             Entity e = em.CreateEntity();
             em.AddComponentData(e, new CrossfireVoteAnswerRpc { Yes = (byte)(yes ? 1 : 0), WarStart = warStart });
             em.AddComponentData(e, new SendRpcCommandRequest());
+        }
+    }
+
+    /// <summary>
+    /// Client: every player view fights for the side the server put on its ghost (<see cref="PvpSwitch.WarSide"/>): a Crossfire Merc is
+    /// hostile to their home faction and friendly to the side they fight for, on namecards, targets and the Callout strip (owner, 16 Nov 2026).
+    /// </summary>
+    [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation)]
+    [UpdateInGroup(typeof(SimulationSystemGroup))]
+    public partial class CrossfireWarSideClientSystem : SystemBase
+    {
+        /// <summary>Views whose side changed (tests).</summary>
+        public int Applied { get; private set; }
+
+        protected override void OnUpdate()
+        {
+            EntityManager em = EntityManager;
+            foreach (GhostBodyEntry e in GhostBodyRegistry.Entries)
+            {
+                if (!ReferenceEquals(e.World, World) || e.Body == null || !em.Exists(e.Ghost) || !em.HasComponent<PvpSwitch>(e.Ghost)) continue;
+                if (!e.Body.TryGetComponent(out PlayerIdentity identity)) continue;
+                var side = (FactionId)em.GetComponentData<PvpSwitch>(e.Ghost).WarSide;
+                if (identity.WarSide == side || (side == identity.HomeFaction && identity.WarSide == FactionId.None)) continue;
+                identity.SetWarSide(side);
+                Applied++;
+            }
         }
     }
 }

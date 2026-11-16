@@ -31,6 +31,13 @@ MonoBehaviour:
   sideFullText: 'Crossfire: your side is full ({cap} of {cap}), so you can''t join
     this war.'
   tookBotsPlaceText: 'Crossfire: you take a War Bot''s place on your side.'
+  offerMercs: 1
+  mercOfferSeconds: 20
+  mercEyebrow: MERC
+  mercOfferText: Your side is full ({cap} of {cap}). Fight this war as a Merc for the
+    {side}?
+  mercJoinedText: 'Crossfire: you fight this war as a Merc for the {side}.'
+  mercDeclinedText: 'Crossfire: your side is full, so you miss this war.'
   voteSeconds: 20
   voteEyebrow: CROSSFIRE
   voteText: Your side has {real} of {cap} players. Fill it to {cap} with War Bots?
