@@ -1,3 +1,4 @@
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -99,19 +100,35 @@ namespace KryticalNova.Player.Entities
     /// <summary>Server: at the end of every server tick, each hittable ghost's place goes into its ring.</summary>
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
     [UpdateInGroup(typeof(SimulationSystemGroup), OrderLast = true)]
+    [BurstCompile]
     public partial struct PositionHistoryWriteSystem : ISystem
     {
+        [BurstCompile]
         public void OnCreate(ref SystemState state) => state.RequireForUpdate<NetworkTime>();
 
+        /// <summary>Perf round 4: two Burst jobs over every ring in parallel, players first, then the other targets (as before).</summary>
+        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             NetworkTick tick = SystemAPI.GetSingleton<NetworkTime>().ServerTick;
             if (!tick.IsValid) return;
-            foreach (var (ring, pose) in SystemAPI.Query<RefRW<PositionHistory>, RefRO<PlayerPose>>())
-                PositionHistoryRules.Record(ref ring.ValueRW, tick, pose.ValueRO.Mm);
+            new PlayerRingJob { Tick = tick }.ScheduleParallel();
             // the attackable ghosts that are not players (M4.2b): where the server wrote them this tick
-            foreach (var (ring, target) in SystemAPI.Query<RefRW<PositionHistory>, RefRO<CombatTarget>>())
-                PositionHistoryRules.Record(ref ring.ValueRW, tick, target.ValueRO.FeetMm);
+            new TargetRingJob { Tick = tick }.ScheduleParallel();
+        }
+
+        [BurstCompile]
+        partial struct PlayerRingJob : IJobEntity
+        {
+            public NetworkTick Tick;
+            void Execute(ref PositionHistory ring, in PlayerPose pose) => PositionHistoryRules.Record(ref ring, Tick, pose.Mm);
+        }
+
+        [BurstCompile]
+        partial struct TargetRingJob : IJobEntity
+        {
+            public NetworkTick Tick;
+            void Execute(ref PositionHistory ring, in CombatTarget target) => PositionHistoryRules.Record(ref ring, Tick, target.FeetMm);
         }
     }
 }

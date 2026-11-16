@@ -52,7 +52,7 @@ namespace KryticalNova.Player.Entities
                 Cfg = cfg,
                 Traces = m_Traces,
                 Vitals = m_Vitals,
-            }.Schedule();
+            }.ScheduleParallel();   // perf round 4: each player's step reads and writes only its own entity (same math, every core)
         }
 
         [BurstCompile(FloatMode = FloatMode.Deterministic, FloatPrecision = FloatPrecision.High)]
