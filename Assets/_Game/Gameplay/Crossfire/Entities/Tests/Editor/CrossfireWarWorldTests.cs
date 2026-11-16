@@ -297,7 +297,8 @@ namespace KryticalNova.Crossfire.Entities.Tests
                 Settle(rig);
                 Assert.AreEqual(CrossfirePhase.End, clock.Current.Now.Phase);
                 Assert.IsFalse(entry.LastPay.ContainsKey(rig.ServerGhosts[0]), "the leaver is not paid");
-                Assert.IsTrue(entry.LastPay.ContainsKey(rig.ServerGhosts[1]));
+                Assert.IsTrue(entry.Sides.TryGetSide(rig.ServerGhosts[1], out _), "the one who stayed is still in the war at its end (no kills here, so nobody is paid: AWarWithNoKills_PaysNobody)");
+                Assert.IsFalse(entry.Sides.TryGetSide(rig.ServerGhosts[0], out _), "the leaver is not");
             }
         }
 
