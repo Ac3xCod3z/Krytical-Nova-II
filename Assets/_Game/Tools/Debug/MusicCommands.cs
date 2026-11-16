@@ -43,8 +43,12 @@ namespace KryticalNova.DevTools
             text.AppendLine(on ? $"Shared clock: track {index + 1}, {position:0.0} s in." : "Shared clock: between two tracks.");
             text.AppendLine(state.Forced >= 0 ? $"One track over and over (gm.music.track round to stop)." : "The tracks play in turn.");
             if (!Mathf.Approximately(state.Nudge, 0f)) text.AppendLine($"Every beat moved by {state.Nudge * 1000f:+0;-0} ms (gm.music.nudge).");
+#if !UNITY_SERVER   // the players are Audio's, which a server build leaves out (no visual or sound code there)
             text.AppendLine($"This machine: {CombatMusicPlayer.Report}");
             text.Append($"Click {(CombatMusicPlayer.Click ? "on" : "off")}. Beat timing offset (Settings) {CombatBeat.OutputDelaySeconds * 1000.0:+0;-0;0} ms.");
+#else
+            text.Append("This machine: a server (it plays no music).");
+#endif
             return text.ToString();
         }
 
@@ -74,8 +78,12 @@ namespace KryticalNova.DevTools
             if (!TryGet(out _, out string error)) return error;
             state = (state ?? string.Empty).Trim().ToLowerInvariant();
             if (state.Length > 0 && state != "on" && state != "off") return "Use gm.music.click on or off.";
+#if !UNITY_SERVER
             CombatMusicPlayer.Click = state.Length == 0 ? !CombatMusicPlayer.Click : state == "on";
             return CombatMusicPlayer.Click ? "Click on (heard while the fight music plays)." : "Click off.";
+#else
+            return "A server plays no music: use gm.music.click on a player's machine.";
+#endif
         }
 
         [Command("gm.music.nudge", "Move every beat of what is playing by so many milliseconds, for every player: gm.music.nudge <ms> (negative = earlier, 0 = as baked). " +
