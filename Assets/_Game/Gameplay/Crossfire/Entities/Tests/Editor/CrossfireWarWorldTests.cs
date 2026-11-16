@@ -24,6 +24,7 @@ namespace KryticalNova.Crossfire.Entities.Tests
         CrossfireSettings m_Settings;
         double m_Now;
         readonly List<GameObject> m_Made = new List<GameObject>();
+        readonly List<Object> m_Made2 = new List<Object>();
         IWarBotFill m_HadBots;
 
         /// <summary>coder-12's War Bots stand-in: counts per side, the calls Crossfire made, and bot ghosts of its own.</summary>
@@ -87,6 +88,8 @@ namespace KryticalNova.Crossfire.Entities.Tests
             CrossfireClockServerSystem.ClockSource = null;
             foreach (GameObject go in m_Made) if (go != null) Object.DestroyImmediate(go);
             m_Made.Clear();
+            foreach (Object o in m_Made2) if (o != null) Object.DestroyImmediate(o);
+            m_Made2.Clear();
             foreach (CrossfireArea a in new List<CrossfireArea>(CrossfireArea.All)) CrossfireArea.Untrack(a);
             Object.DestroyImmediate(m_Settings);
         }
@@ -125,6 +128,13 @@ namespace KryticalNova.Crossfire.Entities.Tests
             entry.FactionOf = g => sideOf.TryGetValue(g, out FactionId f) ? f : FactionId.None;
             entry.LevelOf = g => 112;
             entry.Random = new System.Random(7);
+            var drop = ScriptableObject.CreateInstance<KryticalNova.Items.ItemDefinition>();
+            drop.hideFlags = HideFlags.DontUnloadUnusedAsset;
+            drop.itemId = 777;
+            drop.displayName = "Test Gear";
+            m_Made2.Add(drop);
+            entry.PickDrop = (killer, level, pick) => level == 112 ? drop : null;   // the mobs' rule is HostileLoot.PickGear; here a known piece
+            entry.GrowthOf = g => (false, 1_000_000, 0, 1);   // character and pet growing, mount fully grown
             clock.Settings = m_Settings;
             clock.Clock = () => m_Now;
             clock.Interval = 0f;
@@ -169,7 +179,6 @@ namespace KryticalNova.Crossfire.Entities.Tests
         {
             m_Settings.capPerFaction = 3;
             m_Settings.killDropChance = 1f;   // every real-on-real kill drops, so the test sees it
-            m_Settings.killDropItemIds = new ushort[] { 777 };
             var bots = new FakeBots();
             WarBots.Fill = bots;
             var (rig, clock, entry) = Start(new[] { FactionId.Hegemony, FactionId.Null, FactionId.Hegemony });
@@ -228,13 +237,22 @@ namespace KryticalNova.Crossfire.Entities.Tests
                     Assert.AreEqual(0, seen.KillsCovenant);
                 }
 
-                // the End: Hegemony won 2-1; its real players are paid the win, Null's the loss
+                // the End: Hegemony won 2-1; its real players are paid the win, Null's the loss (bracket X; the mount fully grown)
                 m_Now = Origin + 136;
                 Settle(rig);
                 Assert.AreEqual(CrossfirePhase.End, clock.Current.Now.Phase);
-                Assert.AreEqual(m_Settings.winExperience, entry.LastPay[rig.ServerGhosts[0]]);
-                Assert.AreEqual(m_Settings.winExperience, entry.LastPay[rig.ServerGhosts[2]]);
-                Assert.AreEqual(m_Settings.loseExperience, entry.LastPay[rig.ServerGhosts[1]]);
+                foreach (int i in new[] { 0, 2 })
+                {
+                    CrossfirePay won = entry.LastPay[rig.ServerGhosts[i]];
+                    Assert.AreEqual(100_000, won.CharacterExp, "10 % of the step");
+                    Assert.AreEqual(0.5f, won.PetPercent, 1e-6f);
+                    Assert.AreEqual(0f, won.MountPercent, "fully grown: Creds instead");
+                    Assert.AreEqual(50_000 + 5_000, won.Creds, "X win + the maxed mount's 10 %");
+                }
+                CrossfirePay lost = entry.LastPay[rig.ServerGhosts[1]];
+                Assert.AreEqual(40_000, lost.CharacterExp);
+                Assert.AreEqual(20_000 + 2_000, lost.Creds);
+                Assert.Greater(entry.LastPay[rig.ServerGhosts[0]].Creds, lost.Creds, "the winners are paid more");
                 Assert.IsTrue(entry.Told.Exists(t => t.who == rig.ServerGhosts[0] && t.text.Contains("WON")), "told of the win");
 
                 // over: the sides, the score and the bots go

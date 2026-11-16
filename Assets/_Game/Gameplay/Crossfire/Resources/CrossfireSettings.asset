@@ -36,17 +36,18 @@ MonoBehaviour:
   voteText: Your side has {real} of {cap} players. Fill it to {cap} with War Bots?
   votePassedText: 'Crossfire: your side voted yes. War Bots fill it to {cap}.'
   voteFailedText: 'Crossfire: your side voted no. You fight with {real}.'
-  winExperience: 50000
-  tieExperience: 30000
-  loseExperience: 20000
-  wonText: 'Crossfire is over: your side WON with {kills} kills ({score}). +{exp}
-    EXP.'
-  tiedText: 'Crossfire is over: a TIE at {kills} kills ({score}). +{exp} EXP.'
-  lostText: 'Crossfire is over: your side lost with {kills} kills ({score}). +{exp}
-    EXP.'
+  characterExpPercent: {x: 10, y: 6, z: 4}
+  companionExpPercent: {x: 0.5, y: 0.35, z: 0.25}
+  topWinCreds: 50000
+  tieAndLossCredsShare: {x: 0.6, y: 0.4}
+  maxedCredsShare: {x: 0.5, y: 0.1, z: 0.1}
+  wonText: 'Crossfire is over: your side WON with {kills} kills ({score}). {pay}'
+  tiedText: 'Crossfire is over: a TIE at {kills} kills ({score}). {pay}'
+  lostText: 'Crossfire is over: your side lost with {kills} kills ({score}). {pay}'
   killDropChance: 0.0005
-  killDropItemIds: 
-  killDropText: 'Crossfire: your kill dropped something rare!'
+  killDropLevelsBelow: 9
+  killDropBestRarity: 1
+  killDropText: 'Crossfire: your kill dropped {item}!'
   callText: 'Crossfire! Bracket {bracket} (levels {levels}): the war starts in {time}.
     {where}'
   whereText: Go through the Transit Row port to reach your Rally Point.

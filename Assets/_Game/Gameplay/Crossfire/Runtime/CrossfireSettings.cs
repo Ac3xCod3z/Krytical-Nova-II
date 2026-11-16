@@ -67,23 +67,29 @@ namespace KryticalNova.Crossfire
         [Tooltip("Told to the side when its vote failed or nobody answered.")]
         [TextArea] public string voteFailedText = "Crossfire: your side voted no. You fight with {real}.";
 
-        [Header("Team deathmatch: the most kills wins, a tie is possible (PLACEHOLDER pay: the owner sets the numbers)")]
-        [Tooltip("EXP for each real player of the winning side (PLACEHOLDER).")]
-        [Min(0)] public int winExperience = 50000;
-        [Tooltip("EXP for each real player of a side level at the top (PLACEHOLDER).")]
-        [Min(0)] public int tieExperience = 30000;
-        [Tooltip("EXP for each real player of a side that lost (PLACEHOLDER).")]
-        [Min(0)] public int loseExperience = 20000;
-        [Tooltip("Told to each real player when the war ends. {kills}: their side's kills; {exp}: the EXP paid; {score}: every side's kills.")]
-        [TextArea] public string wonText = "Crossfire is over: your side WON with {kills} kills ({score}). +{exp} EXP.";
-        [TextArea] public string tiedText = "Crossfire is over: a TIE at {kills} kills ({score}). +{exp} EXP.";
-        [TextArea] public string lostText = "Crossfire is over: your side lost with {kills} kills ({score}). +{exp} EXP.";
-        [Tooltip("The chance a kill of a real player by a real player drops an item (extremely rare; War Bots never drop). PLACEHOLDER.")]
+        [Header("Team deathmatch: the most kills wins, a tie is possible. The pay (owner's numbers, 16 Nov 2026)")]
+        [Tooltip("The character's EXP, in % of the EXP of their current level step (win / tie / loss). A character at the level cap gets the Maxed Character share in Creds instead.")]
+        public Vector3 characterExpPercent = new Vector3(10f, 6f, 4f);
+        [Tooltip("The active pet's and the selected mount's EXP, in % of the EXP that fills their growth (win / tie / loss). A fully grown one gets its Maxed share in Creds instead.")]
+        public Vector3 companionExpPercent = new Vector3(0.5f, 0.35f, 0.25f);
+        [Tooltip("Creds for a WIN in the top bracket (X). Bracket n pays n / Bracket Count of it.")]
+        [Min(0)] public long topWinCreds = 50000;
+        [Tooltip("A tie's and a loss's Creds, as a share of the win's (tie / loss).")]
+        public Vector2 tieAndLossCredsShare = new Vector2(0.6f, 0.4f);
+        [Tooltip("Extra Creds, as a share of that result's Creds, for each share that is already maxed (character at the cap / pet fully grown / mount fully grown).")]
+        public Vector3 maxedCredsShare = new Vector3(0.5f, 0.1f, 0.1f);
+        [Tooltip("Told to each real player when the war ends. {kills}: their side's kills; {score}: every side's kills; {pay}: what they were paid.")]
+        [TextArea] public string wonText = "Crossfire is over: your side WON with {kills} kills ({score}). {pay}";
+        [TextArea] public string tiedText = "Crossfire is over: a TIE at {kills} kills ({score}). {pay}";
+        [TextArea] public string lostText = "Crossfire is over: your side lost with {kills} kills ({score}). {pay}";
+        [Tooltip("The chance a kill of a real player by a real player drops an item (1 in 2,000; War Bots never drop).")]
         [Range(0f, 1f)] public float killDropChance = 0.0005f;
-        [Tooltip("The items a kill may drop (item ids), one picked at random. Empty: no drop. PLACEHOLDER until the owner names them.")]
-        public ushort[] killDropItemIds = new ushort[0];
-        [Tooltip("Told to the player whose kill dropped an item.")]
-        [TextArea] public string killDropText = "Crossfire: your kill dropped something rare!";
+        [Tooltip("The drop is a piece of gear a Hostile of the killer's level can drop (the mobs' own rule): of the highest item level at or under it, within this many levels below.")]
+        [Min(0)] public int killDropLevelsBelow = 9;
+        [Tooltip("On: the drop is of the best rarity that level range has (as a Bruiser's). Off: any of them.")]
+        public bool killDropBestRarity = true;
+        [Tooltip("Told to the player whose kill dropped an item. {item}: its name.")]
+        [TextArea] public string killDropText = "Crossfire: your kill dropped {item}!";
 
         [Header("Announcements (the top-of-screen news every player gets, as GM broadcasts)")]
         [Tooltip("The call, sent when the Call starts and again every Call Repeat Seconds until the gates open, to each player for THEIR OWN bracket. {time}: how long until the gates open; {bracket}: the bracket's numeral (X); {levels}: its levels (100-112); {level}: its lowest level; {where}: Where Text, or No Zone Text for a bracket with no zone yet.")]

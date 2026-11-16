@@ -119,31 +119,58 @@ namespace KryticalNova.Crossfire
         public static bool Offered(int real, int bots, int cap, bool botsRun) => botsRun && real > 0 && real + bots < cap;
     }
 
-    /// <summary>The war's pay and its very rare kill drop (owner, 16 Nov 2026; the numbers are in <see cref="CrossfireSettings"/>).</summary>
+    /// <summary>What one real player is paid at a war's end (<see cref="CrossfireRewards.Payout"/>).</summary>
+    public struct CrossfirePay
+    {
+        /// <summary>Character EXP (0 at the level cap: their share is in <see cref="Creds"/>).</summary>
+        public int CharacterExp;
+        /// <summary>% of the growth meter for the active pet and the selected mount (0 when there is none, or it is fully grown).</summary>
+        public float PetPercent, MountPercent;
+        /// <summary>Creds: the result's, plus the maxed shares'.</summary>
+        public long Creds;
+    }
+
+    /// <summary>
+    /// The war's pay and its very rare kill drop (owner, 16 Nov 2026; every number in <see cref="CrossfireSettings"/>). EXP for the
+    /// character (a % of their level step), the active pet and the selected mount (a % of their growth meter); Creds by result and bracket
+    /// (bracket n pays n / 10 of X's); anything already maxed pays a fixed share of that result's Creds instead of its EXP. War Bots are
+    /// never paid. Pure.
+    /// </summary>
     public static class CrossfireRewards
     {
-        /// <summary>The war EXP a real player of a side with <paramref name="outcome"/> is paid (the winning side more than the others).</summary>
-        public static int Experience(CrossfireSettings s, CrossfireOutcome outcome)
+        static int Index(CrossfireOutcome o) => o == CrossfireOutcome.Won ? 0 : o == CrossfireOutcome.Tied ? 1 : 2;
+
+        static float Pick(UnityEngine.Vector3 v, CrossfireOutcome o) => Math.Max(0f, v[Index(o)]);
+
+        /// <summary>The result's Creds in <paramref name="bracket"/> (before the maxed shares).</summary>
+        public static long ResultCreds(CrossfireSettings s, CrossfireOutcome outcome, int bracket)
         {
-            if (s == null) return 0;
-            switch (outcome)
-            {
-                case CrossfireOutcome.Won: return Math.Max(0, s.winExperience);
-                case CrossfireOutcome.Tied: return Math.Max(0, s.tieExperience);
-                default: return Math.Max(0, s.loseExperience);
-            }
+            if (s == null || bracket <= 0) return 0;
+            double share = outcome == CrossfireOutcome.Won ? 1.0 : outcome == CrossfireOutcome.Tied ? s.tieAndLossCredsShare.x : s.tieAndLossCredsShare.y;
+            double scale = Math.Min(bracket, s.bracketCount) / (double)Math.Max(1, s.bracketCount);
+            return (long)Math.Round(Math.Max(0L, s.topWinCreds) * Math.Max(0.0, share) * scale);
         }
 
-        /// <summary>
-        /// The item a kill drops, or 0 for none: only a real player killing a real player (never with a War Bot on either side), with
-        /// <see cref="CrossfireSettings.killDropChance"/>; <paramref name="roll"/> and <paramref name="pick"/> are uniform in [0, 1).
-        /// </summary>
-        public static ushort KillDrop(CrossfireSettings s, bool killerIsBot, bool victimIsBot, double roll, double pick)
+        /// <param name="levelStepExp">The EXP of the character's current level step.</param>
+        /// <param name="pet">The pet: -1 none out, 0 growing, 1 fully grown. <paramref name="mount"/> the same for the selected mount.</param>
+        public static CrossfirePay Payout(CrossfireSettings s, CrossfireOutcome outcome, int bracket, bool characterMaxed, int levelStepExp, int pet, int mount)
         {
-            if (s == null || killerIsBot || victimIsBot || s.killDropItemIds == null || s.killDropItemIds.Length == 0) return 0;
-            if (!(roll < s.killDropChance)) return 0;
-            int i = Math.Min(s.killDropItemIds.Length - 1, (int)(pick * s.killDropItemIds.Length));
-            return s.killDropItemIds[i];
+            var pay = new CrossfirePay();
+            if (s == null) return pay;
+            long creds = ResultCreds(s, outcome, bracket);
+            pay.Creds = creds;
+            if (characterMaxed) pay.Creds += (long)Math.Round(creds * Math.Max(0f, s.maxedCredsShare.x));
+            else pay.CharacterExp = (int)Math.Round(Math.Max(0, levelStepExp) * Pick(s.characterExpPercent, outcome) / 100.0);
+            float companion = Pick(s.companionExpPercent, outcome);
+            if (pet == 1) pay.Creds += (long)Math.Round(creds * Math.Max(0f, s.maxedCredsShare.y));
+            else if (pet == 0) pay.PetPercent = companion;
+            if (mount == 1) pay.Creds += (long)Math.Round(creds * Math.Max(0f, s.maxedCredsShare.z));
+            else if (mount == 0) pay.MountPercent = companion;
+            return pay;
         }
+
+        /// <summary>A kill drops: only a real player killing a real player (never with a War Bot on either side), with <see cref="CrossfireSettings.killDropChance"/>; <paramref name="roll"/> in [0, 1).</summary>
+        public static bool KillDrops(CrossfireSettings s, bool killerIsBot, bool victimIsBot, double roll) =>
+            s != null && !killerIsBot && !victimIsBot && roll < s.killDropChance;
     }
 }

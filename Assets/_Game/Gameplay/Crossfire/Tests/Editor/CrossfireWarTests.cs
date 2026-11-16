@@ -72,26 +72,57 @@ namespace KryticalNova.Crossfire.Tests
             Assert.IsFalse(CrossfireVote.Offered(5, 0, 33, false), "the server runs no War Bots");
         }
 
+        /// <summary>The owner's numbers (16 Nov 2026): Creds X win 50,000, tie 60 %, loss 40 %, bracket n pays n / 10; EXP 10 / 6 / 4 %.</summary>
         [Test]
-        public void TheWinningSide_IsPaidMore_AndAKillDrops_ExtremelyRarely_NeverWithABot()
+        public void TheCreds_GoByResultAndBracket_TheOwnersTable()
         {
-            int won = CrossfireRewards.Experience(m_Settings, CrossfireOutcome.Won);
-            int tied = CrossfireRewards.Experience(m_Settings, CrossfireOutcome.Tied);
-            int lost = CrossfireRewards.Experience(m_Settings, CrossfireOutcome.Lost);
-            Assert.Greater(won, tied, "the winners get more");
-            Assert.Greater(tied, lost);
-            Assert.Greater(lost, 0, "everyone who fought is paid something");
+            var table = new (int bracket, long win, long tie, long loss)[] { (10, 50000, 30000, 20000), (5, 25000, 15000, 10000), (1, 5000, 3000, 2000) };
+            foreach (var row in table)
+            {
+                Assert.AreEqual(row.win, CrossfireRewards.ResultCreds(m_Settings, CrossfireOutcome.Won, row.bracket), $"bracket {row.bracket} win");
+                Assert.AreEqual(row.tie, CrossfireRewards.ResultCreds(m_Settings, CrossfireOutcome.Tied, row.bracket), $"bracket {row.bracket} tie");
+                Assert.AreEqual(row.loss, CrossfireRewards.ResultCreds(m_Settings, CrossfireOutcome.Lost, row.bracket), $"bracket {row.bracket} loss");
+            }
+            Assert.AreEqual(0, CrossfireRewards.ResultCreds(m_Settings, CrossfireOutcome.Won, 0), "no bracket, no pay");
+        }
 
-            Assert.Less(m_Settings.killDropChance, 0.01f, "extremely rare");
-            m_Settings.killDropItemIds = new ushort[] { 501, 502 };
-            m_Settings.killDropChance = 0.001f;
-            Assert.AreEqual(0, CrossfireRewards.KillDrop(m_Settings, false, false, 0.002, 0.0), "the roll missed");
-            Assert.AreEqual(501, CrossfireRewards.KillDrop(m_Settings, false, false, 0.0005, 0.1));
-            Assert.AreEqual(502, CrossfireRewards.KillDrop(m_Settings, false, false, 0.0005, 0.9));
-            Assert.AreEqual(0, CrossfireRewards.KillDrop(m_Settings, true, false, 0.0, 0.0), "a War Bot's kill drops nothing");
-            Assert.AreEqual(0, CrossfireRewards.KillDrop(m_Settings, false, true, 0.0, 0.0), "killing a War Bot drops nothing");
-            m_Settings.killDropItemIds = new ushort[0];
-            Assert.AreEqual(0, CrossfireRewards.KillDrop(m_Settings, false, false, 0.0, 0.0), "no items named: no drop");
+        [Test]
+        public void TheEXP_GoesToTheCharacterPetAndMount_AndAMaxedShare_IsPaidInCredsInstead()
+        {
+            // growing everything, bracket X win: 10 % of a 1,000,000 step, the pet and the mount 0.5 % of their growth, 50,000 Creds
+            CrossfirePay pay = CrossfireRewards.Payout(m_Settings, CrossfireOutcome.Won, 10, false, 1_000_000, 0, 0);
+            Assert.AreEqual(100_000, pay.CharacterExp);
+            Assert.AreEqual(0.5f, pay.PetPercent, 1e-6f);
+            Assert.AreEqual(0.5f, pay.MountPercent, 1e-6f);
+            Assert.AreEqual(50_000, pay.Creds);
+
+            // the brief's example: bracket X win, everything maxed = 50,000 + 25,000 + 5,000 + 5,000
+            pay = CrossfireRewards.Payout(m_Settings, CrossfireOutcome.Won, 10, true, 1_000_000, 1, 1);
+            Assert.AreEqual(0, pay.CharacterExp, "at the level cap: no EXP");
+            Assert.AreEqual(0f, pay.PetPercent);
+            Assert.AreEqual(0f, pay.MountPercent);
+            Assert.AreEqual(85_000, pay.Creds);
+
+            // a tie and a loss, no pet out, mount growing
+            pay = CrossfireRewards.Payout(m_Settings, CrossfireOutcome.Tied, 10, false, 1_000_000, -1, 0);
+            Assert.AreEqual(60_000, pay.CharacterExp, "6 %");
+            Assert.AreEqual(0f, pay.PetPercent, "no pet out: nothing for it, and no Creds for it either");
+            Assert.AreEqual(0.35f, pay.MountPercent, 1e-6f);
+            Assert.AreEqual(30_000, pay.Creds);
+            pay = CrossfireRewards.Payout(m_Settings, CrossfireOutcome.Lost, 5, false, 1_000_000, 0, 1);
+            Assert.AreEqual(40_000, pay.CharacterExp, "4 %");
+            Assert.AreEqual(0.25f, pay.PetPercent, 1e-6f);
+            Assert.AreEqual(10_000 + 1_000, pay.Creds, "bracket V loss + the maxed mount's 10 %");
+        }
+
+        [Test]
+        public void AKillDrops_OneIn2000_NeverWithABot()
+        {
+            Assert.AreEqual(1f / 2000f, m_Settings.killDropChance, 1e-9f, "the owner's 1 in 2,000");
+            Assert.IsTrue(CrossfireRewards.KillDrops(m_Settings, false, false, 0.0004));
+            Assert.IsFalse(CrossfireRewards.KillDrops(m_Settings, false, false, 0.0006), "the roll missed");
+            Assert.IsFalse(CrossfireRewards.KillDrops(m_Settings, true, false, 0.0), "a War Bot's kill drops nothing");
+            Assert.IsFalse(CrossfireRewards.KillDrops(m_Settings, false, true, 0.0), "killing a War Bot drops nothing");
         }
     }
 }

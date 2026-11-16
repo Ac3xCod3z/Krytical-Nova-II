@@ -102,6 +102,8 @@ namespace KryticalNova.Core
         public const string Starter = "starter";
         /// <summary>A character was deleted, with everything it carried (online phase 4, milestone 5: the roster on the server).</summary>
         public const string CharacterDeleted = "character.deleted";
+        /// <summary>An item a Crossfire kill dropped into the killer's Pack (owner, 16 Nov 2026).</summary>
+        public const string Crossfire = "crossfire";
         /// <summary>Every Cred a wallet earns or pays, tallied per save by where it came from or went to: "creds.trade", "creds.vendor".</summary>
         public const string CredsPrefix = "creds.";
     }

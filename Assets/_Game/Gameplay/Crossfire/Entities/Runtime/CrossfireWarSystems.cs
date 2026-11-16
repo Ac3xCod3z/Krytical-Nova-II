@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
 using KryticalNova.Core;
+using KryticalNova.Economy;
 using KryticalNova.Factions;
+using KryticalNova.Hostiles;
 using KryticalNova.Items;
 using KryticalNova.Player.Entities;
 using KryticalNova.Player.Entities.Presentation;
 using KryticalNova.Progression;
+using KryticalNova.Wallet;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.NetCode;
@@ -54,9 +57,17 @@ namespace KryticalNova.Crossfire.Entities
         public int VotesSent { get; private set; }
         public int SidesFilled { get; private set; }
         public int Drops { get; private set; }
-        public readonly Dictionary<Entity, int> LastPay = new Dictionary<Entity, int>();
+        public readonly Dictionary<Entity, CrossfirePay> LastPay = new Dictionary<Entity, CrossfirePay>();
         /// <summary>The item the last drop gave (tests).</summary>
         public ushort LastDrop { get; private set; }
+
+        /// <summary>
+        /// What a real player has to be paid on: (character at the level cap, EXP of their level step, pet, mount), pet and mount -1 none,
+        /// 0 growing, 1 fully grown. Unset: their server body's progression and growth shares (<see cref="IGrowthShare"/>). Tests put their own.
+        /// </summary>
+        public Func<Entity, (bool maxed, int levelStep, int pet, int mount)> GrowthOf;
+        /// <summary>The item a kill drops for a killer of a level: the mobs' gear rule on the killer's catalog (<see cref="HostileLoot.PickGear"/>). Tests put their own.</summary>
+        public Func<Entity, int, float, ItemDefinition> PickDrop;
 
         void CreateWar()
         {
@@ -204,17 +215,28 @@ namespace KryticalNova.Crossfire.Entities
             if (!m_Sides.AddKill(killerSide, victimSide)) return false;
             m_Clock.SetScore(m_Sides.Kills(FactionId.Hegemony), m_Sides.Kills(FactionId.Null), m_Sides.Kills(FactionId.Covenant));
             CrossfireSettings s = Settings;
-            ushort item = CrossfireRewards.KillDrop(s, killerBot, victimBot, m_Random.NextDouble(), m_Random.NextDouble());
-            if (item != 0)
-            {
-                Drops++;
-                LastDrop = item;
-                if (TryBodyEntry(killer, out GhostBodyEntry e) && e.Body != null && e.Body.TryGetComponent(out PlayerInventory pack))
-                    pack.ServerGive(item, 1, earned: true);
-                Tell(killer, s.killDropText);
-            }
+            if (CrossfireRewards.KillDrops(s, killerBot, victimBot, m_Random.NextDouble())) GiveDrop(killer, s);
             FlushTells();
             return true;
+        }
+
+        /// <summary>
+        /// A kill's very rare drop: a piece of gear a Hostile of the killer's level can drop, into their Pack, with its ledger line
+        /// (<see cref="LedgerKinds.Crossfire"/>), as every item an economy action moves.
+        /// </summary>
+        void GiveDrop(Entity killer, CrossfireSettings s)
+        {
+            PlayerInventory pack = TryBodyEntry(killer, out GhostBodyEntry e) && e.Body != null ? e.Body.GetComponent<PlayerInventory>() : null;
+            int level = LevelOfReal(killer);
+            float pick = (float)m_Random.NextDouble();
+            ItemDefinition item = PickDrop != null ? PickDrop(killer, level, pick)
+                : pack != null ? HostileLoot.PickGear(pack.Catalog, level, s.killDropLevelsBelow, s.killDropBestRarity, pick) : null;
+            if (item == null) return;
+            Drops++;
+            LastDrop = item.itemId;
+            if (pack != null && pack.ServerGive(item.itemId, 1, earned: true) > 0)
+                EconomyLedger.Keep(EconomyLedger.Line(pack, LedgerKinds.Crossfire, note: "kill drop").Item(pack.Catalog, new ItemStack(item.itemId, 1), 1));
+            Tell(killer, (s.killDropText ?? string.Empty).Replace("{item}", item.displayName));
         }
 
         // ------------------------------------------------------------------ the vote
@@ -343,20 +365,53 @@ namespace KryticalNova.Crossfire.Entities
             FlushTells();
         }
 
+        /// <summary>
+        /// The war's pay, to every real player (War Bots are never on the sides): EXP for the character, the active pet and the selected
+        /// mount, and Creds (a new source through the wallet's own tally, <see cref="CredsSource.Crossfire"/>, which writes the ledger
+        /// line). Each payout changes only that player's own save, so no <c>ServerSave.SaveTogether</c> is needed.
+        /// </summary>
         void Pay(CrossfireSettings s)
         {
             LastPay.Clear();
+            int bracket = BracketOfWar(s);
             string score = $"Hegemony {m_Sides.Kills(FactionId.Hegemony)}, Null {m_Sides.Kills(FactionId.Null)}, Covenant {m_Sides.Kills(FactionId.Covenant)}";
             foreach (KeyValuePair<Entity, FactionId> p in m_Sides.Players)
             {
                 CrossfireOutcome outcome = m_Sides.Outcome(p.Value);
-                int exp = CrossfireRewards.Experience(s, outcome);
-                LastPay[p.Key] = exp;
-                if (exp > 0 && TryBodyEntry(p.Key, out GhostBodyEntry e) && e.Body != null && e.Body.TryGetComponent(out PlayerCharacterProgression progression))
-                    progression.GrantExperience(exp);
+                GameObject body = TryBodyEntry(p.Key, out GhostBodyEntry e) ? e.Body : null;
+                PlayerCharacterProgression progression = body != null ? body.GetComponent<PlayerCharacterProgression>() : null;
+                IGrowthShare pet = Share(body, GrowthShareKind.Pet), mount = Share(body, GrowthShareKind.Mount);
+                (bool maxed, int step, int petState, int mountState) growth = GrowthOf != null ? GrowthOf(p.Key)
+                    : (progression != null && progression.IsAtLevelCap, progression != null ? progression.ExperienceRequired : 0, StateOf(pet), StateOf(mount));
+                CrossfirePay pay = CrossfireRewards.Payout(s, outcome, bracket, growth.maxed, growth.step, growth.petState, growth.mountState);
+                LastPay[p.Key] = pay;
+                if (pay.CharacterExp > 0 && progression != null) progression.GrantExperience(pay.CharacterExp);
+                if (pay.PetPercent > 0f) pet?.ServerGrantPercentOfFull(pay.PetPercent);
+                if (pay.MountPercent > 0f) mount?.ServerGrantPercentOfFull(pay.MountPercent);
+                if (pay.Creds > 0 && body != null && body.TryGetComponent(out PlayerWallet wallet)) wallet.ServerEarn(pay.Creds, CredsSource.Crossfire);
                 string text = outcome == CrossfireOutcome.Won ? s.wonText : outcome == CrossfireOutcome.Tied ? s.tiedText : s.lostText;
-                Tell(p.Key, (text ?? string.Empty).Replace("{kills}", m_Sides.Kills(p.Value).ToString()).Replace("{exp}", exp.ToString()).Replace("{score}", score));
+                Tell(p.Key, (text ?? string.Empty).Replace("{kills}", m_Sides.Kills(p.Value).ToString()).Replace("{score}", score).Replace("{pay}", Words(pay)));
             }
+        }
+
+        static IGrowthShare Share(GameObject body, GrowthShareKind kind)
+        {
+            if (body == null) return null;
+            foreach (IGrowthShare share in body.GetComponents<IGrowthShare>()) if (share.Kind == kind) return share;
+            return null;
+        }
+
+        static int StateOf(IGrowthShare share) => share == null || !share.HasActive ? -1 : share.IsFullyGrown ? 1 : 0;
+
+        /// <summary>"+4,210 EXP, pet +0.5 %, mount +0.5 %, +50,000 Creds".</summary>
+        public static string Words(in CrossfirePay pay)
+        {
+            var parts = new List<string>(4);
+            if (pay.CharacterExp > 0) parts.Add($"+{pay.CharacterExp:N0} EXP");
+            if (pay.PetPercent > 0f) parts.Add($"pet +{pay.PetPercent:0.##} %");
+            if (pay.MountPercent > 0f) parts.Add($"mount +{pay.MountPercent:0.##} %");
+            if (pay.Creds > 0) parts.Add($"+{pay.Creds:N0} Creds");
+            return string.Join(", ", parts) + (parts.Count > 0 ? "." : string.Empty);
         }
 
         /// <summary>The war is over (its End ran out, or a GM called it off): its sides, score and bots go.</summary>

@@ -15,7 +15,10 @@
         "Unity.Netcode.Runtime",
         "KryticalNova.Factions",
         "KryticalNova.Progression",
-        "KryticalNova.Items"
+        "KryticalNova.Items",
+        "KryticalNova.Economy",
+        "KryticalNova.Wallet",
+        "KryticalNova.Hostiles"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
