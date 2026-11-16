@@ -63,13 +63,15 @@ namespace KryticalNova.WarBots.Entities.Tests
                 ground = Ground(made);
 
                 tw = new KnTestWorld();
-                tw.CreateWorlds(0);
-                tw.Listen();
+                // one client in game, as a war always has (the vote needs a real player): netcode gives ghosts their ids only while a
+                // connection is in game (GhostSendSystem), and a bot finds and targets the others by ghost id (run 2: 0 kills without one)
+                tw.CreateWorlds(1);
                 // the game's server setup; its real ghost subscene loaded the test world's way (ticked by hand, so it streams in here)
                 Assert.IsNotNull(PlayerWorldsSetup.InstallServer(tw.Server, loadGhostScene: false), "the game's server setup");
                 string guid = UnityEditor.AssetDatabase.AssetPathToGUID(GhostSubScenePath);
                 Assert.IsFalse(string.IsNullOrEmpty(guid), "no ghost subscene: run Build Player Ghost Assets");
-                tw.LoadSubScene(new Unity.Entities.Hash128(guid), 600, tw.Server);
+                tw.LoadSubScene(new Unity.Entities.Hash128(guid), 600);   // server and client: a client without it is disconnected
+                tw.Connect(goInGame: true);
                 Assert.GreaterOrEqual(tw.TickUntil(() => Ready(tw.Server), 600), 0,
                     "the real PlayerGhostPrefab is in the server world (the admission's own check)");
                 bots = tw.Server.GetExistingSystemManaged<WarBotServerSystem>();
@@ -100,6 +102,11 @@ namespace KryticalNova.WarBots.Entities.Tests
                 }
                 Assert.AreEqual(2 * PerSide, botGhosts.Count, "every bot has a ghost and a body");
                 for (int i = 0; i < 10; i++) { tw.Tick(1); yield return null; }
+                var ids = new HashSet<int>();
+                foreach (Entity g in botGhosts)
+                    if (em.HasComponent<Unity.NetCode.GhostInstance>(g)) ids.Add(em.GetComponentData<Unity.NetCode.GhostInstance>(g).ghostId);
+                ids.Remove(0);
+                Assert.AreEqual(2 * PerSide, ids.Count, "every bot ghost has an id of its own (what bots target by)");
                 foreach (GhostBodyEntry e in GhostBodyRegistry.Entries)
                 {
                     if (!ReferenceEquals(e.World, tw.Server) || !bots.IsWarBot(e.Ghost) || e.Body == null) continue;
