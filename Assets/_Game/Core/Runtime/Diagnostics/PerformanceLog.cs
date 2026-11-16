@@ -119,6 +119,8 @@ namespace KryticalNova.Diagnostics
         {
             public const string BrainsMs = "brains_ms";        // the longest brain tick of the last second (Brains)
             public const string RelevancyMs = "relevancy_ms";  // the relevancy fill's time (relevancy, when it lands)
+            public const string SeparationMs = "separation_ms"; // the player separation's mean time per tick over the last second (perf round 4)
+            public const string PredictedMs = "predicted_ms";   // the whole predicted simulation group's mean main-thread time per tick (perf round 4)
             public const string Players = "players";           // players in game, read from the entity side
             public const string Entities = "entities";         // entities in the server world
             public const string Ghosts = "ghosts";             // ghosts the server world sends

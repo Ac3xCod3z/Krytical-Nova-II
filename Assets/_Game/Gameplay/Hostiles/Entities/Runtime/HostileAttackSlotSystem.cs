@@ -7,20 +7,30 @@ using Unity.Transforms;
 
 namespace KryticalNova.Hostiles.Entities
 {
-    /// <summary>A Hostile's place in its target's ring (M6.5, the Amalur stage manager; brain plan s3.6).</summary>
+    /// <summary>A Hostile's place in its target's ring (M6.5, the Amalur stage manager; brain plan s3.6; sticky spots, owner pick 15 Nov 2026).</summary>
     public struct HostileSlot : IComponentData
     {
         /// <summary>
-        /// 1 = it may start a swing this tick: it has a place on its target's ring and, in the ring's fair order (longest waiting first),
-        /// the attack budget left still covers a light swing (the swing itself pays its real cost).
+        /// 1 = it may start a swing this tick: it has the turn to strike (in the ring's fair order, longest waiting first, the attack
+        /// budget left still covers a light swing; the swing itself pays its real cost) and stands on its strike spot.
         /// </summary>
         public byte Held;
-        /// <summary>1 = it has a place on its target's ring (crowding by body size, owner pick A 7 Nov 2026): it stands there, not on the wait ring.</summary>
+        /// <summary>1 = it has a spot on its target's ring (crowding by body size, owner pick A 7 Nov 2026): it stands there, not on the wait ring.</summary>
         public byte Placed;
         /// <summary>The attack cost its swing under way holds (0 = none): given back when its recover ends.</summary>
         public byte Cost;
         /// <summary>The tick it began waiting for a swing (0 = it is swinging, or not in a fight).</summary>
         public uint WaitingSinceTick;
+        /// <summary>1 = it has the turn to strike and steps in to its strike spot (the budget is kept for it until it swings or gives the turn up).</summary>
+        public byte Chosen;
+        /// <summary>The tick it was given the turn to strike.</summary>
+        public uint ChosenTick;
+        /// <summary>1 = it is walking to its spot (it walks until it is there, then holds while it stays within the dead-band).</summary>
+        public byte Walking;
+        /// <summary>Its spot on the ring: radians round the player (0 = +z), kept for the whole fight.</summary>
+        public float Angle;
+        /// <summary>The ghost id of the player whose ring the spot is on (another target: a new spot).</summary>
+        public int RingGhost;
     }
 
     /// <summary>The attack cost held on each player this tick, by ghost id (singleton; the slot system fills it, the swing pays into it).</summary>
@@ -30,13 +40,14 @@ namespace KryticalNova.Hostiles.Entities
     }
 
     /// <summary>
-    /// The stage manager (M6.5, owner Q2 A; crowding by body size, owner pick A 7 Nov 2026): every engaged player carries a ring that
-    /// Hostiles fill by their body's arc (<see cref="HostileRingRules"/>: each stands at the player's radius + its radius + a gap, its arc as
-    /// wide as its body, a Bruiser's counted double, while the arcs fit in 90 % of the circle), laid round the ring so no two overlap, and
-    /// an attack capacity (10) their swings pay into (light 3, heavy 5, given back when the recover ends), so about three swing at once
-    /// and the rest rotate in. A Hostile already swinging keeps its slot; the others are served longest
-    /// waiting first among those in reach, then nearest; one that has just swung goes to the back. One without a slot holds the wait ring (3.5-5 m, on its own
-    /// bearing) facing its target. It limits who swings, never who can be hit (area skills hit everyone, no cap).
+    /// The stage manager (M6.5, owner Q2 A; crowding by body size, owner pick A 7 Nov 2026; sticky spots, owner pick 15 Nov 2026): every
+    /// engaged player carries a ring that Hostiles fill by their body's arc (<see cref="HostileRingRules"/>, a Bruiser's counted double,
+    /// while the arcs fit in 90 % of the circle). Each keeps its spot for the whole fight: it holds it a step out, facing the player, steps
+    /// in to strike from where the bodies touch when it gets the turn, and steps back after. A newcomer takes the free spot nearest where
+    /// it stands; the others move only to make room for it, by the smallest push both ways, so the ring never turns. The attack capacity
+    /// (10) their swings pay into (light 3, heavy 5, given back when the recover ends) lets about three swing at once; turns go longest
+    /// waiting first, one that has just swung to the back. One without a spot holds the wait ring (3.5-5 m, on its own bearing) facing its
+    /// target until a spot frees. It limits who swings, never who can be hit (area skills hit everyone, no cap).
     /// </summary>
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
     [UpdateInGroup(typeof(BrainSimulationGroup))]
@@ -49,17 +60,11 @@ namespace KryticalNova.Hostiles.Entities
         {
             public Entity Entity;
             public int Ghost;
-            public byte Swinging;
-            public byte InReach;
-            public uint WaitingSince;
+            public byte Swinging, Kept, Chosen, Walking;
+            public uint WaitingSince, ChosenTick;
             public float DistSq;
-            public float Arc, Stand, Bearing;
-            public float3 Feet;
-        }
-
-        struct ByBearing : System.Collections.Generic.IComparer<float2>
-        {
-            public int Compare(float2 a, float2 b) => a.x.CompareTo(b.x);   // x = bearing, y = the claim's index
+            public float Arc, Stand, Bearing, Angle;
+            public float3 Feet, At;
         }
 
         struct ClaimOrder : System.Collections.Generic.IComparer<Claim>
@@ -67,11 +72,31 @@ namespace KryticalNova.Hostiles.Entities
             public int Compare(Claim a, Claim b)
             {
                 if (a.Ghost != b.Ghost) return a.Ghost.CompareTo(b.Ghost);
-                if (a.Swinging != b.Swinging) return b.Swinging.CompareTo(a.Swinging);   // swinging first: they keep their slots
-                if (a.InReach != b.InReach) return b.InReach.CompareTo(a.InReach);   // then those that can swing now (one out of reach never hogs a slot)
+                if (a.Kept != b.Kept) return b.Kept.CompareTo(a.Kept);   // a spot once given is kept (sticky spots)
+                if (a.Swinging != b.Swinging) return b.Swinging.CompareTo(a.Swinging);
                 if (a.WaitingSince != b.WaitingSince) return a.WaitingSince.CompareTo(b.WaitingSince);   // longest waiting next
                 if (a.DistSq != b.DistSq) return a.DistSq.CompareTo(b.DistSq);
                 return a.Entity.Index.CompareTo(b.Entity.Index);
+            }
+        }
+
+        struct Turn
+        {
+            public int Claim, Seat, Index;
+            public byte Swinging, Chosen;
+            public uint WaitingSince;
+            public float DistSq;
+        }
+
+        struct TurnOrder : System.Collections.Generic.IComparer<Turn>
+        {
+            public int Compare(Turn a, Turn b)
+            {
+                if (a.Swinging != b.Swinging) return b.Swinging.CompareTo(a.Swinging);   // a swing under way keeps its cost
+                if (a.Chosen != b.Chosen) return b.Chosen.CompareTo(a.Chosen);   // one stepping in keeps its turn
+                if (a.WaitingSince != b.WaitingSince) return a.WaitingSince.CompareTo(b.WaitingSince);
+                if (a.DistSq != b.DistSq) return a.DistSq.CompareTo(b.DistSq);
+                return a.Index.CompareTo(b.Index);
             }
         }
 
@@ -103,9 +128,10 @@ namespace KryticalNova.Hostiles.Entities
             {
                 ref HostileSlot s = ref slot.ValueRW;
                 HostileBrain b = brain.ValueRO;
-                if (b.Mode != HostileMode.Engage || target.ValueRO.GhostId == 0)
+                int ghost = target.ValueRO.GhostId;
+                if (b.Mode != HostileMode.Engage || ghost == 0)
                 {
-                    s = default;
+                    s = default;   // out of the fight: its spot is given up
                     continue;
                 }
                 bool swinging = b.Phase == HostilePhase.Tell || b.Phase == HostilePhase.Windup || b.Phase == HostilePhase.Recover;
@@ -113,110 +139,176 @@ namespace KryticalNova.Hostiles.Entities
                 if (!swinging && s.WaitingSinceTick == 0) s.WaitingSinceTick = now;
                 if (s.Cost > 0)
                 {
-                    book.AttackUsed.TryGetValue(target.ValueRO.GhostId, out int used);
-                    book.AttackUsed[target.ValueRO.GhostId] = used + s.Cost;
+                    book.AttackUsed.TryGetValue(ghost, out int used);
+                    book.AttackUsed[ghost] = used + s.Cost;
                 }
+                bool kept = s.Placed != 0 && s.RingGhost == ghost;
                 float3 here = transform.ValueRO.Position, feet = target.ValueRO.LastFeet;
                 float bodyRadius = life.ValueRO.RadiusMm * 0.001f;
-                float stand = HostileRingRules.Stand(c.PlayerRadius, bodyRadius, c.SlotStandGap, life.ValueRO.AttackRange + c.ReachSlack);
+                float stand = HostileRingRules.Stand(c.PlayerRadius, bodyRadius, c.SlotStandGap);
                 claims.Add(new Claim
                 {
                     Entity = entity,
-                    Ghost = target.ValueRO.GhostId,
+                    Ghost = ghost,
                     Swinging = (byte)(swinging ? 1 : 0),
-                    InReach = (byte)(HostileRules.InReach(transform.ValueRO.Position, target.ValueRO.LastFeet, life.ValueRO.AttackRange, c.ReachSlack, life.ValueRO.ReachAbove) ? 1 : 0),
+                    Kept = (byte)(kept ? 1 : 0),
+                    Chosen = kept ? s.Chosen : (byte)0,
+                    Walking = kept ? s.Walking : (byte)0,
                     WaitingSince = swinging ? 0u : s.WaitingSinceTick,
-                    DistSq = SenseQueries.FlatSq(transform.ValueRO.Position, target.ValueRO.LastFeet),
+                    ChosenTick = s.ChosenTick,
+                    DistSq = SenseQueries.FlatSq(here, feet),
                     Arc = HostileRingRules.Arc(bodyRadius, stand, life.ValueRO.Tier == (byte)HostileTier.Bruiser ? c.BruiserArcFactor : 1f),
                     Stand = stand,
                     Bearing = HostileRingRules.Bearing(feet, here),
+                    Angle = s.Angle,
                     Feet = feet,
+                    At = here,
                 });
             }
             claims.Sort(new ClaimOrder());
-
-            float room = HostileRingRules.Room(c.SlotRingFill);
-            var holders = new NativeList<float2>(16, Allocator.Temp);
-            int ghost = 0;
-            float arcUsed = 0f;
-            int budgetLeft = 0;
-            for (int i = 0; i < claims.Length; i++)
+            int start = 0;
+            for (int i = 1; i <= claims.Length; i++)
             {
-                Claim claim = claims[i];
-                if (i == 0 || claim.Ghost != ghost)
-                {
-                    PlaceHolders(ref state, claims, holders);
-                    ghost = claim.Ghost;
-                    arcUsed = 0f;
-                    book.AttackUsed.TryGetValue(ghost, out int spent);
-                    budgetLeft = c.AttackCapacity - spent;
-                }
-                // one swinging keeps its place even past the room (it was given it); the others while their arcs still fit
-                bool placed = claim.Swinging != 0 || arcUsed + claim.Arc <= room + 1e-4f;
-                if (placed) { arcUsed += claim.Arc; holders.Add(new float2(claim.Bearing, i)); }
-                // the turn to swing goes in the same fair order: the attack system meets them in entity order, so it is decided here
-                bool held = claim.Swinging != 0;
-                if (!held && placed && budgetLeft >= c.AttackCostLight) { held = true; budgetLeft -= c.AttackCostLight; }
-                HostileSlot s = SystemAPI.GetComponent<HostileSlot>(claim.Entity);
-                s.Held = (byte)(held ? 1 : 0);
-                s.Placed = (byte)(placed ? 1 : 0);
-                SystemAPI.SetComponent(claim.Entity, s);
-                if (placed) continue;
-
-                // no place: hold the wait ring on its own bearing, facing the target
-                BrainMover m = SystemAPI.GetComponent<BrainMover>(claim.Entity);
-                float3 at = SystemAPI.GetComponent<LocalTransform>(claim.Entity).Position;
-                float3 feet = SystemAPI.GetComponent<HostileTarget>(claim.Entity).LastFeet;
-                float2 away = at.xz - feet.xz;
-                float dist = math.length(away);
-                float2 dir = dist > 1e-3f ? away / dist : new float2(0f, 1f);
-                float ring = math.clamp(dist, c.WaitRingMin, c.WaitRingMax);
-                if (math.abs(dist - ring) < 0.25f) m.Flags = (byte)(BrainMoverFlags.Stop | BrainMoverFlags.Face);
-                else { m.Dest = new float3(feet.x + dir.x * ring, at.y, feet.z + dir.y * ring); m.Flags = BrainMoverFlags.Run; }
-                float2 to = feet.xz - at.xz;
-                if (math.lengthsq(to) > 1e-6f) m.Yaw = math.atan2(to.x, to.y);
-                SystemAPI.SetComponent(claim.Entity, m);
+                if (i < claims.Length && claims[i].Ghost == claims[start].Ghost) continue;
+                SeatRing(ref state, c, claims, start, i, now, book);
+                start = i;
             }
-            PlaceHolders(ref state, claims, holders);
-            holders.Dispose();
             claims.Dispose();
         }
 
         /// <summary>
-        /// One player's ring: its holders (bearing, claim index) laid round it so no two arcs overlap (<see cref="HostileRingRules.Layout"/>);
-        /// one not swinging walks to its place at its own stand distance and faces the player. Clears <paramref name="holders"/>.
+        /// One player's ring (claims <paramref name="start"/> to <paramref name="end"/>, in <see cref="ClaimOrder"/>): spots kept, newcomers
+        /// seated while the room lasts, overlaps cleared both ways, turns to strike given, and each Hostile walked to (or held on) its spot.
         /// </summary>
-        void PlaceHolders(ref SystemState state, NativeList<Claim> claims, NativeList<float2> holders)
+        void SeatRing(ref SystemState state, in HostileBrainConfig c, NativeList<Claim> claims, int start, int end, uint now, HostileSlotBook book)
         {
-            int n = holders.Length;
-            if (n == 0) return;
-            holders.Sort(new ByBearing());
-            var bearings = new NativeArray<float>(n, Allocator.Temp);
+            int n = end - start;
+            var angles = new NativeArray<float>(n, Allocator.Temp);
             var arcs = new NativeArray<float>(n, Allocator.Temp);
-            var places = new NativeArray<float>(n, Allocator.Temp);
+            var seatOf = new NativeArray<int>(n, Allocator.Temp);
+            var claimOf = new NativeArray<int>(n, Allocator.Temp);
+            int count = 0;
+            float arcUsed = 0f, room = HostileRingRules.Room(c.SlotRingFill);
+            for (int k = 0; k < n; k++) seatOf[k] = -1;
+
+            // 1. kept spots stay (sticky); a swing under way keeps where it stands
             for (int k = 0; k < n; k++)
             {
-                bearings[k] = holders[k].x;
-                arcs[k] = claims[(int)holders[k].y].Arc;
+                Claim cl = claims[start + k];
+                bool left = cl.Kept != 0 && math.distancesq(HostileRingRules.Spot(cl.Feet, cl.Angle, cl.Stand + c.SlotHoldBack, cl.At.y).xz, cl.At.xz)
+                    > c.SlotReseatDistance * c.SlotReseatDistance;
+                if (cl.Kept != 0 ? left : cl.Swinging == 0) continue;
+                Seat(k, cl.Kept != 0 ? cl.Angle : cl.Bearing, cl.Arc, ref count, ref arcUsed, angles, arcs, seatOf, claimOf);
             }
-            HostileRingRules.Layout(bearings, arcs, places);
+            // 2. a kept one the player ran far from takes the free spot nearest where it stands now (it never walks through the player)
             for (int k = 0; k < n; k++)
             {
-                Claim claim = claims[(int)holders[k].y];
-                if (claim.Swinging != 0) continue;   // a swing under way stays where it is
-                float3 at = SystemAPI.GetComponent<LocalTransform>(claim.Entity).Position;
-                float3 spot = new float3(claim.Feet.x + math.sin(places[k]) * claim.Stand, at.y, claim.Feet.z + math.cos(places[k]) * claim.Stand);
-                BrainMover m = SystemAPI.GetComponent<BrainMover>(claim.Entity);
-                if (math.lengthsq(spot.xz - at.xz) < 0.25f * 0.25f) m.Flags = (byte)(BrainMoverFlags.Stop | BrainMoverFlags.Face);
-                else { m.Dest = spot; m.Flags = BrainMoverFlags.Run; }
-                float2 to = claim.Feet.xz - at.xz;
+                Claim cl = claims[start + k];
+                if (cl.Kept == 0 || seatOf[k] >= 0) continue;
+                HostileRingRules.FreeSpot(angles, arcs, count, cl.Arc, cl.Bearing, out float spot);
+                Seat(k, spot, cl.Arc, ref count, ref arcUsed, angles, arcs, seatOf, claimOf);
+            }
+            // 3. newcomers, longest waiting first, while their arcs fit: the free spot nearest where each stands
+            for (int k = 0; k < n; k++)
+            {
+                Claim cl = claims[start + k];
+                if (seatOf[k] >= 0 || arcUsed + cl.Arc > room + 1e-4f) continue;
+                HostileRingRules.FreeSpot(angles, arcs, count, cl.Arc, cl.Bearing, out float spot);
+                Seat(k, spot, cl.Arc, ref count, ref arcUsed, angles, arcs, seatOf, claimOf);
+            }
+            // a newcomer with no gap wide enough: its neighbours make room, each moving half (nothing moves when nothing overlaps)
+            HostileRingRules.Spread(angles, arcs, count);
+
+            // the turns to strike, in the fair order, while the player's attack budget covers a light swing
+            int ghost = claims[start].Ghost;
+            book.AttackUsed.TryGetValue(ghost, out int spent);
+            int budgetLeft = c.AttackCapacity - spent;
+            var turns = new NativeList<Turn>(math.max(1, count), Allocator.Temp);
+            for (int seat = 0; seat < count; seat++)
+            {
+                Claim cl = claims[start + claimOf[seat]];
+                turns.Add(new Turn
+                {
+                    Claim = start + claimOf[seat], Seat = seat, Index = cl.Entity.Index, Swinging = cl.Swinging, Chosen = cl.Chosen,
+                    WaitingSince = cl.WaitingSince, DistSq = cl.DistSq,
+                });
+            }
+            turns.Sort(new TurnOrder());
+            for (int t = 0; t < turns.Length; t++)
+            {
+                Turn turn = turns[t];
+                Claim cl = claims[turn.Claim];
+                HostileSlot s = SystemAPI.GetComponent<HostileSlot>(cl.Entity);
+                bool swinging = cl.Swinging != 0;
+                bool chosen = swinging;
+                if (!swinging && cl.Chosen != 0 && now - cl.ChosenTick > c.SlotStepInTicks)
+                    s.WaitingSinceTick = now;   // it could not step in in time: the turn goes on, it goes to the back
+                else if (!swinging && budgetLeft >= c.AttackCostLight)
+                {
+                    chosen = true;
+                    budgetLeft -= c.AttackCostLight;
+                }
+                if (chosen && !swinging && cl.Chosen == 0) s.ChosenTick = now;
+
+                // where it stands: its strike spot (bodies a gap apart) with the turn, a step farther out without it
+                float angle = angles[turn.Seat];
+                float3 spot = HostileRingRules.Spot(cl.Feet, angle, chosen ? cl.Stand : cl.Stand + c.SlotHoldBack, cl.At.y);
+                float off = math.distance(spot.xz, cl.At.xz);
+                // a walk starts past the dead-band (the strike spot's reach with the turn) and goes on until it is settled on the spot
+                bool walking = !swinging && (off > (chosen ? c.SlotStrikeArrive : c.SlotHoldDeadBand) || (cl.Walking != 0 && off > c.SlotSettle));
+
+                s.Held = (byte)(chosen && (swinging || off <= c.SlotStrikeArrive) ? 1 : 0);
+                s.Chosen = (byte)(chosen && !swinging ? 1 : 0);
+                s.Walking = (byte)(walking ? 1 : 0);
+                s.Placed = 1;
+                s.Angle = angle;
+                s.RingGhost = ghost;
+                SystemAPI.SetComponent(cl.Entity, s);
+
+                BrainMover m = SystemAPI.GetComponent<BrainMover>(cl.Entity);
+                // a swing under way stands where it is (it never walks on into the player); one on its spot holds it
+                if (walking) { m.Dest = spot; m.Flags = BrainMoverFlags.Run; }
+                else m.Flags = (byte)(BrainMoverFlags.Stop | BrainMoverFlags.Face);
+                float2 to = cl.Feet.xz - cl.At.xz;
                 if (math.lengthsq(to) > 1e-6f) m.Yaw = math.atan2(to.x, to.y);
-                SystemAPI.SetComponent(claim.Entity, m);
+                SystemAPI.SetComponent(cl.Entity, m);
             }
-            bearings.Dispose();
+
+            // no spot: hold the wait ring on its own bearing, facing the target, until one frees
+            for (int k = 0; k < n; k++)
+            {
+                if (seatOf[k] >= 0) continue;
+                Claim cl = claims[start + k];
+                HostileSlot s = SystemAPI.GetComponent<HostileSlot>(cl.Entity);
+                s.Held = 0; s.Placed = 0; s.Chosen = 0; s.Walking = 0; s.RingGhost = 0;
+                SystemAPI.SetComponent(cl.Entity, s);
+                BrainMover m = SystemAPI.GetComponent<BrainMover>(cl.Entity);
+                float2 away = cl.At.xz - cl.Feet.xz;
+                float dist = math.length(away);
+                float2 dir = dist > 1e-3f ? away / dist : new float2(0f, 1f);
+                float ring = math.clamp(dist, c.WaitRingMin, c.WaitRingMax);
+                if (math.abs(dist - ring) < c.SlotHoldDeadBand) m.Flags = (byte)(BrainMoverFlags.Stop | BrainMoverFlags.Face);
+                else { m.Dest = new float3(cl.Feet.x + dir.x * ring, cl.At.y, cl.Feet.z + dir.y * ring); m.Flags = BrainMoverFlags.Run; }
+                float2 to = cl.Feet.xz - cl.At.xz;
+                if (math.lengthsq(to) > 1e-6f) m.Yaw = math.atan2(to.x, to.y);
+                SystemAPI.SetComponent(cl.Entity, m);
+            }
+            turns.Dispose();
+            angles.Dispose();
             arcs.Dispose();
-            places.Dispose();
-            holders.Clear();
+            seatOf.Dispose();
+            claimOf.Dispose();
+        }
+
+        static void Seat(int k, float angle, float arc, ref int count, ref float arcUsed, NativeArray<float> angles, NativeArray<float> arcs,
+            NativeArray<int> seatOf, NativeArray<int> claimOf)
+        {
+            angles[count] = HostileRingRules.Wrap(angle);
+            arcs[count] = arc;
+            seatOf[k] = count;
+            claimOf[count] = k;
+            count++;
+            arcUsed += arc;
         }
     }
 }

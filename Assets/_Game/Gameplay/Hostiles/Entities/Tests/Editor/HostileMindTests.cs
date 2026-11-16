@@ -41,6 +41,12 @@ namespace KryticalNova.Hostiles.Entities.Tests
 
         public EntityManager Em => World.EntityManager;
 
+        /// <summary>
+        /// Metres per second the brains walk where their mover sends them after each tick (0 = they stand still, as most tests want). A
+        /// stand-in for the game's mover: straight to the destination, no paths or separation, so tests see only the ring's own spacing.
+        /// </summary>
+        public float MoveSpeed;
+
         public Entity Hostile(float3 at, byte behaviour, uint stableId = 1, float aggro = 9f, float range = 2f)
         {
             EntityManager em = Em;
@@ -83,6 +89,25 @@ namespace KryticalNova.Hostiles.Entities.Tests
                 m_Decide.Update(World.Unmanaged);
                 m_Slots.Update(World.Unmanaged);
                 m_Attack.Update(World.Unmanaged);
+                if (MoveSpeed > 0f) Walk(MoveSpeed / TickRate);
+            }
+        }
+
+        void Walk(float step)
+        {
+            using var query = Em.CreateEntityQuery(typeof(BrainMover), typeof(LocalTransform));
+            using var entities = query.ToEntityArray(Unity.Collections.Allocator.Temp);
+            foreach (Entity e in entities)
+            {
+                BrainMover m = Em.GetComponentData<BrainMover>(e);
+                if ((m.Flags & BrainMoverFlags.Stop) != 0 || (m.Flags & BrainMoverFlags.Run) == 0) continue;
+                LocalTransform t = Em.GetComponentData<LocalTransform>(e);
+                float2 to = m.Dest.xz - t.Position.xz;
+                float d = math.length(to);
+                if (d < 1e-5f) continue;
+                float2 next = t.Position.xz + to / d * math.min(step, d);
+                t.Position = new float3(next.x, t.Position.y, next.y);
+                Em.SetComponentData(e, t);
             }
         }
 
