@@ -103,8 +103,13 @@ namespace KryticalNova.Player.Entities
     [BurstCompile]
     public partial struct PositionHistoryWriteSystem : ISystem
     {
-        [BurstCompile]
-        public void OnCreate(ref SystemState state) => state.RequireForUpdate<NetworkTime>();
+        bool m_Serial;
+
+        public void OnCreate(ref SystemState state)   // not Burst: reads the command line once (perf round 4 switch)
+        {
+            state.RequireForUpdate<NetworkTime>();
+            m_Serial = PlayerPerfSwitches.MoveSerial;
+        }
 
         /// <summary>Perf round 4: two Burst jobs over every ring in parallel, players first, then the other targets (as before).</summary>
         [BurstCompile]
@@ -112,9 +117,9 @@ namespace KryticalNova.Player.Entities
         {
             NetworkTick tick = SystemAPI.GetSingleton<NetworkTime>().ServerTick;
             if (!tick.IsValid) return;
-            new PlayerRingJob { Tick = tick }.ScheduleParallel();
             // the attackable ghosts that are not players (M4.2b): where the server wrote them this tick
-            new TargetRingJob { Tick = tick }.ScheduleParallel();
+            if (m_Serial) { new PlayerRingJob { Tick = tick }.Schedule(); new TargetRingJob { Tick = tick }.Schedule(); }
+            else { new PlayerRingJob { Tick = tick }.ScheduleParallel(); new TargetRingJob { Tick = tick }.ScheduleParallel(); }
         }
 
         [BurstCompile]

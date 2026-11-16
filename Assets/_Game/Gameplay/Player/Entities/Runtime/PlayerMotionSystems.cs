@@ -211,10 +211,11 @@ namespace KryticalNova.Player.Entities
     {
         ComponentLookup<ClientMotionPlan> m_ClientPlans;
         ComponentLookup<ServerOrder> m_Orders;
+        bool m_Serial;
 
-        [BurstCompile]
-        public void OnCreate(ref SystemState state)
+        public void OnCreate(ref SystemState state)   // not Burst: reads the command line once (perf round 4 switch)
         {
+            m_Serial = PlayerPerfSwitches.MoveSerial;
             state.RequireForUpdate<NetworkTime>();
             state.RequireForUpdate<PlayerGhostTag>();
             m_ClientPlans = state.GetComponentLookup<ClientMotionPlan>(true);
@@ -233,10 +234,11 @@ namespace KryticalNova.Player.Entities
                 ? rate.SimulationTickRate : 30);
             m_ClientPlans.Update(ref state);
             m_Orders.Update(ref state);
-            new FlightJob
+            var job = new FlightJob
             {
                 Curves = curves, TickMicros = tickMicros, Tick = nt.ServerTick, ClientPlans = m_ClientPlans, Orders = m_Orders,
-            }.ScheduleParallel();
+            };
+            if (m_Serial) job.Schedule(); else job.ScheduleParallel();
         }
 
         [BurstCompile(FloatMode = FloatMode.Deterministic, FloatPrecision = FloatPrecision.High)]
