@@ -18,7 +18,8 @@
         "KryticalNova.Items",
         "KryticalNova.Economy",
         "KryticalNova.Wallet",
-        "KryticalNova.Hostiles"
+        "KryticalNova.Hostiles",
+        "KryticalNova.Player"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

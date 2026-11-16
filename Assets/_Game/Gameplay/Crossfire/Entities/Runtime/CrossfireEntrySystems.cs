@@ -80,8 +80,7 @@ namespace KryticalNova.Crossfire.Entities
             foreach (GhostBodyEntry e in GhostBodyRegistry.Entries)
             {
                 if (!ReferenceEquals(e.World, World) || !ReferenceEquals(e.Body, body) || !em.Exists(e.Ghost) || !em.HasComponent<PlayerLevelTag>(e.Ghost)) continue;
-                IFactionMember member = body.GetComponentInParent<IFactionMember>();
-                return Port(e.Ghost, em.GetComponentData<PlayerLevelTag>(e.Ghost).Level, member != null ? member.Faction : FactionId.None, portalId, out result);
+                return Port(e.Ghost, em.GetComponentData<PlayerLevelTag>(e.Ghost).Level, HomeOf(body), portalId, out result);
             }
             return false;
         }
@@ -98,10 +97,12 @@ namespace KryticalNova.Crossfire.Entities
             if (answer == CrossfirePortAnswer.NotThisPort || answer == CrossfirePortAnswer.NotCalled) return false;
             string message = CrossfirePort.Message(settings, answer, level);
             EntityManager em = EntityManager;
-            if (answer == CrossfirePortAnswer.Land && SideFull(faction))
+            if (answer == CrossfirePortAnswer.Land && !m_Sides.TryGetSide(ghost, out _) && SideFull(faction))
             {
                 Refused++;
-                result = new ZoneTransferResult(false, Fill(settings.sideFullText, settings, m_Sides.Real(faction)));
+                bool offered = TryOfferMerc(ghost, faction, settings);
+                result = new ZoneTransferResult(false, offered ? null : Fill(settings.sideFullText, settings, m_Sides.Real(faction)));
+                FlushTells();
                 return true;
             }
             if (answer != CrossfirePortAnswer.Land || !em.Exists(ghost) || !em.HasComponent<TeleportRequest>(ghost))
@@ -142,10 +143,13 @@ namespace KryticalNova.Crossfire.Entities
                     if (IsBot(entity)) continue;   // War Bots are never admitted, paid or sent back as real players (review 1, item 4)
                     if (!inArea && m_Sides.TryGetSide(entity, out _) && !m_Arriving.Contains(entity)) m_Leaving.Add(entity);   // left the war (item 2)
                     if (inArea) m_Arriving.Remove(entity);
+                    if (inArea && m_Mercs.Contains(entity) && !m_MercInside.Contains(entity)) m_ToSide.Add(entity);   // a Merc only once inside the war area
                     if (inYard && joinOpen && !m_Entries.TryEntry(entity, out _) && m_Entries.TryOutside(entity, out CrossfireSpot from) && !Admit(entity, from))
                         continue;
                     m_Entries.Observe(entity, spot, inArea, inYard, joinOpen);
                 }
+                foreach (Entity who in m_ToSide) EnterAsMerc(who);
+                m_ToSide.Clear();
                 foreach (Entity who in m_Leaving) LeaveWar(who, true);
                 m_Leaving.Clear();
                 SendRefusedBack();

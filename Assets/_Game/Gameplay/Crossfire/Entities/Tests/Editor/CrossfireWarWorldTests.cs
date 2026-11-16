@@ -154,6 +154,7 @@ namespace KryticalNova.Crossfire.Entities.Tests
         public void TheCap_RefusesTheSidesNextRealPlayer_AtThePortAndAtTheYard()
         {
             m_Settings.capPerFaction = 1;
+            m_Settings.offerMercs = false;   // this test is the plain refusal (Mercs: CrossfireMercWorldTests)
             var (rig, _, entry) = Start(new[] { FactionId.Hegemony, FactionId.Hegemony, FactionId.Null });
             WarBots.Fill = null;   // no real War Bots in a test of the cap
             using (rig)

@@ -51,6 +51,22 @@ namespace KryticalNova.Crossfire.Entities
         public double WarStart;   // which war's vote (an answer to an old one is dropped)
     }
 
+    /// <summary>Server to one real player refused by their full side: a Merc place on a short side (owner, 16 Nov 2026).</summary>
+    public struct CrossfireMercOfferRpc : IRpcCommand
+    {
+        public FixedString32Bytes Eyebrow;
+        public FixedString512Bytes Text;
+        public float Seconds;
+        public double WarStart;
+    }
+
+    /// <summary>A player's answer to <see cref="CrossfireMercOfferRpc"/>.</summary>
+    public struct CrossfireMercAnswerRpc : IRpcCommand
+    {
+        public byte Yes;
+        public double WarStart;
+    }
+
     /// <summary>A player's answer to <see cref="CrossfireVoteRpc"/>.</summary>
     public struct CrossfireVoteAnswerRpc : IRpcCommand
     {
