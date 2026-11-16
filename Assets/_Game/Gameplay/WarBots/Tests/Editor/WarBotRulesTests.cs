@@ -358,5 +358,21 @@ namespace KryticalNova.WarBots.Tests
             Assert.IsFalse(WarBotRules.MaySay(s, 0, 1000, roll: 0.99), "the chance can say no");
             foreach (string line in s.lowLines) StringAssert.DoesNotContain("heal", line.ToLowerInvariant(), "no healers in the game: a bot never asks for a heal");
         }
+
+        [Test]
+        public void NoRealPlayerLeft_AllBotsGoHome_AfterTheGrace_AndAPlayerBackStartsItAgain()
+        {
+            // Master-24, 16 Nov 2026: bots fight for real players only
+            double since = double.NaN;
+            Assert.IsFalse(WarBotRules.AllGoHome(2, ref since, 100, s), "real players there: the bots stay");
+            Assert.IsTrue(double.IsNaN(since));
+            Assert.IsFalse(WarBotRules.AllGoHome(0, ref since, 200, s), "the last one just went: the grace starts");
+            Assert.AreEqual(200, since);
+            Assert.IsFalse(WarBotRules.AllGoHome(0, ref since, 200 + s.noRealPlayerSeconds - 0.1, s), "inside the grace");
+            Assert.IsFalse(WarBotRules.AllGoHome(1, ref since, 200 + s.noRealPlayerSeconds - 0.05, s), "one came back (a relog)");
+            Assert.IsTrue(double.IsNaN(since), "the count starts again");
+            Assert.IsFalse(WarBotRules.AllGoHome(0, ref since, 300, s));
+            Assert.IsTrue(WarBotRules.AllGoHome(0, ref since, 300 + s.noRealPlayerSeconds, s), "nobody for the whole grace: every bot leaves");
+        }
     }
 }

@@ -109,6 +109,9 @@ namespace KryticalNova.WarBots.Entities
         public int Removed { get; private set; }
         /// <summary>The last refusal of an admission (null none).</summary>
         public string LastRefusal { get; private set; }
+        /// <summary>Times every bot went home because no real player was left in the war (tests and the server log).</summary>
+        public int WentHomeAlone { get; private set; }
+        double m_NoRealSince = double.NaN;
 
         protected override void OnCreate()
         {
@@ -362,6 +365,7 @@ namespace KryticalNova.WarBots.Entities
         void RemoveAll()
         {
             for (int i = m_Bots.Count - 1; i >= 0; i--) Remove(m_Bots[i]);
+            m_NoRealSince = double.NaN;
         }
 
         // ================================================================== thinking
@@ -381,6 +385,16 @@ namespace KryticalNova.WarBots.Entities
                 Remove(b);
             }
             WarBotSettings s = Config;
+            // bots fight for real players only: none left in the war (past a short grace) and every bot goes home
+            if (WarBotRules.AllGoHome(RealPlayersInWar(), ref m_NoRealSince, m_Now, s))
+            {
+                int was = m_Bots.Count;
+                RemoveAll();
+                m_NoRealSince = double.NaN;
+                WentHomeAlone++;
+                Debug.Log($"[WarBots] No real player left in the war for {s.noRealPlayerSeconds:0} s: all {was} bots left.");
+                return;
+            }
             for (int i = 0; i < m_Bots.Count; i++)
             {
                 Bot b = m_Bots[i];
@@ -390,6 +404,26 @@ namespace KryticalNova.WarBots.Entities
                 try { Think(b, s); }
                 catch (Exception e) { Debug.LogException(e); }
             }
+        }
+
+        /// <summary>Real players (not bots) with a body in the war area, or anywhere on a map with no areas.</summary>
+        int RealPlayersInWar()
+        {
+            EntityManager em = EntityManager;
+            bool areas = CrossfireArea.All.Count > 0;
+            int n = 0;
+            foreach (GhostBodyEntry e in GhostBodyRegistry.Entries)
+            {
+                if (!ReferenceEquals(e.World, World) || e.Body == null || !em.Exists(e.Ghost) || m_ByGhost.ContainsKey(e.Ghost)) continue;
+                if (PlayerKeys.IsServerBot(e.Key)) continue;
+                if (areas && em.HasComponent<PlayerPose>(e.Ghost))
+                {
+                    var pose = em.GetComponentData<PlayerPose>(e.Ghost);
+                    if (!CrossfireArea.AnyContains(new Vector3(pose.XMm, pose.YMm, pose.ZMm) * 0.001f, false)) continue;
+                }
+                n++;
+            }
+            return n;
         }
 
         /// <summary>Every player in the war area (or everywhere, on a map with no areas): side, spot, health, target.</summary>

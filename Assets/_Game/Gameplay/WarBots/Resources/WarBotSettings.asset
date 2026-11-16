@@ -79,6 +79,7 @@ MonoBehaviour:
   rallySpreadMinMeters: 1.5
   rallySpreadStepMeters: 0.9
   rallySpreadRings: 6
+  noRealPlayerSeconds: 15
   mountShare: 0.3
   rideBeyondMeters: 40
   chatGapSeconds: 25

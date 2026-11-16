@@ -125,6 +125,10 @@ namespace KryticalNova.WarBots
         [Tooltip("...in this many rings, then the rings start again (bots go round the spot at the golden angle, so none stand on another).")]
         [Min(1)] public int rallySpreadRings = 6;
 
+        [Header("When the real players are gone (Master-24, 16 Nov 2026)")]
+        [Tooltip("Bots fight for real players only: once no real player has been in the war for this many seconds, every bot leaves (a short grace, so one who relogs or steps out a moment does not empty the war).")]
+        [Min(1f)] public float noRealPlayerSeconds = 15f;
+
         [Header("Mounts")]
         [Tooltip("The share of bots that bring a mount (0-1). It rides the way to the field and gets off to fight.")]
         [Range(0f, 1f)] public float mountShare = 0.3f;

@@ -78,6 +78,11 @@ namespace KryticalNova.WarBots.Entities.Tests
                 Assert.IsNotNull(bots, "the server world runs War Bots");
                 Assert.AreSame(bots, KryticalNova.Crossfire.Entities.WarBots.Fill, "War Bots is Crossfire's IWarBotFill");
                 yield return null;
+                // this test world's client has no body (no real player in the war): a long grace for the fight, the real one at the end
+                var settings = Object.Instantiate(WarBotSettings.Instance);
+                made.Add(settings);
+                settings.noRealPlayerSeconds = 100000f;
+                bots.Settings = settings;
 
                 // the vote passed on both sides: Crossfire asks for 32 each, at its side's Rally Point, bracket X
                 int hegemony = bots.Fill(new WarBotRequest { Faction = FactionId.Hegemony, Bracket = 10, Count = PerSide, RallyAt = HegemonyRally, RallyYaw = 90f },
@@ -142,13 +147,15 @@ namespace KryticalNova.WarBots.Entities.Tests
                 int score = killsBy[FactionId.Hegemony] + killsBy[FactionId.Null];
                 Debug.Log($"[WarBotsRealWar] admitted {bots.Admitted}, fight {ticks} ticks, kill events {anyKilled}, bot deaths {deaths}, "
                           + $"score Hegemony {killsBy[FactionId.Hegemony]} / Null {killsBy[FactionId.Null]}, live {bots.Live}");
+
+                // no real player in the war (the client has no body): past the grace every bot goes home, through the game's leave
+                settings.noRealPlayerSeconds = 1f;
+                int homeTicks = tw.TickUntil(() => bots.Live == 0, 120);
+                for (int i = 0; i < 10; i++) { tw.Tick(1); yield return null; }
+                Debug.Log($"[WarBotsRealWar] after the guard: live {bots.Live}, removed {bots.Removed}, went home alone {bots.WentHomeAlone} (in {homeTicks} ticks)");
                 Assert.Greater(deaths, 0, $"a bot died in {ticks} ticks (kill events {anyKilled})");
                 Assert.Greater(score, 0, $"a kill counted for the killer's side, as Crossfire scores it (kill events {anyKilled}, bot deaths {deaths})");
-
-                // the war's end: every bot leaves, through the game's leave
-                bots.EndWar();
-                for (int i = 0; i < 10; i++) { tw.Tick(1); yield return null; }
-                Debug.Log($"[WarBotsRealWar] after the end: live {bots.Live}, removed {bots.Removed}");
+                Assert.AreEqual(1, bots.WentHomeAlone, "no real player left: the bots went home on their own");
                 Assert.AreEqual(0, bots.Live, "no bot is left");
                 Assert.AreEqual(2 * PerSide, bots.Removed, "every bot went");
                 int ghostsLeft = 0;

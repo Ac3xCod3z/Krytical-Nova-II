@@ -495,6 +495,18 @@ namespace KryticalNova.WarBots
             return false;
         }
 
+        /// <summary>
+        /// War Bots fight for real players only (Master-24, 16 Nov 2026): true once no real player has been in the war for
+        /// <see cref="WarBotSettings.noRealPlayerSeconds"/>, so every bot leaves. <paramref name="noneSince"/> is when the last real
+        /// player went (NaN while one is there); it is kept here, so a player back within the grace starts the count again.
+        /// </summary>
+        public static bool AllGoHome(int realPlayers, ref double noneSince, double now, WarBotSettings s)
+        {
+            if (realPlayers > 0) { noneSince = double.NaN; return false; }
+            if (double.IsNaN(noneSince)) noneSince = now;
+            return now - noneSince >= s.noRealPlayerSeconds;
+        }
+
         static double Clamp01(double x) => x < 0d ? 0d : x > 1d ? 1d : x;
     }
 }
