@@ -27,6 +27,26 @@ MonoBehaviour:
   maxLevel: 112
   zoneBrackets: 0a000000
   portPortalId: zone01-northeast
+  capPerFaction: 33
+  sideFullText: 'Crossfire: your side is full ({cap} of {cap}), so you can''t join
+    this war.'
+  tookBotsPlaceText: 'Crossfire: you take a War Bot''s place on your side.'
+  voteSeconds: 20
+  voteEyebrow: CROSSFIRE
+  voteText: Your side has {real} of {cap} players. Fill it to {cap} with War Bots?
+  votePassedText: 'Crossfire: your side voted yes. War Bots fill it to {cap}.'
+  voteFailedText: 'Crossfire: your side voted no. You fight with {real}.'
+  winExperience: 50000
+  tieExperience: 30000
+  loseExperience: 20000
+  wonText: 'Crossfire is over: your side WON with {kills} kills ({score}). +{exp}
+    EXP.'
+  tiedText: 'Crossfire is over: a TIE at {kills} kills ({score}). +{exp} EXP.'
+  lostText: 'Crossfire is over: your side lost with {kills} kills ({score}). +{exp}
+    EXP.'
+  killDropChance: 0.0005
+  killDropItemIds: 
+  killDropText: 'Crossfire: your kill dropped something rare!'
   callText: 'Crossfire! Bracket {bracket} (levels {levels}): the war starts in {time}.
     {where}'
   whereText: Go through the Transit Row port to reach your Rally Point.

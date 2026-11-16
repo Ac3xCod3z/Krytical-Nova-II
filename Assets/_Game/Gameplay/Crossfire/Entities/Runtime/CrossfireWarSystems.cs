@@ -1,0 +1,413 @@
+using System;
+using System.Collections.Generic;
+using KryticalNova.Core;
+using KryticalNova.Factions;
+using KryticalNova.Items;
+using KryticalNova.Player.Entities;
+using KryticalNova.Player.Entities.Presentation;
+using KryticalNova.Progression;
+using Unity.Collections;
+using Unity.Entities;
+using Unity.NetCode;
+using UnityEngine;
+
+namespace KryticalNova.Crossfire.Entities
+{
+    /// <summary>
+    /// Crossfire's war itself (owner, 16 Nov 2026; CROSSFIRE-WARBOTS-BRIEF Part A and the owner's corrections), on the entry system that
+    /// already sees who comes into a Rally Point:
+    /// <list type="bullet">
+    /// <item>The sides: each real player who joins fights for their faction; a side holds <see cref="CrossfireSettings.capPerFaction"/>
+    /// (33) real players and War Bots together; the next real player is refused and put back where they came from, and a real player
+    /// always takes a bot's place (the bot leaves).</item>
+    /// <item>The War Bot vote: when the Rally starts, every side short of the cap (with the server running War Bots) is asked once; yes
+    /// fills it to the cap with bots before the gates open (<see cref="IWarBotFill"/>), no or no answer leaves it short.</item>
+    /// <item>The team deathmatch: kills in the War count for the killer's side (a side never scores on its own); the HUD shows them; at the
+    /// War's end the most kills wins, a tie is possible, and every real player is paid the war EXP of their side's outcome.</item>
+    /// <item>A kill of a real player by a real player drops an item, extremely rarely; War Bots never drop and earn nothing here.</item>
+    /// </list>
+    /// </summary>
+    public partial class CrossfireEntryServerSystem
+    {
+        readonly CrossfireSides<Entity> m_Sides = new CrossfireSides<Entity>();
+        readonly List<(Entity who, CrossfireSpot to)> m_Refused = new List<(Entity, CrossfireSpot)>();
+        readonly List<FactionId> m_BotsOut = new List<FactionId>();
+        readonly Dictionary<FactionId, (int yes, int no)> m_Votes = new Dictionary<FactionId, (int, int)>();
+        readonly HashSet<Entity> m_Voted = new HashSet<Entity>();
+        readonly List<Entity> m_RealPlayers = new List<Entity>();
+        System.Random m_Random = new System.Random();
+        double m_VoteFor = double.NaN, m_VoteCloses, m_PaidFor = double.NaN;
+        bool m_VoteOpen;
+        EntityQuery m_VoteAnswers, m_Connections;
+
+        /// <summary>The faction a real player fights for. Unset: their server body's (<see cref="IFactionMember"/>). Tests put their own.</summary>
+        public Func<Entity, FactionId> FactionOf;
+        /// <summary>The level a real player has. Unset: their <see cref="PlayerLevelTag"/>. Tests put their own.</summary>
+        public Func<Entity, int> LevelOf;
+        /// <summary>The dice of the kill drop (tests put their own seed).</summary>
+        public System.Random Random { get => m_Random; set => m_Random = value ?? new System.Random(); }
+
+        /// <summary>The war's sides (tests).</summary>
+        public CrossfireSides<Entity> Sides => m_Sides;
+        /// <summary>Real players refused at a full side; votes sent; sides the bots filled; kill drops; EXP paid per player at the last war's end (tests).</summary>
+        public int Refused { get; private set; }
+        public int VotesSent { get; private set; }
+        public int SidesFilled { get; private set; }
+        public int Drops { get; private set; }
+        public readonly Dictionary<Entity, int> LastPay = new Dictionary<Entity, int>();
+        /// <summary>The item the last drop gave (tests).</summary>
+        public ushort LastDrop { get; private set; }
+
+        void CreateWar()
+        {
+            m_VoteAnswers = GetEntityQuery(ComponentType.ReadOnly<CrossfireVoteAnswerRpc>(), ComponentType.ReadOnly<ReceiveRpcCommandRequest>());
+            m_Connections = GetEntityQuery(ComponentType.ReadOnly<NetworkId>(), ComponentType.ReadOnly<NetworkStreamInGame>());
+            CombatEntity.AnyKilled += OnAnyKilled;
+        }
+
+        void DestroyWar() => CombatEntity.AnyKilled -= OnAnyKilled;
+
+        CrossfireSettings Settings => m_Clock != null ? m_Clock.ActiveSettings : null;
+        static IWarBotFill Bots => WarBots.Fill;
+        static int BotsOn(FactionId side) => Bots != null ? Bots.Count(side) : 0;
+
+        bool TryBodyEntry(Entity ghost, out GhostBodyEntry entry)
+        {
+            foreach (GhostBodyEntry e in GhostBodyRegistry.Entries)
+                if (ReferenceEquals(e.World, World) && e.Ghost == ghost) { entry = e; return true; }
+            entry = null;
+            return false;
+        }
+
+        bool TryGhostOf(GameObject body, out Entity ghost)
+        {
+            ghost = Entity.Null;
+            if (body == null) return false;
+            foreach (GhostBodyEntry e in GhostBodyRegistry.Entries)
+                if (ReferenceEquals(e.World, World) && e.Body != null && (body == e.Body || body.transform.IsChildOf(e.Body.transform))) { ghost = e.Ghost; return true; }
+            return false;
+        }
+
+        FactionId SideOfReal(Entity ghost)
+        {
+            if (FactionOf != null) return FactionOf(ghost);
+            if (!TryBodyEntry(ghost, out GhostBodyEntry e) || e.Body == null) return FactionId.None;
+            IFactionMember member = e.Body.GetComponentInParent<IFactionMember>();
+            return member != null ? member.Faction : FactionId.None;
+        }
+
+        int LevelOfReal(Entity ghost)
+        {
+            if (LevelOf != null) return LevelOf(ghost);
+            EntityManager em = EntityManager;
+            return em.Exists(ghost) && em.HasComponent<PlayerLevelTag>(ghost) ? em.GetComponentData<PlayerLevelTag>(ghost).Level : 0;
+        }
+
+        /// <summary>Tells one real player a line through the announcement system (<see cref="ServerChat.AnnounceTo"/>).</summary>
+        void Tell(Entity ghost, string text)
+        {
+            if (string.IsNullOrEmpty(text)) return;
+            Told.Add((ghost, text));
+            m_ToTell.Add((ghost, text));   // said by FlushTells, never inside a look over the players (a chat line may change the world)
+        }
+
+        readonly List<(Entity who, string text)> m_ToTell = new List<(Entity, string)>();
+
+        void FlushTells()
+        {
+            if (m_ToTell.Count == 0) return;
+            var tell = ServerChat.AnnounceTo;
+            foreach ((Entity who, string text) in m_ToTell)
+                if (tell != null && TryBodyEntry(who, out GhostBodyEntry e) && e.Body != null) tell(e.Body, AnnouncementKind.Crossfire, text, null, 0);
+            m_ToTell.Clear();
+        }
+
+        /// <summary>Every line told to a real player this run (tests).</summary>
+        public readonly List<(Entity who, string text)> Told = new List<(Entity, string)>();
+
+        static string Fill(string text, CrossfireSettings s, int real) =>
+            (text ?? string.Empty).Replace("{cap}", s.capPerFaction.ToString()).Replace("{real}", real.ToString());
+
+        /// <summary>
+        /// A real player stands in a Rally Point while it takes players in and has not joined: their side takes them (in a bot's place if
+        /// it must) or, full of real players, refuses them. False when refused (they are put back where they came from).
+        /// </summary>
+        bool Admit(Entity who, CrossfireSpot from)
+        {
+            CrossfireSettings s = Settings;
+            if (s == null) return true;
+            FactionId side = SideOfReal(who);
+            CrossfireJoin join = m_Sides.TryJoin(who, side, s.capPerFaction, BotsOn(side));
+            switch (join)
+            {
+                case CrossfireJoin.Full:
+                    m_Refused.Add((who, from));
+                    Refused++;
+                    Tell(who, Fill(s.sideFullText, s, m_Sides.Real(side)));
+                    return false;
+                case CrossfireJoin.TookBotsPlace:
+                    m_BotsOut.Add(side);   // after the look over every player: a bot leaving changes the world
+                    Tell(who, s.tookBotsPlaceText);
+                    return true;
+                default:
+                    return true;
+            }
+        }
+
+        /// <summary>The port's cap check: the player's side is full of real players.</summary>
+        bool SideFull(FactionId side)
+        {
+            CrossfireSettings s = Settings;
+            return s != null && m_Sides.Real(side) >= s.capPerFaction;
+        }
+
+        /// <summary>Puts refused players back where they came from, and takes off the bots real players replaced (after the look over every player).</summary>
+        void SendRefusedBack()
+        {
+            foreach (FactionId side in m_BotsOut) Bots?.Release(side, 1);
+            m_BotsOut.Clear();
+            FlushTells();
+            EntityManager em = EntityManager;
+            foreach ((Entity who, CrossfireSpot to) in m_Refused)
+                if (em.Exists(who) && em.HasComponent<TeleportRequest>(who))
+                    PlayerEntitiesSetup.Teleport(em, who, new Unity.Mathematics.int3(to.Mm.x, to.Mm.y, to.Mm.z), to.YawCdeg);
+            m_Refused.Clear();
+        }
+
+        // ------------------------------------------------------------------ the kills
+
+        void OnAnyKilled(CombatEntity victim, KillingBlow blow)
+        {
+            if (victim == null || blow.Attacker == null || !World.IsCreated) return;
+            if (TryGhostOf(victim.gameObject, out Entity dead) && TryGhostOf(blow.Attacker.gameObject, out Entity killer)) RecordKill(killer, dead);
+        }
+
+        /// <summary>The side a ghost fights for in this war: a real player's, a War Bot's, else None.</summary>
+        FactionId SideIn(Entity ghost, out bool bot)
+        {
+            bot = false;
+            if (m_Sides.TryGetSide(ghost, out FactionId side)) return side;
+            FactionId botSide = Bots != null ? Bots.SideOf(ghost) : FactionId.None;
+            bot = botSide != FactionId.None;
+            return botSide;
+        }
+
+        /// <summary>
+        /// A kill between two ghosts (the combat's kill, or a test): during the War it counts for the killer's side, and a real player's
+        /// kill of a real player may drop an item. True when it counted.
+        /// </summary>
+        public bool RecordKill(Entity killer, Entity victim)
+        {
+            m_Clock ??= World.GetExistingSystemManaged<CrossfireClockServerSystem>();
+            if (m_Clock == null || !m_Clock.Current.Known || m_Clock.Current.Now.Phase != CrossfirePhase.War) return false;
+            FactionId killerSide = SideIn(killer, out bool killerBot), victimSide = SideIn(victim, out bool victimBot);
+            if (!m_Sides.AddKill(killerSide, victimSide)) return false;
+            m_Clock.SetScore(m_Sides.Kills(FactionId.Hegemony), m_Sides.Kills(FactionId.Null), m_Sides.Kills(FactionId.Covenant));
+            CrossfireSettings s = Settings;
+            ushort item = CrossfireRewards.KillDrop(s, killerBot, victimBot, m_Random.NextDouble(), m_Random.NextDouble());
+            if (item != 0)
+            {
+                Drops++;
+                LastDrop = item;
+                if (TryBodyEntry(killer, out GhostBodyEntry e) && e.Body != null && e.Body.TryGetComponent(out PlayerInventory pack))
+                    pack.ServerGive(item, 1, earned: true);
+                Tell(killer, s.killDropText);
+            }
+            FlushTells();
+            return true;
+        }
+
+        // ------------------------------------------------------------------ the vote
+
+        void SendVote(FactionId side, CrossfireSettings s, double warStart)
+        {
+            EntityManager em = EntityManager;
+            int real = m_Sides.Real(side);
+            var rpc = new CrossfireVoteRpc
+            {
+                Eyebrow = s.voteEyebrow ?? string.Empty, Text = Fill(s.voteText, s, real),
+                Seconds = (float)Math.Max(1.0, m_VoteCloses - m_Clock.Now), WarStart = warStart,
+            };
+            using NativeArray<Entity> connections = m_Connections.ToEntityArray(Allocator.Temp);
+            foreach (KeyValuePair<Entity, FactionId> p in m_Sides.Players)
+            {
+                if (p.Value != side || !em.Exists(p.Key) || !em.HasComponent<GhostOwner>(p.Key)) continue;
+                int id = em.GetComponentData<GhostOwner>(p.Key).NetworkId;
+                foreach (Entity c in connections)
+                {
+                    if (em.GetComponentData<NetworkId>(c).Value != id) continue;
+                    Entity e = em.CreateEntity();
+                    em.AddComponentData(e, rpc);
+                    em.AddComponentData(e, new SendRpcCommandRequest { TargetConnection = c });
+                    VotesSent++;
+                }
+            }
+        }
+
+        /// <summary>A real player's vote (from their answer, or a test): counts once, for their own side, while the vote is open.</summary>
+        public bool Vote(Entity who, bool yes)
+        {
+            if (!m_VoteOpen || !m_Sides.TryGetSide(who, out FactionId side) || !m_Votes.TryGetValue(side, out (int yes, int no) v) || !m_Voted.Add(who)) return false;
+            m_Votes[side] = yes ? (v.yes + 1, v.no) : (v.yes, v.no + 1);
+            return true;
+        }
+
+        void ReadVoteAnswers()
+        {
+            if (m_VoteAnswers.IsEmpty) return;
+            EntityManager em = EntityManager;
+            using NativeArray<Entity> answers = m_VoteAnswers.ToEntityArray(Allocator.Temp);
+            foreach (Entity a in answers)
+            {
+                CrossfireVoteAnswerRpc answer = em.GetComponentData<CrossfireVoteAnswerRpc>(a);
+                Entity from = em.GetComponentData<ReceiveRpcCommandRequest>(a).SourceConnection;
+                if (answer.WarStart.Equals(m_VoteFor) && em.Exists(from) && em.HasComponent<NetworkId>(from))
+                {
+                    int id = em.GetComponentData<NetworkId>(from).Value;
+                    foreach (KeyValuePair<Entity, FactionId> p in m_Sides.Players)
+                        if (em.Exists(p.Key) && em.HasComponent<GhostOwner>(p.Key) && em.GetComponentData<GhostOwner>(p.Key).NetworkId == id) { Vote(p.Key, answer.Yes != 0); break; }
+                }
+                em.DestroyEntity(a);
+            }
+        }
+
+        void CloseVote(CrossfireSettings s)
+        {
+            m_VoteOpen = false;
+            foreach (KeyValuePair<FactionId, (int yes, int no)> v in m_Votes)
+            {
+                FactionId side = v.Key;
+                int real = m_Sides.Real(side);
+                bool passes = CrossfireVote.Passes(v.Value.yes, v.Value.no) && Bots != null;
+                if (passes)
+                {
+                    m_RealPlayers.Clear();
+                    foreach (KeyValuePair<Entity, FactionId> p in m_Sides.Players) m_RealPlayers.Add(p.Key);
+                    var request = new WarBotRequest { Faction = side, Bracket = BracketOfWar(s), Count = s.capPerFaction - real - BotsOn(side) };
+                    if (CrossfireArea.TryRallyPoint(side, out CrossfireArea yard)) yard.Landing(out request.RallyAt, out request.RallyYaw);
+                    if (request.Count > 0 && Bots.Fill(request, m_RealPlayers) > 0) SidesFilled++;
+                }
+                foreach (KeyValuePair<Entity, FactionId> p in m_Sides.Players)
+                    if (p.Value == side) Tell(p.Key, Fill(passes ? s.votePassedText : s.voteFailedText, s, real));
+            }
+            m_Votes.Clear();
+        }
+
+        int BracketOfWar(CrossfireSettings s)
+        {
+            foreach (KeyValuePair<Entity, FactionId> p in m_Sides.Players)
+            {
+                int b = s.BracketOf(LevelOfReal(p.Key));
+                if (b > 0) return b;
+            }
+            return s.bracketCount;
+        }
+
+        // ------------------------------------------------------------------ the war's course
+
+        /// <summary>One look a tick: the vote, the pay at the War's end, and the war's sides cleared when it is over.</summary>
+        void RunWar(in CrossfireState state, double now)
+        {
+            CrossfireSettings s = Settings;
+            if (s == null) return;
+            EntityManager em = EntityManager;
+            m_Sides.ForgetWhere(e => !em.Exists(e));
+            ReadVoteAnswers();
+            CrossfirePhase phase = state.Now.Phase;
+            double war = state.Now.WarStart;
+
+            // the vote opens with the Rally, for every short side
+            if (phase == CrossfirePhase.Muster && !m_VoteFor.Equals(war))
+            {
+                m_VoteFor = war;
+                m_Votes.Clear();
+                m_Voted.Clear();
+                double gatesOpen = war + s.musterSeconds;
+                m_VoteCloses = Math.Min(now + s.voteSeconds, gatesOpen - 1.0);
+                m_VoteOpen = true;
+                foreach (FactionId side in CrossfireSides<Entity>.Factions)
+                {
+                    if (!CrossfireVote.Offered(m_Sides.Real(side), BotsOn(side), s.capPerFaction, Bots != null)) continue;
+                    m_Votes[side] = (0, 0);
+                    SendVote(side, s, war);
+                }
+            }
+            if (m_VoteOpen && (now >= m_VoteCloses || phase != CrossfirePhase.Muster || !m_VoteFor.Equals(war))) CloseVote(s);
+
+            // the War's end: the most kills wins; every real player is paid by their side's outcome
+            if (phase == CrossfirePhase.End && !m_PaidFor.Equals(war))
+            {
+                m_PaidFor = war;
+                Pay(s);
+            }
+            FlushTells();
+        }
+
+        void Pay(CrossfireSettings s)
+        {
+            LastPay.Clear();
+            string score = $"Hegemony {m_Sides.Kills(FactionId.Hegemony)}, Null {m_Sides.Kills(FactionId.Null)}, Covenant {m_Sides.Kills(FactionId.Covenant)}";
+            foreach (KeyValuePair<Entity, FactionId> p in m_Sides.Players)
+            {
+                CrossfireOutcome outcome = m_Sides.Outcome(p.Value);
+                int exp = CrossfireRewards.Experience(s, outcome);
+                LastPay[p.Key] = exp;
+                if (exp > 0 && TryBodyEntry(p.Key, out GhostBodyEntry e) && e.Body != null && e.Body.TryGetComponent(out PlayerCharacterProgression progression))
+                    progression.GrantExperience(exp);
+                string text = outcome == CrossfireOutcome.Won ? s.wonText : outcome == CrossfireOutcome.Tied ? s.tiedText : s.lostText;
+                Tell(p.Key, (text ?? string.Empty).Replace("{kills}", m_Sides.Kills(p.Value).ToString()).Replace("{exp}", exp.ToString()).Replace("{score}", score));
+            }
+        }
+
+        /// <summary>The war is over (its End ran out, or a GM called it off): its sides, score and bots go.</summary>
+        void EndWar()
+        {
+            m_Sides.Clear();
+            m_Votes.Clear();
+            m_VoteOpen = false;
+            m_Clock?.SetScore(0, 0, 0);
+            Bots?.EndWar();
+        }
+    }
+
+    /// <summary>Client: the War Bot vote on the HUD's accept / decline panel (<see cref="IRequestPromptSink"/>), and the answer back to the server.</summary>
+    [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation)]
+    [UpdateInGroup(typeof(SimulationSystemGroup))]
+    public partial class CrossfireVoteClientSystem : SystemBase
+    {
+        public const string PromptId = "crossfire-vote";
+        EntityQuery m_Votes;
+
+        /// <summary>Votes shown (tests).</summary>
+        public int Shown { get; private set; }
+
+        protected override void OnCreate() =>
+            m_Votes = GetEntityQuery(ComponentType.ReadOnly<CrossfireVoteRpc>(), ComponentType.ReadOnly<ReceiveRpcCommandRequest>());
+
+        protected override void OnUpdate()
+        {
+            if (m_Votes.IsEmpty) return;
+            EntityManager em = EntityManager;
+            using NativeArray<Entity> votes = m_Votes.ToEntityArray(Allocator.Temp);
+            foreach (Entity v in votes)
+            {
+                CrossfireVoteRpc vote = em.GetComponentData<CrossfireVoteRpc>(v);
+                em.DestroyEntity(v);
+                Shown++;
+                double war = vote.WarStart;
+                Unity.Entities.World world = World;
+                ClientPresentationRegistry.Prompts?.Show(PromptId, vote.Eyebrow.ToString(), vote.Text.ToString(), vote.Seconds, yes => Answer(world, war, yes));
+            }
+        }
+
+        /// <summary>Sends the player's answer to the server.</summary>
+        public static void Answer(Unity.Entities.World world, double warStart, bool yes)
+        {
+            if (world == null || !world.IsCreated) return;
+            EntityManager em = world.EntityManager;
+            Entity e = em.CreateEntity();
+            em.AddComponentData(e, new CrossfireVoteAnswerRpc { Yes = (byte)(yes ? 1 : 0), WarStart = warStart });
+            em.AddComponentData(e, new SendRpcCommandRequest());
+        }
+    }
+}

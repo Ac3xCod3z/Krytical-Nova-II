@@ -13,7 +13,9 @@
         "Unity.Mathematics",
         "Unity.Transforms",
         "Unity.Netcode.Runtime",
-        "KryticalNova.Factions"
+        "KryticalNova.Factions",
+        "KryticalNova.Progression",
+        "KryticalNova.Items"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -47,6 +47,44 @@ namespace KryticalNova.Crossfire
         [Tooltip("The portal (its ZonePortal id) that takes a called player of a bracket with a zone onto their own faction's Rally Point, on this server: the Transit Row port.")]
         public string portPortalId = "zone01-northeast";
 
+        [Header("The sides of a war (owner, 16 Nov 2026)")]
+        [Tooltip("Players a faction's side holds in one war, real players and War Bots together (33: 99 in a war). The next real player is refused at the Rally Point; a real player always takes a War Bot's place.")]
+        [Min(1)] public int capPerFaction = 33;
+        [Tooltip("Told to a real player refused because their side is full. {cap}: the cap.")]
+        [TextArea] public string sideFullText = "Crossfire: your side is full ({cap} of {cap}), so you can't join this war.";
+        [Tooltip("Told to a real player who takes a War Bot's place on their side.")]
+        [TextArea] public string tookBotsPlaceText = "Crossfire: you take a War Bot's place on your side.";
+
+        [Header("The War Bot vote of a short side (before the gates open)")]
+        [Tooltip("Seconds a short side has to vote, from the Rally's start (it always closes a second before the gates open). Nobody answering is a no.")]
+        [Min(1f)] public float voteSeconds = 20f;
+        [Tooltip("The small heading of the vote's accept / decline panel.")]
+        public string voteEyebrow = "CROSSFIRE";
+        [Tooltip("The question. {real}: the side's real players; {cap}: the cap.")]
+        [TextArea] public string voteText = "Your side has {real} of {cap} players. Fill it to {cap} with War Bots?";
+        [Tooltip("Told to the side when its vote passed. {cap}, {real} as above.")]
+        [TextArea] public string votePassedText = "Crossfire: your side voted yes. War Bots fill it to {cap}.";
+        [Tooltip("Told to the side when its vote failed or nobody answered.")]
+        [TextArea] public string voteFailedText = "Crossfire: your side voted no. You fight with {real}.";
+
+        [Header("Team deathmatch: the most kills wins, a tie is possible (PLACEHOLDER pay: the owner sets the numbers)")]
+        [Tooltip("EXP for each real player of the winning side (PLACEHOLDER).")]
+        [Min(0)] public int winExperience = 50000;
+        [Tooltip("EXP for each real player of a side level at the top (PLACEHOLDER).")]
+        [Min(0)] public int tieExperience = 30000;
+        [Tooltip("EXP for each real player of a side that lost (PLACEHOLDER).")]
+        [Min(0)] public int loseExperience = 20000;
+        [Tooltip("Told to each real player when the war ends. {kills}: their side's kills; {exp}: the EXP paid; {score}: every side's kills.")]
+        [TextArea] public string wonText = "Crossfire is over: your side WON with {kills} kills ({score}). +{exp} EXP.";
+        [TextArea] public string tiedText = "Crossfire is over: a TIE at {kills} kills ({score}). +{exp} EXP.";
+        [TextArea] public string lostText = "Crossfire is over: your side lost with {kills} kills ({score}). +{exp} EXP.";
+        [Tooltip("The chance a kill of a real player by a real player drops an item (extremely rare; War Bots never drop). PLACEHOLDER.")]
+        [Range(0f, 1f)] public float killDropChance = 0.0005f;
+        [Tooltip("The items a kill may drop (item ids), one picked at random. Empty: no drop. PLACEHOLDER until the owner names them.")]
+        public ushort[] killDropItemIds = new ushort[0];
+        [Tooltip("Told to the player whose kill dropped an item.")]
+        [TextArea] public string killDropText = "Crossfire: your kill dropped something rare!";
+
         [Header("Announcements (the top-of-screen news every player gets, as GM broadcasts)")]
         [Tooltip("The call, sent when the Call starts and again every Call Repeat Seconds until the gates open, to each player for THEIR OWN bracket. {time}: how long until the gates open; {bracket}: the bracket's numeral (X); {levels}: its levels (100-112); {level}: its lowest level; {where}: Where Text, or No Zone Text for a bracket with no zone yet.")]
         [TextArea] public string callText = "Crossfire! Bracket {bracket} (levels {levels}): the war starts in {time}. {where}";

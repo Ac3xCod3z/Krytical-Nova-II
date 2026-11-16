@@ -43,6 +43,9 @@ namespace KryticalNova.Crossfire.Entities
         /// <summary>This server ghost is a War Bot.</summary>
         bool IsWarBot(Entity ghost);
 
+        /// <summary>The side a War Bot fights for; <see cref="FactionId.None"/> when the ghost is not a War Bot (the kill counter reads it).</summary>
+        FactionId SideOf(Entity ghost);
+
         /// <summary>The war is over (the Gap): every war bot goes.</summary>
         void EndWar();
     }
