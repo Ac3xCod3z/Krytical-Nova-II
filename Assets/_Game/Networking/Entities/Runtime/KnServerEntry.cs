@@ -131,6 +131,7 @@ namespace KryticalNova.Networking.Entities
             RelevancySetup.WithImportance = false;   // no distance importance on the dedicated server (it crashed GhostDespawnParallelJob after 17-37 min; owner, 16 Nov 2026)
             RelevancySetup.Install(server, null, settings.Relevancy);   // wave 4: who is sent to whom; the file's "relevancy" key wins over the asset
             KnBootstrap.Listen(server, (ushort)settings.port);
+            KnUdpResetGuard.Arm();   // Windows: a dropped player's closed port must not fail the server's receives (the rejoin lock, 16 Nov 2026)
             Debug.Log($"[KnServer] listening on UDP {settings.port}, role {settings.role}, map {settings.map}, max {settings.maxPlayers} players, " +
                       (settings.UsesSaveService ? "saving through the save service." : "saving to files."));
 
