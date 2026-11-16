@@ -131,8 +131,10 @@ namespace KryticalNova.Hostiles
             entity = GetComponent<CombatEntity>();
             brain = GetComponent<IHostileBrain>();
             if (animator == null) animator = GetComponent<Animator>();
+#if !UNITY_SERVER
             KryticalNova.Rendering.ActorDrawOrder.On(gameObject); // a Nova hides the Hostiles behind it
             KryticalNova.Rendering.CharacterLod.Ensure(gameObject); // lighter with distance
+#endif
         }
 
         private void OnEnable()

@@ -2,6 +2,7 @@
     "name": "KryticalNova.Runtime",
     "rootNamespace": "KryticalNova",
     "references": [
+        "Unity.Netcode.Runtime",
         "Unity.Networking.Transport",
         "Unity.Collections",
         "Unity.Services.Core",

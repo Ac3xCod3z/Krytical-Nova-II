@@ -1,3 +1,4 @@
+#if !UNITY_SERVER
 using KryticalNova.Diagnostics;
 using KryticalNova.Rendering;
 using QFSW.QC;
@@ -53,3 +54,4 @@ namespace KryticalNova.DevTools
         }
     }
 }
+#endif
