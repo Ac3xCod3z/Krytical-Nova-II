@@ -947,8 +947,12 @@ once). It ships **on** from the build after 15 Nov 2026 (perf round 3, R3-3); bu
   project's `Builds\Server\Windows\certificates`) beside the release server. **Never clean a `certificates` folder**: on 14 Nov
   that NGO folder was emptied, and build 17's server step failed after a good build ("the NGO server has no certificates
   folder"). The same two files are beside the release server (`Builds\Server\Windows\certificates` of the DOTS clone) and in
-  `Documents\KryticalNova-Backups\cutover-2026-11-12\certificates`; copy them back, then resume with
-  `publish-cutover-from-server.bat`.
+  `Documents\KryticalNova-Backups\cutover-2026-11-12\certificates`. **Since build 18 the server step falls back by itself**: NGO
+  folder first, then the release server's own `certificates` (kept as they are), then every
+  `Documents\KryticalNova-Backups\*\certificates`, newest first; the log names the folder it used. It stops only when none of
+  them holds both files (then copy them back from `Documents\KryticalNova-Secrets` and resume with
+  `publish-cutover-from-server.bat`). Any disk cleanup keeps every `Builds\Server\**\certificates` and every backup's
+  `certificates` folder: they are never deleted, moved or emptied.
 - **A server step that failed** can leave Server rows in `ProjectSettings/ProjectSettings.asset` (scripting backend, IL2CPP
   configuration, stripping, an empty preloaded asset); the resume then refuses ("ProjectSettings has changes a build would
   bake in"). Put the file back with `git checkout -- ProjectSettings/ProjectSettings.asset` and resume.
@@ -1196,3 +1200,5 @@ Things learned the hard way:
 - 15 Nov 2026: **build 17 live** (release17): release 20 promoted, live badge 20, rollback 19 (section 13c); the certificates rule
   (never clean a `certificates` folder; where the two files are kept) and resuming after a failed server step that left
   ProjectSettings changed.
+- 16 Nov 2026: before build 18, the server step's certificate falls back by itself (NGO folder, then the release server's own,
+  then the backups' `certificates`, newest first) and every cleanup keeps all `certificates` folders (section 13c).

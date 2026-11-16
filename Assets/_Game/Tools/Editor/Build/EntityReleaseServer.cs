@@ -84,6 +84,55 @@ namespace KryticalNova.EditorTools
             return true;
         }
 
+        /// <summary>
+        /// The certificate for the release server, never failing while one good copy is anywhere on this PC (build 17, 15 Nov 2026: a disk
+        /// cleanup had emptied the NGO server's folder and the server step stopped). In order: the NGO server's <c>certificates</c>
+        /// (copied as before); the release server's own <c>certificates</c> when it already holds both files (kept, nothing copied); then each
+        /// <paramref name="backups"/> folder in turn (copied). Nothing is printed but the folder used. False, with every folder tried, when none
+        /// holds both files: a certificate is never made up.
+        /// </summary>
+        public static bool CopyCertificates(string ngoCertificates, string releaseCertificates, string[] backups, out string usedFolder, out string problem)
+        {
+            usedFolder = null;
+            if (CopyCertificates(ngoCertificates, releaseCertificates, out problem)) { usedFolder = ngoCertificates; return true; }
+            string tried = problem;
+            if (HasBoth(releaseCertificates)) { usedFolder = releaseCertificates; problem = null; return true; }
+            tried += "; the release server's own folder " + releaseCertificates + " lacks them";
+            foreach (string backup in backups ?? new string[0])
+            {
+                if (string.IsNullOrEmpty(backup)) continue;
+                if (CopyCertificates(backup, releaseCertificates, out string backupProblem)) { usedFolder = backup; problem = null; return true; }
+                tried += "; " + backupProblem.Replace("the NGO server has no certificates folder", "no backup folder").Replace("the NGO certificates folder", backup);
+            }
+            problem = tried;
+            return false;
+        }
+
+        static bool HasBoth(string folder) =>
+            Directory.Exists(folder) && File.Exists(Path.Combine(folder, "server.crt")) && File.Exists(Path.Combine(folder, "server.key"));
+
+        /// <summary>
+        /// The kept copies of the certificate, newest first: every <c>Documents/KryticalNova-Backups/*/certificates</c> (the cutover copy of
+        /// 12 Nov 2026 is one). No cleanup ever touches these or any <c>certificates</c> folder (owner rule, build 17).
+        /// </summary>
+        public static string[] BackupCertificateFolders()
+        {
+            try
+            {
+                string root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Documents", "KryticalNova-Backups");
+                if (!Directory.Exists(root)) return new string[0];
+                var found = new System.Collections.Generic.List<string>();
+                foreach (string dir in Directory.GetDirectories(root))
+                {
+                    string certs = Path.Combine(dir, "certificates");
+                    if (HasBoth(certs)) found.Add(certs);
+                }
+                found.Sort((a, b) => Directory.GetLastWriteTimeUtc(b).CompareTo(Directory.GetLastWriteTimeUtc(a)));
+                return found.ToArray();
+            }
+            catch (Exception) { return new string[0]; }
+        }
+
         /// <summary>The certificates beside the release server's folder (where <c>ServerCertificates</c> looks when the settings name none).</summary>
         public static string CertificatesFolder => Path.Combine(Path.GetDirectoryName(Path.GetFullPath(OutputFolder)) ?? ".", "certificates");
 

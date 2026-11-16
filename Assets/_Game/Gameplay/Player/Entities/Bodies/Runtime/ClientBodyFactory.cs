@@ -9,8 +9,12 @@ namespace KryticalNova.Player.Entities.Bodies
     /// The clicks of the local ClientView (<see cref="BodyClicks"/>, filled by <c>PointAndClickPlayer</c> in view mode) as the
     /// presentation's <see cref="IClickSource"/>: one per frame, a stop as a stop.
     /// </summary>
-    public sealed class BodyClickSource : IClickSource
+    public sealed class BodyClickSource
+#if !UNITY_SERVER
+        : IClickSource   // the presentation (client only, 15 Nov 2026: no visual code in the server build)
+#endif
     {
+#if !UNITY_SERVER
         public bool TryTake(out WorldClick click)
         {
             click = default;
@@ -26,6 +30,7 @@ namespace KryticalNova.Player.Entities.Bodies
             click = new WorldClick { Point = taken.Point, Run = taken.Run, Stop = taken.Stop, Jump = taken.Jump, Wall = taken.Wall, Normal = taken.Normal };
             return true;
         }
+#endif
 
         /// <summary>
         /// The ghost id of the player body <paramref name="body"/> belongs to, or of the attackable non-player ghost it stands for (M4.2b:
@@ -46,6 +51,7 @@ namespace KryticalNova.Player.Entities.Bodies
         }
     }
 
+#if !UNITY_SERVER
     /// <summary>
     /// Client: makes the body of each player ghost from the real Player.prefab as a <see cref="NetRoleKind.ClientView"/> (M3a-2b step 7)
     /// through <see cref="PlayerBodyAssembler"/>: the local player's keeps input, camera and the offline-style stubs (decision D2: HUD
@@ -96,4 +102,5 @@ namespace KryticalNova.Player.Entities.Bodies
             ServerBodies.DestroyBody(body);
         }
     }
+#endif
 }

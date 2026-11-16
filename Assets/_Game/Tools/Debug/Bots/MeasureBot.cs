@@ -54,10 +54,13 @@ namespace KryticalNova.DevTools
         /// <summary>The character the server's roster gave this bot.</summary>
         internal static string CharacterId { get; set; }
 
+        // Enter Play Mode runs without a domain reload: reset at SubsystemRegistration, never in a BeforeSceneLoad hook (startup race).
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() => Index = -1;
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Boot()
         {
-            Index = -1;
             if (Application.isEditor) return;
             string[] args = Environment.GetCommandLineArgs();
             string server = null;
@@ -85,7 +88,7 @@ namespace KryticalNova.DevTools
             Application.runInBackground = true;
             Server = new ServerListing { name = "Measure server", address = address, port = port };
             Store = new PlayerPrefsCharacterStore(profile + ".bot.server." + address + ":" + port);
-            CharacterId = null;
+            CharacterId = null;   // startup-race: ok, a bot client that is starting its own session (no server world here)
             JoinFlow.Failed += reason =>
             {
                 Debug.LogWarning("[Bot] The join failed: " + reason);

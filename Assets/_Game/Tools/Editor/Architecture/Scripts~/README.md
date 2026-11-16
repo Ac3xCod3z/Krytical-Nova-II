@@ -74,6 +74,17 @@ Systems, Hubs, Design data, Tests and How to read.
   assets hold.
 - `compile_check.py`, `run_editmode_tests.py`: see above; `run_batch_checks.py`: the Editor checks, below.
 - `kn_check.py`, `organization_check.py`, `known-findings.json`, `known-test-failures.json`: the gate, below.
+- `startup_race.py` (in the gate, 15 Nov 2026): fails on a static reset (`= null`, `= 0`, `.Clear()`...) inside a
+  `[RuntimeInitializeOnLoadMethod(BeforeSceneLoad)]` method of a changed `.cs` file (`--all`: every file). A built entity
+  server makes its worlds in Entities' own BeforeSceneLoad bootstrap, in no fixed order with ours, so such a reset can wipe
+  what the world set (PR 313); the Editor never shows it. Reset at SubsystemRegistration; a BeforeSceneLoad hook only
+  adds. Blind installs there (`X.Install(`, `X.Use(`, `X.Slot = new`) are WARN lines (PR 304: install into an empty slot).
+  A line that must stay carries `// startup-race: ok <why>`. `StartupHookOrderTests` (Core tests) pins the same.
+- `server_visual.py` (in the gate, owner 15 Nov 2026: no visual code in the server build): lists the assemblies the dedicated
+  server compiles (as `compile_check.py --server`) and fails on one whose name or folder says it draws, plays sound or
+  presents (Rendering, Audio, UI, GameFeel, Presentation, Vfx, Camera, Minimap, Sky, Weather, Grass, Foliage...) or that holds
+  a `Presentation/` folder of scripts. The fix is `!UNITY_SERVER` in its defineConstraints, after moving what the server
+  needs down a layer. Its KNOWN list (with each one's plan) only shrinks; `--list` prints every server assembly.
 - `own_tree.py`: runs a batch Unity in its own job object and stops only that tree when the PC runs low on memory:
   below 2 GB free for 15 s it asks Unity to quit and forces it only after 60 s (FORCED), below 1 GB it forces at once;
   `run_editmode_tests.py` uses it.
@@ -85,12 +96,12 @@ python "Assets/_Game/Tools/Editor/Architecture/Scripts~/kn_check.py"
 ```
 
 `--quick` (the default, under 2 minutes, Unity can stay closed) runs the checks whose files changed against
-`origin/main` and names each one that failed (`--all` runs all four whatever changed):
+`origin/main` and names each one that failed (`--all` runs all six whatever changed):
 the file-path rules of Validate Project Organization (`organization_check.py`, a Python copy of
-`ProjectOrganizationRules`), `dependency_map.py --check` (the report it rewrites is put back), `compile_check.py` and
-`compile_check.py --server`. `--only organization,dependencies` runs some of them. Findings that were there before a
+`ProjectOrganizationRules`), `dependency_map.py --check` (the report it rewrites is put back), `startup_race.py`, `server_visual.py`,
+`compile_check.py` and `compile_check.py --server`. `--only organization,dependencies` runs some of them. Findings that were there before a
 check joined the gate are in `known-findings.json` with their reason: they do not fail it, a new one does, and so does
-a listed one that has gone (take it off the list). When all four pass, `Logs/kn-check-stamp.json` records the git tree
+a listed one that has gone (take it off the list). When all six pass, `Logs/kn-check-stamp.json` records the git tree
 of the files at that moment, and `--stamp-ok` says whether the files are still the same. Every run also prints the
 change's risk level from `risk-tiers.json` (high, medium or low, and what that level needs before the PR goes in, as in
 `_Docs/Guides/Review-Rules.md`); `--risk` prints only that.
