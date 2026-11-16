@@ -33,7 +33,6 @@ WAIVER = "startup-race: ok"
 
 # Known on main and handled elsewhere: path -> why. Only shrinks.
 KNOWN = {
-    "Assets/_Game/Gameplay/Hostiles/Runtime/HostilePool.cs": "PR 313 moves this reset to SubsystemRegistration",
     "Assets/_Game/Gameplay/Persistence/Entities/Runtime/KnPlayHere.cs": "Editor Play-here only: its worlds are made later, by StartPlayHere",
 }
 

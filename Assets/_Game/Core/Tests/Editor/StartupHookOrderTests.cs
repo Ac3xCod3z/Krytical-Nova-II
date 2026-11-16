@@ -19,9 +19,6 @@ namespace KryticalNova.Tests
     {
         const BindingFlags Statics = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
 
-        // Fixed in a PR of its own: HostilePool (#313). Take it off once #313 is in main; the test then holds it too.
-        static readonly HashSet<string> FixedElsewhere = new HashSet<string> { "KryticalNova.Hostiles.HostilePool" };
-
         static IEnumerable<Type> OurTypes() => AppDomain.CurrentDomain.GetAssemblies()
             .Where(a => a.GetName().Name.StartsWith("KryticalNova", StringComparison.Ordinal))
             .SelectMany(a => { try { return a.GetTypes(); } catch (ReflectionTypeLoadException e) { return e.Types.Where(t => t != null); } });
@@ -41,7 +38,6 @@ namespace KryticalNova.Tests
             var late = new List<string>();
             foreach (Type type in OurTypes())
             {
-                if (FixedElsewhere.Contains(type.FullName)) continue;
                 foreach (MethodInfo m in type.GetMethods(Statics))
                 {
                     RuntimeInitializeLoadType? when = When(m);
