@@ -132,6 +132,32 @@ namespace KryticalNova.Combat.Entities.Tests
             Assert.Greater(struckTotal, 0, "the crowd is dense enough that swings strike bystanders");
         }
 
+        /// <summary>Perf round 4: the read-only view the parallel resolve job gathers from finds the same bodies, in the same order,
+        /// as the stamped <see cref="MeleeBystanderGrid.Gather"/>, for every body of square and ring crowds, short and very long reach.</summary>
+        [TestCase(50, 3u, false), TestCase(200, 11u, false), TestCase(200, 5u, true), TestCase(1000, 7u, false)]
+        public void TheReadOnlyView_GathersTheSameBodies_InTheSameOrder(int n, uint seed, bool circle)
+        {
+            Crowd c = MakeCrowd(n, seed, circle);
+            using var grid = new MeleeBystanderGrid(n);
+            for (int b = 0; b < n; b++) grid.Add(c.Rings[b], c.Proxies[b]);
+            MeleeBystanderGrid.ReadOnlyView view = grid.AsReadOnly();
+            var a = new NativeList<int>(64, Allocator.Temp);
+            var v = new NativeList<int>(64, Allocator.Temp);
+            int compared = 0;
+            foreach (int reach in new[] { 1600, 2500, 90_000 })
+                for (int b = 0; b < n; b++)
+                {
+                    int3 at = FeetNow(c.Rings[b]);
+                    grid.Gather(at, reach, a);
+                    view.Gather(at, reach, v);
+                    Assert.AreEqual(a.Length, v.Length, $"body {b} reach {reach}: count");
+                    for (int k = 0; k < a.Length; k++) Assert.AreEqual(a[k], v[k], $"body {b} reach {reach}: pick {k}");
+                    compared += a.Length;
+                }
+            Assert.Greater(compared, n, "the crowds really had neighbours");
+            a.Dispose(); v.Dispose();
+        }
+
         [Test]
         public void ABodyThatTeleportedHere_IsStillFound_WhereItStoodBefore()
         {
