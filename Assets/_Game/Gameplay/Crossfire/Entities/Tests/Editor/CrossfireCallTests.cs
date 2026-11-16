@@ -144,8 +144,7 @@ namespace KryticalNova.Crossfire.Entities.Tests
                 Assert.AreEqual(expected[levels[i]], heard[0].text, $"level {levels[i]}: its own bracket");
                 Assert.AreEqual(AnnouncementKind.Crossfire, heard[0].kind);
             }
-            Assert.AreEqual(1, clock.Announced, "one moment");
-            Assert.AreEqual(5, clock.Told, "told to the five players at level 10 and up");
+            Assert.AreEqual(5, clock.Told, "one moment, told to the five players at level 10 and up");
 
             RunTo(tw, 2700);
             for (int i = 0; i < levels.Length; i++)

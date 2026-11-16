@@ -32,6 +32,8 @@ namespace KryticalNova.Crossfire.Entities
         public int SentBack { get; private set; }
         /// <summary>Players the Transit Row port put on their Rally Point (tests).</summary>
         public int Ported { get; private set; }
+        /// <summary>What the port answered last (tests, diagnostics).</summary>
+        public CrossfirePortAnswer LastPortAnswer { get; private set; }
 
         PortHandler m_Port;
 
@@ -86,6 +88,7 @@ namespace KryticalNova.Crossfire.Entities
             if (m_Clock == null) return false;
             CrossfireSettings settings = m_Clock.ActiveSettings;
             CrossfirePortAnswer answer = CrossfirePort.Decide(settings, m_Clock.Current, portalId, level, faction, out CrossfireArea yard);
+            LastPortAnswer = answer;
             if (answer == CrossfirePortAnswer.NotThisPort || answer == CrossfirePortAnswer.NotCalled) return false;
             string message = CrossfirePort.Message(settings, answer, level);
             EntityManager em = EntityManager;

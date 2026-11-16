@@ -78,10 +78,13 @@ namespace KryticalNova.Crossfire.Entities.Tests
             clock.Clock = () => m_Now;
             clock.Interval = 0f;
             m_Now = Origin + 5;
-            rig.Tick(3);
+            Settle(rig);
             Assert.AreEqual(CrossfirePhase.Call, clock.Current.Now.Phase, "the war is called");
             return (rig, clock, entry);
         }
+
+        /// <summary>Ticks past the clock's next look (it was booked a quarter second ahead before the test set Interval 0).</summary>
+        static void Settle(PlayerRig rig) => rig.Tick(30);
 
         static int3 Mm(Vector3 m) => new int3((int)math.round(m.x * 1000f), (int)math.round(m.y * 1000f), (int)math.round(m.z * 1000f));
 
@@ -102,7 +105,7 @@ namespace KryticalNova.Crossfire.Entities.Tests
                 {
                     Assert.IsTrue(entry.Port(rig.ServerGhosts[i], levels[i], factions[i], m_Settings.portPortalId, out ZoneTransferResult r),
                         $"player {i}: Crossfire answers its port");
-                    Assert.IsTrue(r.Transferred, $"player {i} (level {levels[i]}, {factions[i]}) is moved");
+                    Assert.IsTrue(r.Transferred, $"player {i} (level {levels[i]}, {factions[i]}) is moved; the port said {entry.LastPortAnswer} ({r.Message}), phase {clock.Current.Now.Phase}");
                     Assert.AreEqual(m_Settings.portArrivedText, r.Message);
                 }
                 rig.Tick(10);
@@ -119,7 +122,7 @@ namespace KryticalNova.Crossfire.Entities.Tests
 
                 // the war runs out: everyone the port brought is sent back where they stood before
                 m_Now = Origin + 200;
-                rig.Tick(10);
+                Settle(rig);
                 Assert.AreEqual(CrossfirePhase.Gap, clock.Current.Now.Phase);
                 Assert.AreEqual(3, entry.SentBack);
                 for (int i = 0; i < 3; i++)
@@ -165,7 +168,7 @@ namespace KryticalNova.Crossfire.Entities.Tests
                 Assert.IsNotNull(ZonePortal.TransferHandler);
                 Assert.IsNotInstanceOf<SealedPortalHandler>(ZonePortal.TransferHandler, "Crossfire stands in front of the portals' handler on this server");
                 m_Now = Origin + 90;   // the War: the gates are open, the port no longer takes anyone
-                rig.Tick(3);
+                Settle(rig);
                 Assert.AreEqual(CrossfirePhase.War, clock.Current.Now.Phase);
                 Assert.IsFalse(entry.Port(rig.ServerGhosts[0], 112, FactionId.Hegemony, m_Settings.portPortalId, out _), "during the War: the portal as always");
 
