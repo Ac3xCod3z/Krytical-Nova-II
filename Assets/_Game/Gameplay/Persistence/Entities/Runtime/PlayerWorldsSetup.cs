@@ -40,7 +40,9 @@ namespace KryticalNova.Persistence.Entities
         {
             if (IsProbeRun()) return;
             KnWorldHooks.ServerWorldMade += world => InstallServer(world);
-            KnWorldHooks.ClientWorldMade += world => InstallClient(world);
+#if !UNITY_SERVER
+            KnWorldHooks.ClientWorldMade += world => InstallClient(world);   // the body presentation is client only
+#endif
             KnGoInGame.Source = new CharacterSessionGoInGame();
         }
 
@@ -158,6 +160,7 @@ namespace KryticalNova.Persistence.Entities
             return admission;
         }
 
+#if !UNITY_SERVER
         /// <summary>
         /// Client world: the body factory (real Player.prefab as ClientView), the clicks of the local body's view mode, and the client's
         /// planner (configured from the local body's NavMeshAgent when it is made). The ghost subscene is loaded first: a client that
@@ -211,6 +214,7 @@ namespace KryticalNova.Persistence.Entities
             }
             return factory;
         }
+#endif
 
         /// <summary>
         /// The player's own body animates at its predicted ghost's speed (<see cref="KryticalNova.Player.Entities.Presentation.PlayerPresentationState"/>,
