@@ -42,7 +42,7 @@ namespace KryticalNova.Economy
     /// Every value here is a proposal to be tuned; nothing in code may hard-code one.
     /// </summary>
     [CreateAssetMenu(menuName = "Krytical Nova/Economy/Economy Settings")]
-    public sealed class EconomySettings : ScriptableObject, IExperienceBoosterTable
+    public sealed class EconomySettings : ScriptableObject, IExperienceBoosterTable, IPackSyncTuning
     {
         private const int RarityCount = 5;
 
@@ -133,6 +133,14 @@ namespace KryticalNova.Economy
         ExperienceBooster[] IExperienceBoosterTable.Boosters => boosters;
         int IExperienceBoosterTable.MaxHours => boosterMaxHours;
         bool IExperienceBoosterTable.TimeRunsOnlyOnline => boosterTimeRunsOnlyOnline;
+
+        [Header("Pack mirror (server to owner)")]
+        [Tooltip("Seconds between two looks at a player's Pack, Vault, loadouts, skills and booster clocks; a change reaches the owner within this.")]
+        [Min(0f)] public float packSyncSeconds = 0.1f;
+        [Tooltip("The players are looked at in this many turns, one group a turn, so the server's work is spread over the frames (perf round 3, R3-6). Each player is still looked at every packSyncSeconds.")]
+        [Min(1)] public int packSyncGroups = 3;
+        float IPackSyncTuning.PackSyncSeconds => packSyncSeconds;
+        int IPackSyncTuning.PackSyncGroups => packSyncGroups;
 
         [Header("Income target (what the faucets are tuned to pay)")]
         [Tooltip("Creds a player is meant to earn per hour of hunting at a level. Hostile drops, Contracts and shops are " +

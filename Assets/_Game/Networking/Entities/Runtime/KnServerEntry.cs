@@ -94,6 +94,11 @@ namespace KryticalNova.Networking.Entities
             KnStopRequests.Reset();
             var stopSystem = server.GetExistingSystemManaged<KnStopSystem>();
             if (stopSystem != null) stopSystem.Machine.GraceTicks = KnNetDefaults.StopGraceTicks(settings.stopGraceSeconds > 0f ? settings.stopGraceSeconds : KnNetDefaults.StopGraceSeconds);
+            var closedSystem = server.GetExistingSystemManaged<ConnectionClosedSystem>();
+            if (closedSystem != null) closedSystem.MaxLeavesPerTick = settings.leavesPerTick;
+            // Perf round 3, R3-7: a built server's ordinary log lines carry no stack trace (each one was a managed stack walk, one or more
+            // per leaving player); warnings, errors and exceptions keep theirs. The server log file never wrote them; the Editor keeps them.
+            if (!Application.isEditor) Application.SetStackTraceLogType(LogType.Log, StackTraceLogType.None);
 
             var assembler = server.GetExistingSystemManaged<KnApprovalAssembler>();
             assembler.JoinCheck = BuildJoinCheck(settings, GameBuild.Version, Application.isEditor, ProjectId(settings), () => assembler.ApprovedCount);

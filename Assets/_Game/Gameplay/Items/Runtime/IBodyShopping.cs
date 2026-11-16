@@ -23,5 +23,20 @@ namespace KryticalNova.Items
 
         /// <summary>The owner's own view: one item's count of that week.</summary>
         void MirrorBought(ushort itemId, int count);
+
+        /// <summary>How often the server mirrors the owner's Pack (EconomySettings; perf round 3, R3-6). Null = the network's defaults.</summary>
+        IPackSyncTuning PackSyncTuning => null;
+    }
+
+    /// <summary>
+    /// The server's Pack mirror timing (EconomySettings implements it): here, below Economy, so the network reads the numbers without
+    /// knowing Economy.
+    /// </summary>
+    public interface IPackSyncTuning
+    {
+        /// <summary>Seconds between two looks at one player's Pack, Vault, loadouts, skills and booster clocks.</summary>
+        float PackSyncSeconds { get; }
+        /// <summary>The players are looked at in this many turns, one group a turn.</summary>
+        int PackSyncGroups { get; }
     }
 }

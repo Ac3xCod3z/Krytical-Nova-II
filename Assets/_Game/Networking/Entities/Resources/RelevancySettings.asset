@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7865a9f3ded24648a1446c7fe7e5016d, type: 3}
   m_Name: RelevancySettings
   m_EditorClassIdentifier: KryticalNova.Networking.Entities::KryticalNova.Networking.Entities.RelevancySettings
-  enabled: 0
+  enabled: 1
   playerRadius: 150
   objectRadius: 150
   leaveMargin: 16
@@ -21,3 +21,4 @@ MonoBehaviour:
   importancePlayer: 100
   importanceHostile: 60
   importanceDummy: 10
+  preSerializePlayer: 1

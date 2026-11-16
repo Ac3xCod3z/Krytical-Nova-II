@@ -62,7 +62,15 @@ STAGES = {
     "S1-relevancy-on": dict(bots=50, minutes=30, step=5, every=120, lines=["gm.zone.list"], extra=[], who="session", hostiles="102", relevancy=True),
     "S1-relevancy-off": dict(bots=50, minutes=30, step=5, every=120, lines=["gm.zone.list"], extra=[], who="session", hostiles="102", relevancy=False),
 }
-EQUIP = ["gm.level max", "gm.skills.max", "gm.autopilot.time {seconds}"]
+# Each bot after gm.target (perf round 3 chunk 0, 15 Nov 2026: before, the bots stood in one clump at the spawn): every skill, a day of
+# Autopilot time, a Hostile Zone of Zone01 (gm.tp finds a zone by its id, the bots spread over the four mob zones), then Autopilot on
+# (it only starts inside a Hostile Zone). The bots enter at the maximum level already ("gm.level max" was not a number).
+# gm.autopilot on goes in a LATER pass (AUTOPILOT_AFTER_S after the tp): the teleport moves the ghost and the body follows a tick later,
+# so an "on" sent straight after the tp still saw the town (coder-2's 50-bot proof, 15 Nov: 49 of 50 refused). Up to 3 tries per bot.
+EQUIP = ["gm.skills.max", "gm.autopilot.time 1", "gm.tp {zone}"]
+AUTOPILOT_AFTER_S = 1.5
+AUTOPILOT_TRIES = 3
+BOT_ZONES = ["mob-ne", "mob-nw", "mob-se", "mob-sw"]
 SECRET_KEYS = ("pagePassword", "password", "key", "secret", "token", "saveServiceKey")
 
 THIN_BOT_NOTE = (
@@ -283,7 +291,8 @@ def wait_for_page(page, what):
 
 
 def bots_in_status(status):
-    return re.findall(r'\{"id":(\d+),"name":"(Knbot\d+)"', status or "")
+    # The entity server's /api/status writes ids as strings ("id":"1"); bare numbers too (coder-2, phase 0: no bot was ever matched)
+    return re.findall(r'\{"id":"?(\d+)"?,"name":"(Knbot\d+)"', status or "")
 
 
 # ------------------------------------------------------------------ the result page
@@ -426,6 +435,7 @@ def run_stage(stage):
             host = job.start("bot host", args, os.path.dirname(SETTINGS["bot_host"]), os.path.join(run_folder, "bots", "host.out.log"))
             pids.write(f"bothost {host.pid}\n"); pids.flush()
         equipped = set()
+        placed, tries, autopiloted = {}, {}, set()   # bot id -> time of its tp; tries of "gm.autopilot on"; bots on Autopilot
         sent_lines = False
         started = time.time()
         while time.time() - started < seconds + 30:
@@ -442,9 +452,28 @@ def run_stage(stage):
                 if bot_id in equipped:
                     continue
                 gm_answers.append((f"gm.target {bot_id}", page.command(f"gm.target {bot_id}")))
+                zone = BOT_ZONES[len(equipped) % len(BOT_ZONES)]
                 for line in EQUIP:
-                    page.command(line.format(seconds=seconds))
+                    l = line.format(zone=zone)
+                    answer = page.command(l)
+                    if l.startswith("gm.tp"):
+                        gm_answers.append((f"{l} (bot {bot_id})", answer))   # the proof: where each bot went
                 equipped.add(bot_id)
+                placed[bot_id] = time.time()
+            # Autopilot on, a pass after the teleport has moved the body (see AUTOPILOT_AFTER_S)
+            for bot_id, at in list(placed.items()):
+                if time.time() - at < AUTOPILOT_AFTER_S:
+                    continue
+                page.command(f"gm.target {bot_id}")
+                answer = page.command("gm.autopilot on") or ""
+                tries[bot_id] = tries.get(bot_id, 0) + 1
+                if "Autopilot ON" in answer or tries[bot_id] >= AUTOPILOT_TRIES:
+                    gm_answers.append((f"gm.autopilot on (bot {bot_id}, try {tries[bot_id]})", answer))   # Autopilot's own words
+                    if "Autopilot ON" in answer:
+                        autopiloted.add(bot_id)
+                    del placed[bot_id]
+                else:
+                    placed[bot_id] = time.time()   # not in the zone yet: again next pass
             if not sent_lines and (spec["bots"] == 0 or len(equipped) >= min(spec["bots"], spec["step"] or spec["bots"])):
                 species = "prowler"
                 for line in spec["lines"]:
@@ -456,7 +485,7 @@ def run_stage(stage):
                 say(f"the bot host ended (exit {bot_exit})")
                 if time.time() - started >= seconds:
                     break
-            say(f"{stage}: {time.time() - started:.0f}/{seconds} s, bots equipped {len(equipped)}, free RAM {free:.1f} GB")
+            say(f"{stage}: {time.time() - started:.0f}/{seconds} s, bots equipped {len(equipped)}, on Autopilot {len(autopiloted)}, free RAM {free:.1f} GB")
             time.sleep(10)
         if host is not None and bot_exit is None and host.poll() is not None:
             bot_exit = host.returncode

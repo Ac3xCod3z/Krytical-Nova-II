@@ -14,7 +14,12 @@ namespace KryticalNova.Player.Entities
     // the plan and the tick, as the jump does. The jump's MotionPlan is left alone: the knock has its own plan.
     // =================================================================================================================
 
-    /// <summary>A dead body's travel to its landing, planned by the server at the death (never predicted, owner answer Q4).</summary>
+    /// <summary>
+    /// A dead body's travel to its landing, planned by the server at the death (never predicted, owner answer Q4). Sent to the owner
+    /// only (perf round 3, R3-2): on a client only the owner's own ghost runs <see cref="DeathKnockSystem"/> (prediction, Simulate);
+    /// every other player sees the travel through the interpolated pose.
+    /// </summary>
+    [GhostComponent(OwnerSendType = SendToOwnerType.SendToOwner)]
     public struct KnockPlan : IComponentData
     {
         /// <summary>Bumped on each knock; 0 = none yet.</summary>

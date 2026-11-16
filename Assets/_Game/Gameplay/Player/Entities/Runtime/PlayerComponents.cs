@@ -90,7 +90,10 @@ namespace KryticalNova.Player.Entities
     /// <summary>
     /// A walk the server issues (skill walk-in, follow, housing, bench...). Replicated and predicted: the start system treats
     /// a change of <see cref="Seq"/> exactly like a click. It wins over a click of the same tick.
+    /// Sent to the owner only (perf round 3, R3-2): only the owner's predicted walk and the server read it; other players' bodies
+    /// follow <see cref="MoveState"/> and the pose.
     /// </summary>
+    [GhostComponent(OwnerSendType = SendToOwnerType.SendToOwner)]
     public struct ServerOrder : IComponentData
     {
         [GhostField] public ushort Seq;

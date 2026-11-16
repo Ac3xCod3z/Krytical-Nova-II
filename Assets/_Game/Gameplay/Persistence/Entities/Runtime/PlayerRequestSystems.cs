@@ -1443,8 +1443,20 @@ namespace KryticalNova.Persistence.Entities
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial class PlayerPackSyncServerSystem : SystemBase
     {
-        /// <summary>Seconds between looks at the Packs.</summary>
+        /// <summary>Seconds between two looks at the same player's Pack (EconomySettings.packSyncSeconds once a body is there).</summary>
         public float Interval = 0.1f;
+
+        /// <summary>
+        /// The players are looked at in this many turns, one group a turn, so each is still looked at every <see cref="Interval"/>
+        /// (EconomySettings.packSyncGroups; perf round 3, R3-6: all 200 in one look cost 6.5 ms every third frame). A player arriving
+        /// or whose own body just became ready is looked at in the next turn, whatever its group.
+        /// </summary>
+        public int Groups = 3;
+
+        int m_Turn;
+        bool m_SettingsRead;
+        readonly HashSet<Entity> m_Urgent = new HashSet<Entity>();
+        readonly List<IBodyStorage> m_Storages = new List<IBodyStorage>();
 
         readonly Dictionary<Entity, ItemStack[]> m_Sent = new Dictionary<Entity, ItemStack[]>();
         readonly Dictionary<Entity, LoadoutEntry[]> m_SentLoadouts = new Dictionary<Entity, LoadoutEntry[]>();
@@ -1516,6 +1528,7 @@ namespace KryticalNova.Persistence.Entities
                         if (ReferenceEquals(entry.World, World) && entry.NetworkId == id && em.Exists(entry.Ghost) && m_Readied.Add(entry.Ghost))
                         {
                             ForgetSent(entry.Ghost);
+                            m_Urgent.Add(entry.Ghost);
                             honoured = true;
                             PlayerRequestServerSystem.ItemProbe?.Invoke($"server: own body ready for player {id}: every mirror sent again");
                         }
@@ -1530,7 +1543,10 @@ namespace KryticalNova.Persistence.Entities
         {
             HearReadies();
             if (UnityEngine.Time.realtimeSinceStartup < m_Next) return;
-            m_Next = UnityEngine.Time.realtimeSinceStartup + Interval;
+            int groups = Mathf.Max(1, Groups);
+            m_Next = UnityEngine.Time.realtimeSinceStartup + Interval / groups;
+            int turn = m_Turn;
+            m_Turn = (m_Turn + 1) % groups;
             var em = EntityManager;
             m_Connections.Clear();
             var connections = m_InGame.ToEntityArray(Allocator.Temp);
@@ -1550,8 +1566,17 @@ namespace KryticalNova.Persistence.Entities
             {
                 if (!ReferenceEquals(entry.World, World) || entry.Body == null || !em.Exists(entry.Ghost)) continue;
                 if (!m_Connections.TryGetValue(entry.NetworkId, out Entity connection)) continue;
-                var inventory = entry.Body.GetComponent<PlayerInventory>();
-                if (inventory == null) continue;
+                if (!m_SettingsRead && entry.TryGetPart(out IBodyShopping shop) && shop.PackSyncTuning is IPackSyncTuning tuning
+                    && !(tuning is UnityEngine.Object asset && asset == null))
+                {
+                    m_SettingsRead = true;
+                    Interval = Mathf.Max(0f, tuning.PackSyncSeconds);
+                    Groups = Mathf.Max(1, tuning.PackSyncGroups);
+                }
+                // this turn's group (by the ghost's own index, which stays while the player does), plus arrivals and readied bodies
+                bool known = m_Sent.ContainsKey(entry.Ghost);
+                if (known && entry.Ghost.Index % groups != turn && !m_Urgent.Contains(entry.Ghost)) continue;
+                if (!entry.TryGetPart(out PlayerInventory inventory)) continue;
                 if (!m_Sent.TryGetValue(entry.Ghost, out ItemStack[] sent))
                 {
                     sent = new ItemStack[PlayerInventory.Capacity + WornCells];
@@ -1585,7 +1610,8 @@ namespace KryticalNova.Persistence.Entities
                     }
                 }
                 // the Vault and Deep Vault cells and Creds (NGO: owner-only list + variable each), emptied then filled on arrival, then changes
-                foreach (var storage in entry.Body.GetComponents<IBodyStorage>())
+                entry.Body.GetComponents(m_Storages);   // into a kept list: no array per player per look
+                foreach (IBodyStorage storage in m_Storages)
                 {
                     var key = (entry.Ghost, storage.StorageKind);
                     bool arriving = !m_SentStorage.TryGetValue(key, out var told);
@@ -1690,6 +1716,8 @@ namespace KryticalNova.Persistence.Entities
                     CellsSent++;
                 }
             }
+            m_Urgent.Clear();
+            m_Storages.Clear();
         }
 
         /// <summary>Cells after the Pack's: one per equipment slot (index Capacity + slot; slot 0 is None).</summary>

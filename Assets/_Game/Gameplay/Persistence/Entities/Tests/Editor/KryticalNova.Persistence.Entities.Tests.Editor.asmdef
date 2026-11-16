@@ -20,6 +20,7 @@
         "KryticalNova.UI",
         "KryticalNova.Player.Entities.Bodies",
         "Unity.Collections",
+        "Unity.Mathematics",
         "KryticalNova.Player.Entities",
         "KryticalNova.Player.Entities.Presentation",
         "KryticalNova.Player",

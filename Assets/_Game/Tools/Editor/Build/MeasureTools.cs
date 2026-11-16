@@ -31,7 +31,10 @@ namespace KryticalNova.EditorTools
         public const int PagePort = 8091;
         private const string ClientExe = "KryticalNovaII.exe";
         private const int BotsPerStep = 5;
-        private static readonly string[] Equip = { "gm.level 60", "gm.skills.max", "gm.autopilot.time 600" };
+        // Then each bot goes to a Hostile Zone (gm.tp finds a zone by its id) and Autopilot is switched on, which only starts inside one
+        // (perf round 3 chunk 0, 15 Nov 2026: the time alone left every bot standing at the spawn).
+        private static readonly string[] Equip = { "gm.level 60", "gm.skills.max", "gm.autopilot.time 1" };
+        private static readonly string[] BotZones = { "mob-ne", "mob-nw", "mob-se", "mob-sw" };
 
         // ------------------------------------------------------------------ the bot client
 
@@ -144,14 +147,24 @@ namespace KryticalNova.EditorTools
             string status = Page("/api/status", null);
             if (status == null) { Debug.LogError("[Measure] The measure server's page does not answer."); return; }
             int equipped = 0;
+            var placed = new List<string>();
             foreach (Match player in Regex.Matches(status, "\\{\"id\":(\\d+),\"name\":\"(Bot[a-z]+[0-9]?)\""))
             {
                 string id = player.Groups[1].Value;
                 if (Page("/api/command", "{\"line\":\"gm.target " + id + "\"}") == null) continue;
                 foreach (string line in Equip) Page("/api/command", "{\"line\":\"" + line + "\"}");
+                Page("/api/command", "{\"line\":\"gm.tp " + BotZones[equipped % BotZones.Length] + "\"}");
+                placed.Add(id);
                 equipped++;
             }
-            Debug.Log($"[Measure] Equipped {equipped} bot(s): {string.Join(", ", Equip)}.");
+            // Autopilot on in a second pass: the teleport moves the body a tick later, and Autopilot only starts inside a Hostile Zone
+            System.Threading.Thread.Sleep(1500);
+            foreach (string id in placed)
+            {
+                Page("/api/command", "{\"line\":\"gm.target " + id + "\"}");
+                Page("/api/command", "{\"line\":\"gm.autopilot on\"}");
+            }
+            Debug.Log($"[Measure] Equipped {equipped} bot(s): {string.Join(", ", Equip)}, a Hostile Zone each, Autopilot on.");
         }
 
         [MenuItem(Menu + "6. Stop All Bots", priority = 65)]

@@ -44,6 +44,8 @@ namespace KryticalNova.Networking.Entities
         public string cloudProjectId = "";
         /// <summary>The most seconds the stop waits for the players' connections to close before it force-closes them and quits (default <see cref="KnNetDefaults.StopGraceSeconds"/>).</summary>
         public float stopGraceSeconds = KnNetDefaults.StopGraceSeconds;
+        /// <summary>The most closed connections handled in one tick; the rest wait for the next ticks (default <see cref="KnNetDefaults.LeavesPerTick"/>; 0 = all at once).</summary>
+        public int leavesPerTick = KnNetDefaults.LeavesPerTick;
 
         /// <summary>
         /// The file's <c>relevancy</c> key (wave 4): the switch for relevancy that needs no build. Null = the key is not in the file, so
