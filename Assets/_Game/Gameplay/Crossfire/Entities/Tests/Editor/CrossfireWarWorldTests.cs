@@ -155,6 +155,7 @@ namespace KryticalNova.Crossfire.Entities.Tests
         {
             m_Settings.capPerFaction = 1;
             var (rig, _, entry) = Start(new[] { FactionId.Hegemony, FactionId.Hegemony, FactionId.Null });
+            WarBots.Fill = null;   // no real War Bots in a test of the cap
             using (rig)
             {
                 PlayerPose before1 = rig.ServerPose(1);
@@ -180,8 +181,8 @@ namespace KryticalNova.Crossfire.Entities.Tests
             m_Settings.capPerFaction = 3;
             m_Settings.killDropChance = 1f;   // every real-on-real kill drops, so the test sees it
             var bots = new FakeBots();
-            WarBots.Fill = bots;
             var (rig, clock, entry) = Start(new[] { FactionId.Hegemony, FactionId.Null, FactionId.Hegemony });
+            WarBots.Fill = bots;   // after the worlds: the real War Bots system fills the slot when the server world is made
             using (rig)
             {
                 Port(rig, entry, 0, FactionId.Hegemony, true, "Hegemony's first");
@@ -268,8 +269,8 @@ namespace KryticalNova.Crossfire.Entities.Tests
         [Test]
         public void WithoutWarBots_NoVoteIsOffered()
         {
-            WarBots.Fill = null;
             var (rig, clock, entry) = Start(new[] { FactionId.Hegemony });
+            WarBots.Fill = null;   // after the worlds, as above
             using (rig)
             {
                 Port(rig, entry, 0, FactionId.Hegemony, true, "in");
