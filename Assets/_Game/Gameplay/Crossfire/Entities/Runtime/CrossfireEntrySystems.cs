@@ -113,6 +113,7 @@ namespace KryticalNova.Crossfire.Entities
             var mm = new int3((int)math.round(at.x * 1000f), (int)math.round(at.y * 1000f), (int)math.round(at.z * 1000f));
             int yawCdeg = (int)math.round(Mathf.Repeat(yaw, 360f) * 100f) % 36000;
             PlayerEntitiesSetup.Teleport(em, ghost, mm, yawCdeg);
+            m_Arriving.Add(ghost);
             Ported++;
             result = new ZoneTransferResult(true, message);
             return true;
@@ -138,10 +139,15 @@ namespace KryticalNova.Crossfire.Entities
                     var spot = new CrossfireSpot { Mm = new Vector3Int(pose.ValueRO.XMm, pose.ValueRO.YMm, pose.ValueRO.ZMm), YawCdeg = pose.ValueRO.YawCdeg };
                     bool inArea = CrossfireArea.AnyContains(at, false), inYard = inArea && CrossfireArea.AnyContains(at, true);
                     // a newcomer to a Rally Point while it takes players in: their side takes them, or (full) puts them back
+                    if (IsBot(entity)) continue;   // War Bots are never admitted, paid or sent back as real players (review 1, item 4)
+                    if (!inArea && m_Sides.TryGetSide(entity, out _) && !m_Arriving.Contains(entity)) m_Leaving.Add(entity);   // left the war (item 2)
+                    if (inArea) m_Arriving.Remove(entity);
                     if (inYard && joinOpen && !m_Entries.TryEntry(entity, out _) && m_Entries.TryOutside(entity, out CrossfireSpot from) && !Admit(entity, from))
                         continue;
                     m_Entries.Observe(entity, spot, inArea, inYard, joinOpen);
                 }
+                foreach (Entity who in m_Leaving) LeaveWar(who, true);
+                m_Leaving.Clear();
                 SendRefusedBack();
                 m_Entries.ForgetWhere(e => !em.Exists(e) || !em.HasComponent<PlayerPose>(e));
             }

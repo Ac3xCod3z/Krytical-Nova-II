@@ -35,6 +35,30 @@ namespace KryticalNova.Crossfire.Entities
         readonly CrossfireSides<Entity> m_Sides = new CrossfireSides<Entity>();
         readonly List<(Entity who, CrossfireSpot to)> m_Refused = new List<(Entity, CrossfireSpot)>();
         readonly List<FactionId> m_BotsOut = new List<FactionId>();
+        readonly List<Entity> m_Leaving = new List<Entity>();
+        /// <summary>Players put into the war area who have not been seen there yet (a teleport lands a tick later): not leavers.</summary>
+        readonly HashSet<Entity> m_Arriving = new HashSet<Entity>();
+
+        /// <summary>Players who left the war before its end (tests).</summary>
+        public int Left { get; private set; }
+        /// <summary>Kill drops rolled (an item was picked), whether or not it fitted in the killer's Pack (tests).</summary>
+        public int DropsRolled { get; private set; }
+
+        bool IsBot(Entity ghost) => Bots != null && Bots.IsWarBot(ghost);
+
+        /// <summary>
+        /// A real player leaves the war before its end (walked or ported out of the war area, or left the game): their place goes, they are
+        /// not paid and not sent back (review 1, item 2).
+        /// </summary>
+        void LeaveWar(Entity who, bool tell)
+        {
+            if (!m_Sides.TryGetSide(who, out _)) return;
+            m_Sides.Leave(who);
+            m_Entries.Forget(who);
+            m_Arriving.Remove(who);
+            Left++;
+            if (tell && Settings != null) Tell(who, Settings.leftWarText);
+        }
         readonly Dictionary<FactionId, (int yes, int no)> m_Votes = new Dictionary<FactionId, (int, int)>();
         readonly HashSet<Entity> m_Voted = new HashSet<Entity>();
         readonly List<Entity> m_RealPlayers = new List<Entity>();
@@ -58,6 +82,8 @@ namespace KryticalNova.Crossfire.Entities
         public int SidesFilled { get; private set; }
         public int Drops { get; private set; }
         public readonly Dictionary<Entity, CrossfirePay> LastPay = new Dictionary<Entity, CrossfirePay>();
+        /// <summary>What each real player was really given at the last war's end (a capped wallet takes less; no body, nothing) (tests).</summary>
+        public readonly Dictionary<Entity, CrossfirePay> LastGiven = new Dictionary<Entity, CrossfirePay>();
         /// <summary>The item the last drop gave (tests).</summary>
         public ushort LastDrop { get; private set; }
 
@@ -147,6 +173,7 @@ namespace KryticalNova.Crossfire.Entities
         {
             CrossfireSettings s = Settings;
             if (s == null) return true;
+            if (IsBot(who)) return false;   // never a real player's place (review 1, item 4)
             FactionId side = SideOfReal(who);
             CrossfireJoin join = m_Sides.TryJoin(who, side, s.capPerFaction, BotsOn(side));
             switch (join)
@@ -232,10 +259,12 @@ namespace KryticalNova.Crossfire.Entities
             ItemDefinition item = PickDrop != null ? PickDrop(killer, level, pick)
                 : pack != null ? HostileLoot.PickGear(pack.Catalog, level, s.killDropLevelsBelow, s.killDropBestRarity, pick) : null;
             if (item == null) return;
-            Drops++;
+            DropsRolled++;
             LastDrop = item.itemId;
-            if (pack != null && pack.ServerGive(item.itemId, 1, earned: true) > 0)
-                EconomyLedger.Keep(EconomyLedger.Line(pack, LedgerKinds.Crossfire, note: "kill drop").Item(pack.Catalog, new ItemStack(item.itemId, 1), 1));
+            // only what was given is told (review 1, item 5): a full Pack takes nothing, and nothing is said
+            if (pack == null || pack.ServerGive(item.itemId, 1, earned: true) <= 0) return;
+            Drops++;
+            EconomyLedger.Keep(EconomyLedger.Line(pack, LedgerKinds.Crossfire, note: "kill drop").Item(pack.Catalog, new ItemStack(item.itemId, 1), 1));
             Tell(killer, (s.killDropText ?? string.Empty).Replace("{item}", item.displayName));
         }
 
@@ -315,6 +344,7 @@ namespace KryticalNova.Crossfire.Entities
             m_Votes.Clear();
         }
 
+        /// <summary>The war's bracket, from its first real player: right while only one bracket (X) has a zone (one war at a time).</summary>
         int BracketOfWar(CrossfireSettings s)
         {
             foreach (KeyValuePair<Entity, FactionId> p in m_Sides.Players)
@@ -333,7 +363,8 @@ namespace KryticalNova.Crossfire.Entities
             CrossfireSettings s = Settings;
             if (s == null) return;
             EntityManager em = EntityManager;
-            m_Sides.ForgetWhere(e => !em.Exists(e));
+            m_Sides.ForgetWhere(e => !em.Exists(e));   // left the game: no place, no pay
+            m_Arriving.RemoveWhere(e => !em.Exists(e));
             ReadVoteAnswers();
             CrossfirePhase phase = state.Now.Phase;
             double war = state.Now.WarStart;
@@ -345,7 +376,7 @@ namespace KryticalNova.Crossfire.Entities
                 m_Votes.Clear();
                 m_Voted.Clear();
                 double gatesOpen = war + s.musterSeconds;
-                m_VoteCloses = Math.Min(now + s.voteSeconds, gatesOpen - 1.0);
+                m_VoteCloses = Math.Min(now + s.voteSeconds, gatesOpen - s.voteClosesBeforeGatesSeconds);
                 m_VoteOpen = true;
                 foreach (FactionId side in CrossfireSides<Entity>.Factions)
                 {
@@ -385,12 +416,15 @@ namespace KryticalNova.Crossfire.Entities
                     : (progression != null && progression.IsAtLevelCap, progression != null ? progression.ExperienceRequired : 0, StateOf(pet), StateOf(mount));
                 CrossfirePay pay = CrossfireRewards.Payout(s, outcome, bracket, growth.maxed, growth.step, growth.petState, growth.mountState);
                 LastPay[p.Key] = pay;
-                if (pay.CharacterExp > 0 && progression != null) progression.GrantExperience(pay.CharacterExp);
-                if (pay.PetPercent > 0f) pet?.ServerGrantPercentOfFull(pay.PetPercent);
-                if (pay.MountPercent > 0f) mount?.ServerGrantPercentOfFull(pay.MountPercent);
-                if (pay.Creds > 0 && body != null && body.TryGetComponent(out PlayerWallet wallet)) wallet.ServerEarn(pay.Creds, CredsSource.Crossfire);
+                // what was really given, and only that is told (review 1, item 5: a wallet at its cap takes less)
+                var given = new CrossfirePay();
+                if (pay.CharacterExp > 0 && progression != null) { progression.GrantExperience(pay.CharacterExp); given.CharacterExp = pay.CharacterExp; }
+                if (pay.PetPercent > 0f && pet != null) { pet.ServerGrantPercentOfFull(pay.PetPercent); given.PetPercent = pay.PetPercent; }
+                if (pay.MountPercent > 0f && mount != null) { mount.ServerGrantPercentOfFull(pay.MountPercent); given.MountPercent = pay.MountPercent; }
+                if (pay.Creds > 0 && body != null && body.TryGetComponent(out PlayerWallet wallet)) given.Creds = wallet.ServerEarn(pay.Creds, CredsSource.Crossfire);
+                LastGiven[p.Key] = given;
                 string text = outcome == CrossfireOutcome.Won ? s.wonText : outcome == CrossfireOutcome.Tied ? s.tiedText : s.lostText;
-                Tell(p.Key, (text ?? string.Empty).Replace("{kills}", m_Sides.Kills(p.Value).ToString()).Replace("{score}", score).Replace("{pay}", Words(pay)));
+                Tell(p.Key, (text ?? string.Empty).Replace("{kills}", m_Sides.Kills(p.Value).ToString()).Replace("{score}", score).Replace("{pay}", Words(given)));
             }
         }
 
@@ -417,6 +451,7 @@ namespace KryticalNova.Crossfire.Entities
         /// <summary>The war is over (its End ran out, or a GM called it off): its sides, score and bots go.</summary>
         void EndWar()
         {
+            m_Arriving.Clear();
             m_Sides.Clear();
             m_Votes.Clear();
             m_VoteOpen = false;

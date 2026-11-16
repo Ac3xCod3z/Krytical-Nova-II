@@ -220,12 +220,14 @@ namespace KryticalNova.Crossfire.Entities.Tests
                 var bot = rig.Server.EntityManager.CreateEntity();
                 bots.Ghosts[bot] = FactionId.Null;
                 Assert.IsTrue(entry.RecordKill(rig.ServerGhosts[0], rig.ServerGhosts[1]), "Hegemony kills Null");
-                Assert.AreEqual(1, entry.Drops, "a real player's kill of a real player dropped (chance 1 here)");
+                Assert.AreEqual(1, entry.DropsRolled, "a real player's kill of a real player dropped (chance 1 here)");
                 Assert.AreEqual(777, entry.LastDrop);
+                Assert.AreEqual(0, entry.Drops, "no Pack here to take it: nothing was given");
+                Assert.IsFalse(entry.Told.Exists(t => t.text.Contains("dropped")), "and nothing that was not given is announced (review 1, item 5)");
                 Assert.IsTrue(entry.RecordKill(rig.ServerGhosts[2], bot), "Hegemony kills a Null bot");
-                Assert.AreEqual(1, entry.Drops, "killing a bot drops nothing");
+                Assert.AreEqual(1, entry.DropsRolled, "killing a bot drops nothing");
                 Assert.IsTrue(entry.RecordKill(bot, rig.ServerGhosts[0]), "a Null bot kills Hegemony: it counts for Null");
-                Assert.AreEqual(1, entry.Drops, "a bot's kill drops nothing");
+                Assert.AreEqual(1, entry.DropsRolled, "a bot's kill drops nothing");
                 Assert.IsFalse(entry.RecordKill(rig.ServerGhosts[0], rig.ServerGhosts[2]), "Hegemony on Hegemony never counts");
                 Settle(rig);
                 Assert.AreEqual(2, clock.Current.KillsHegemony);
@@ -255,6 +257,8 @@ namespace KryticalNova.Crossfire.Entities.Tests
                 Assert.AreEqual(20_000 + 2_000, lost.Creds);
                 Assert.Greater(entry.LastPay[rig.ServerGhosts[0]].Creds, lost.Creds, "the winners are paid more");
                 Assert.IsTrue(entry.Told.Exists(t => t.who == rig.ServerGhosts[0] && t.text.Contains("WON")), "told of the win");
+                Assert.AreEqual(0, entry.LastGiven[rig.ServerGhosts[0]].Creds, "no wallet here: no Creds given, and none announced (review 1, item 5)");
+                Assert.IsFalse(entry.Told.Exists(t => t.text.Contains("Creds")), "only what was given is told");
 
                 // over: the sides, the score and the bots go
                 m_Now = Origin + 200;
@@ -263,6 +267,51 @@ namespace KryticalNova.Crossfire.Entities.Tests
                 Assert.AreEqual(1, bots.Ended, "every war bot goes when the war is over");
                 Assert.AreEqual(0, entry.Sides.Count);
                 Assert.AreEqual(0, clock.Current.KillsHegemony, "the next war starts at 0");
+            }
+        }
+
+        /// <summary>Review 1, item 2: leaving the war area during the war is leaving the war: the place goes, no pay, no send-back.</summary>
+        [Test]
+        public void APlayerWhoLeavesTheWarArea_LosesThePlace_AndIsNotPaid()
+        {
+            m_Settings.capPerFaction = 1;
+            var (rig, clock, entry) = Start(new[] { FactionId.Hegemony, FactionId.Hegemony });
+            WarBots.Fill = null;
+            using (rig)
+            {
+                Port(rig, entry, 0, FactionId.Hegemony, true, "in");
+                Settle(rig);
+                Assert.IsTrue(entry.Sides.TryGetSide(rig.ServerGhosts[0], out _), "joined");
+                rig.Teleport(0, new int3(-60000, 0, -60000));   // walks off (here: is put) out of the war area
+                Settle(rig);
+                Assert.IsFalse(entry.Sides.TryGetSide(rig.ServerGhosts[0], out _), "left the war");
+                Assert.AreEqual(1, entry.Left);
+                Assert.IsTrue(entry.Told.Exists(t => t.who == rig.ServerGhosts[0] && t.text.Contains("you left the war")));
+                Port(rig, entry, 1, FactionId.Hegemony, true, "the place is free again");
+                Settle(rig);
+                m_Now = Origin + 136;   // the End: only the one still in the war is paid
+                Settle(rig);
+                Assert.AreEqual(CrossfirePhase.End, clock.Current.Now.Phase);
+                Assert.IsFalse(entry.LastPay.ContainsKey(rig.ServerGhosts[0]), "the leaver is not paid");
+                Assert.IsTrue(entry.LastPay.ContainsKey(rig.ServerGhosts[1]));
+            }
+        }
+
+        /// <summary>Review 1, item 4: a War Bot in a Rally Point is never admitted as a real player.</summary>
+        [Test]
+        public void AWarBot_IsNeverAdmittedAsARealPlayer()
+        {
+            var bots = new FakeBots();
+            var (rig, _, entry) = Start(new[] { FactionId.Hegemony, FactionId.Hegemony });
+            WarBots.Fill = bots;
+            using (rig)
+            {
+                bots.Ghosts[rig.ServerGhosts[1]] = FactionId.Hegemony;   // this ghost is a bot
+                rig.Teleport(1, new int3(100000, 0, 0));                 // stands in Hegemony's yard
+                Settle(rig);
+                Assert.IsFalse(entry.Sides.TryGetSide(rig.ServerGhosts[1], out _), "a bot is no real player");
+                Assert.AreEqual(0, entry.Sides.Count);
+                Assert.AreEqual(0, entry.Refused, "nor refused and put back");
             }
         }
 

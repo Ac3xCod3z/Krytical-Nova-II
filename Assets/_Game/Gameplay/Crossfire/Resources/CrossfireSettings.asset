@@ -30,8 +30,10 @@ MonoBehaviour:
   capPerFaction: 33
   sideFullText: 'Crossfire: your side is full ({cap} of {cap}), so you can''t join
     this war.'
+  leftWarText: 'Crossfire: you left the war, so you lose your place and its pay.'
   tookBotsPlaceText: 'Crossfire: you take a War Bot''s place on your side.'
   voteSeconds: 20
+  voteClosesBeforeGatesSeconds: 1
   voteEyebrow: CROSSFIRE
   voteText: Your side has {real} of {cap} players. Fill it to {cap} with War Bots?
   votePassedText: 'Crossfire: your side voted yes. War Bots fill it to {cap}.'
