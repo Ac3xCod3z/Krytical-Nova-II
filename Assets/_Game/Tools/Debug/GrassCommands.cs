@@ -1,3 +1,5 @@
+#if !UNITY_SERVER
+// The grass is client presentation: its assembly is left out of the server build (!UNITY_SERVER).
 using KryticalNova.Vegetation.Grass;
 using QFSW.QC;
 
@@ -66,3 +68,4 @@ namespace KryticalNova.DevTools
         }
     }
 }
+#endif
