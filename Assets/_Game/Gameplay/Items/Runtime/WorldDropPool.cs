@@ -29,14 +29,22 @@ namespace KryticalNova.Items
             }
         }
 
-        // Enter Play Mode runs without a domain reload, so statics must be reset by hand. Netcode clears its own
-        // static event at SubsystemRegistration; this runs after that and before any scene object wakes.
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        // Enter Play Mode runs without a domain reload, so statics must be reset by hand. The reset runs at SubsystemRegistration,
+        // before anything can use the pool: a built entity server makes its worlds at BeforeSceneLoad in no fixed order with our own
+        // BeforeSceneLoad hooks, and a reset there wiped what the world had just set (HostilePool, live bug 15 Nov 2026).
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
         {
             free.Clear();
             prefabOf.Clear();
             Created = 0;
+        }
+
+        // Netcode for GameObjects clears its own static event at SubsystemRegistration (order with ours not fixed), so the
+        // subscription waits for BeforeSceneLoad; it only adds this pool's own handler.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void ListenForNetworkManager()
+        {
             NetworkManager.OnInstantiated -= RegisterHandlers;
             NetworkManager.OnInstantiated += RegisterHandlers;
         }
