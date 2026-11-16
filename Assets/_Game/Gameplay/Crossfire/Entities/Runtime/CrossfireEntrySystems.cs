@@ -32,6 +32,10 @@ namespace KryticalNova.Crossfire.Entities
         public int SentBack { get; private set; }
         /// <summary>Players the Transit Row port put on their Rally Point (tests).</summary>
         public int Ported { get; private set; }
+        /// <summary>Players last seen outside the war area; whether the yards took players in at the last look (tests, diagnostics).</summary>
+        public int SeenOutside => m_Entries.OutsideCount;
+        public bool LastJoinOpen { get; private set; }
+        public int Looks { get; private set; }
         /// <summary>What the port answered last (tests, diagnostics).</summary>
         public CrossfirePortAnswer LastPortAnswer { get; private set; }
 
@@ -118,6 +122,8 @@ namespace KryticalNova.Crossfire.Entities
             if (CrossfireArea.All.Count > 0)
             {
                 bool joinOpen = state.JoinOpen(m_Clock.Now);
+                LastJoinOpen = joinOpen;
+                Looks++;
                 foreach (var (pose, entity) in SystemAPI.Query<RefRO<PlayerPose>>().WithAll<PlayerGhostTag>().WithEntityAccess())
                 {
                     Vector3 at = Meters(pose.ValueRO);

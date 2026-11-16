@@ -125,7 +125,8 @@ namespace KryticalNova.Crossfire.Entities.Tests
                         if (j != i) Assert.IsFalse(CrossfireArea.TryRallyPoint(factions[j], out CrossfireArea other) && other.Contains(RigM(p)), $"player {i} is not in {factions[j]}'s yard");
                 }
                 Assert.AreEqual(3, entry.Ported);
-                Assert.AreEqual(3, entry.Joined, "landed in their yard while it takes players in: all three joined the war");
+                Assert.AreEqual(3, entry.Joined, $"landed in their yard while it takes players in: all three joined the war (seen outside {entry.SeenOutside}, "
+                    + $"join open {entry.LastJoinOpen}, looks {entry.Looks}, now {clock.Now}, joins from {clock.Current.JoinOpensAt}, war {clock.Current.Now.WarStart})");
 
                 // the war runs out: everyone the port brought is sent back where they stood before
                 m_Now = Origin + 200;

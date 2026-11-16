@@ -25,6 +25,8 @@ namespace KryticalNova.Crossfire
 
         /// <summary>Players who joined this war.</summary>
         public int Count => m_Entry.Count;
+        /// <summary>Players last seen outside the war area (tests, diagnostics).</summary>
+        public int OutsideCount => m_Outside.Count;
 
         public bool TryEntry(T who, out CrossfireSpot spot) => m_Entry.TryGetValue(who, out spot);
 
