@@ -1,3 +1,4 @@
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -205,14 +206,25 @@ namespace KryticalNova.Player.Entities
     [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation | WorldSystemFilterFlags.ServerSimulation)]
     [UpdateInGroup(typeof(PredictedSimulationSystemGroup))]
     [UpdateAfter(typeof(PredictedMoveSystem))]
+    [BurstCompile(FloatMode = FloatMode.Deterministic, FloatPrecision = FloatPrecision.High)]
     public partial struct PlayerMotionSystem : ISystem
     {
-        public void OnCreate(ref SystemState state)
+        ComponentLookup<ClientMotionPlan> m_ClientPlans;
+        ComponentLookup<ServerOrder> m_Orders;
+        bool m_Serial;
+
+        public void OnCreate(ref SystemState state)   // not Burst: reads the command line once (perf round 4 switch)
         {
+            m_Serial = PlayerPerfSwitches.MoveSerial;
             state.RequireForUpdate<NetworkTime>();
             state.RequireForUpdate<PlayerGhostTag>();
+            m_ClientPlans = state.GetComponentLookup<ClientMotionPlan>(true);
+            m_Orders = state.GetComponentLookup<ServerOrder>(true);
         }
 
+        /// <summary>Perf round 4: the flight is one Burst job over every player in parallel (each writes only its own pose); the
+        /// math is the same integer flight as before, on the client and the server alike.</summary>
+        [BurstCompile(FloatMode = FloatMode.Deterministic, FloatPrecision = FloatPrecision.High)]
         public void OnUpdate(ref SystemState state)
         {
             var nt = SystemAPI.GetSingleton<NetworkTime>();
@@ -220,40 +232,54 @@ namespace KryticalNova.Player.Entities
             var curves = SystemAPI.TryGetSingleton<PlayerMotionCurves>(out var c) ? c : PlayerMotionCurves.Default;
             int tickMicros = PlayerMovement.TickMicros(SystemAPI.TryGetSingleton<ClientServerTickRate>(out var rate) && rate.SimulationTickRate > 0
                 ? rate.SimulationTickRate : 30);
-            var clientPlans = SystemAPI.GetComponentLookup<ClientMotionPlan>(true);
-            var orders = SystemAPI.GetComponentLookup<ServerOrder>(true);
-            foreach (var (plan, move, pose, transform, entity) in SystemAPI
-                         .Query<RefRO<MotionPlan>, RefRW<MoveState>, RefRW<PlayerPose>, RefRW<LocalTransform>>()
-                         .WithAll<PlayerGhostTag, Simulate>().WithEntityAccess())
+            m_ClientPlans.Update(ref state);
+            m_Orders.Update(ref state);
+            var job = new FlightJob
             {
-                MotionPlan use = plan.ValueRO;
-                if (clientPlans.HasComponent(entity))
-                    use = Choose(plan.ValueRO, clientPlans[entity].Plan, move.ValueRO.RefusedSeq);
+                Curves = curves, TickMicros = tickMicros, Tick = nt.ServerTick, ClientPlans = m_ClientPlans, Orders = m_Orders,
+            };
+            if (m_Serial) job.Schedule(); else job.ScheduleParallel();
+        }
+
+        [BurstCompile(FloatMode = FloatMode.Deterministic, FloatPrecision = FloatPrecision.High)]
+        [WithAll(typeof(PlayerGhostTag), typeof(Simulate))]
+        partial struct FlightJob : IJobEntity
+        {
+            public PlayerMotionCurves Curves;
+            public int TickMicros;
+            public NetworkTick Tick;
+            [ReadOnly] public ComponentLookup<ClientMotionPlan> ClientPlans;
+            [ReadOnly] public ComponentLookup<ServerOrder> Orders;
+
+            void Execute(Entity entity, in MotionPlan plan, ref MoveState move, ref PlayerPose pose, ref LocalTransform transform)
+            {
+                MotionPlan use = plan;
+                if (ClientPlans.HasComponent(entity))
+                    use = Choose(plan, ClientPlans[entity].Plan, move.RefusedSeq);
                 // a catch whose climb has begun (or is over): the climb moves the body now (Wallstride part 4)
-                if (JumpFlight.IsCatch(in use) && move.ValueRO.OrderSeq == use.PlanSeq) continue;
-                NetworkTick orderStart = orders.HasComponent(entity) ? orders[entity].StartTick : default;
-                if (!JumpFlight.Places(use, curves, nt.ServerTick, tickMicros, JumpFlight.ClickWalkSeq(move.ValueRO), move.ValueRO.RefusedSeq, orderStart)) continue;
-                long elapsed = JumpFlight.ElapsedMicros(use, nt.ServerTick, tickMicros);
-                int3 feet = JumpFlight.FeetAt(use, curves, elapsed);
-                ref var p = ref pose.ValueRW;
-                p.XMm = feet.x; p.YMm = feet.y; p.ZMm = feet.z;
-                p.YawCdeg = use.YawCdeg;
-                if (JumpFlight.CatchHandOff(in use, in curves, elapsed, in move.ValueRO))
+                if (JumpFlight.IsCatch(in use) && move.OrderSeq == use.PlanSeq) return;
+                NetworkTick orderStart = Orders.HasComponent(entity) ? Orders[entity].StartTick : default;
+                if (!JumpFlight.Places(use, Curves, Tick, TickMicros, JumpFlight.ClickWalkSeq(move), move.RefusedSeq, orderStart)) return;
+                long elapsed = JumpFlight.ElapsedMicros(use, Tick, TickMicros);
+                int3 feet = JumpFlight.FeetAt(use, Curves, elapsed);
+                pose.XMm = feet.x; pose.YMm = feet.y; pose.ZMm = feet.z;
+                pose.YawCdeg = use.YawCdeg;
+                if (JumpFlight.CatchHandOff(in use, in Curves, elapsed, in move))
                 {
                     // the jump met the wall: no landing, the climb of its number runs on from the catch point (NGO CatchSurface)
-                    int3 caught = JumpFlight.CatchFeet(in use, in curves);
-                    p.XMm = caught.x; p.YMm = caught.y; p.ZMm = caught.z;
-                    PlayerMovement.BeginCatchClimb(ref move.ValueRW, caught, use.PlanSeq);
-                    move.ValueRW.Water = 0;
-                    transform.ValueRW.Position = new float3(p.XMm, p.YMm, p.ZMm) * 0.001f;
-                    transform.ValueRW.Rotation = quaternion.RotateY(math.radians(p.YawCdeg * 0.01f));
-                    continue;
+                    int3 caught = JumpFlight.CatchFeet(in use, in Curves);
+                    pose.XMm = caught.x; pose.YMm = caught.y; pose.ZMm = caught.z;
+                    PlayerMovement.BeginCatchClimb(ref move, caught, use.PlanSeq);
+                    move.Water = 0;
+                    transform.Position = new float3(pose.XMm, pose.YMm, pose.ZMm) * 0.001f;
+                    transform.Rotation = quaternion.RotateY(math.radians(pose.YawCdeg * 0.01f));
+                    return;
                 }
-                PlayerMovement.CancelWalk(ref move.ValueRW);
+                PlayerMovement.CancelWalk(ref move);
                 // in the air the body is off the water (NGO: ServerLeaveForJump); after touchdown the server's landing decides (a stand sets it)
-                if (!JumpFlight.Landed(use, curves, elapsed)) move.ValueRW.Water = 0;
-                transform.ValueRW.Position = new float3(p.XMm, p.YMm, p.ZMm) * 0.001f;
-                transform.ValueRW.Rotation = quaternion.RotateY(math.radians(p.YawCdeg * 0.01f));
+                if (!JumpFlight.Landed(use, Curves, elapsed)) move.Water = 0;
+                transform.Position = new float3(pose.XMm, pose.YMm, pose.ZMm) * 0.001f;
+                transform.Rotation = quaternion.RotateY(math.radians(pose.YawCdeg * 0.01f));
             }
         }
 

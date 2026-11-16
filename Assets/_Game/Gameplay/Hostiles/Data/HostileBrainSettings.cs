@@ -67,6 +67,20 @@ namespace KryticalNova.Hostiles
         [Tooltip("A Bruiser's arc counts this many times its body's (their own tier).")]
         [Min(1f)] public float bruiserArcFactor = 2f;
         public Vector2 waitRingRadius = new Vector2(3.5f, 5f);
+
+        [Header("Sticky spots (owner pick, 15 Nov 2026: hold the spot, step in to strike, step back)")]
+        [Tooltip("Metres farther out than its strike spot a fighting Hostile holds its spot while it waits for its turn; it steps in this far to strike.")]
+        [Min(0f)] public float slotHoldBack = 0.8f;
+        [Tooltip("Metres off its spot a waiting Hostile may stand before it walks back (smaller drifts are left: no shuffling).")]
+        [Min(0.05f)] public float slotHoldDeadBand = 0.4f;
+        [Tooltip("Metres from its strike spot a Hostile with the turn to strike counts as there and may start its swing.")]
+        [Min(0.05f)] public float slotStrikeArrive = 0.4f;
+        [Tooltip("Metres from its spot a walking Hostile stops (it walks until this close, so it never stops just inside the dead-band).")]
+        [Min(0.02f)] public float slotSettle = 0.15f;
+        [Tooltip("Metres off its spot (the player ran through the pack) after which a Hostile takes a new spot nearest where it is now.")]
+        [Min(0.5f)] public float slotReseatDistance = 3f;
+        [Tooltip("Seconds a Hostile with the turn to strike may take to step in before the turn goes to the next one.")]
+        [Min(0.1f)] public float slotStepInSeconds = 2f;
         public int attackCapacity = 10;
         public int rangedAttackCapacity = 6;
         public int attackCostLight = 3;

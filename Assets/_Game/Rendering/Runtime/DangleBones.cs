@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Unity.Collections;
 using UnityEngine;
 
 namespace KryticalNova.Rendering
@@ -20,8 +21,11 @@ namespace KryticalNova.Rendering
     /// server.
     /// </para>
     /// </summary>
+    /// <para>
+    /// The swing itself runs for every character at once in jobs (<see cref="DangleBonesBatch"/>); this component
+    /// finds the chains and decides each frame whether its character swings.
+    /// </para>
     [DisallowMultipleComponent]
-    [DefaultExecutionOrder(1000)] // after the animation, IK and the appearance's own LateUpdate merge
     public sealed class DangleBones : MonoBehaviour
     {
         /// <summary>How one kind of dangle piece moves, picked by the bone name's slot prefix.</summary>
@@ -100,26 +104,27 @@ namespace KryticalNova.Rendering
 
         // Particles: one per dangle bone, plus a tip past every leaf so the leaf has a direction to point along.
         // Ordered parents first. A pinned particle is a chain's first bone: it stays where its body bone puts it.
-        private Transform[] bone = Array.Empty<Transform>();   // null for a tip
-        private int[] parent = Array.Empty<int>();             // particle index, -1 when pinned
-        private int[] leafOf = Array.Empty<int>();             // for a tip: the bone particle it extends
-        private Vector3[] tipLocal = Array.Empty<Vector3>();   // for a tip: its point in the leaf's space
-        private Vector3[] restPos = Array.Empty<Vector3>();    // the bone's local pose at rest
-        private Quaternion[] restRot = Array.Empty<Quaternion>();
+        internal Transform[] bone = Array.Empty<Transform>();   // null for a tip
+        internal int[] parent = Array.Empty<int>();             // particle index, -1 when pinned
+        internal int[] leafOf = Array.Empty<int>();             // for a tip: the bone particle it extends
+        internal Vector3[] tipLocal = Array.Empty<Vector3>();   // for a tip: its point in the leaf's space
+        internal Vector3[] restPos = Array.Empty<Vector3>();    // the bone's local pose at rest
+        internal Quaternion[] restRot = Array.Empty<Quaternion>();
         private int[] profileOf = Array.Empty<int>();
-        private Vector3[] pos = Array.Empty<Vector3>(), prev = Array.Empty<Vector3>(), target = Array.Empty<Vector3>();
-        private int[] firstChild = Array.Empty<int>(), nextSibling = Array.Empty<int>();
-        private float[] reach = Array.Empty<float>();          // [particle * capsules + capsule]: share of the radius kept free
+        // The swing (position and last position of each particle) while the character is not laid out in a batch.
+        internal Vector3[] keptPos = Array.Empty<Vector3>(), keptPrev = Array.Empty<Vector3>();
+        internal int[] firstChild = Array.Empty<int>(), nextSibling = Array.Empty<int>();
+        internal float[] reach = Array.Empty<float>();          // [particle * capsules + capsule]: share of the radius kept free
         // [particle * capsules + capsule]: the side of the capsule the particle hangs on at rest, in the capsule bone's
         // space (zero when it hangs far from it). A cape on the back is kept on the back: swinging forward on a sudden
         // stop it would cross the capsule's middle and be pushed out the front, through the body (owner, 24 Oct 2026).
-        private Vector3[] side = Array.Empty<Vector3>();
-        private Transform[] capA = Array.Empty<Transform>(), capB = Array.Empty<Transform>();
-        private float[] capRadius = Array.Empty<float>(), capExtend = Array.Empty<float>();
-        private Vector3[] segA = Array.Empty<Vector3>(), segB = Array.Empty<Vector3>();
+        internal Vector3[] side = Array.Empty<Vector3>();
+        internal Transform[] capA = Array.Empty<Transform>(), capB = Array.Empty<Transform>();
+        internal float[] capRadius = Array.Empty<float>(), capExtend = Array.Empty<float>();
         private SkinnedMeshRenderer[] skins = Array.Empty<SkinnedMeshRenderer>();
         private CharacterLod lod;
-        private int count, capsuleCount;
+        internal int count, capsuleCount;
+        internal int batchIndex = -1, batchPStart; // where the shared batch laid this character out (-1: not yet)
         private bool live, posed;
         private float pending, prevDt = Step60;
         private int frame;
@@ -162,7 +167,16 @@ namespace KryticalNova.Rendering
             return false;
         }
 
-        private void OnDisable() => RestorePose();
+        private void OnEnable()
+        {
+            if (Application.isPlaying && count > 0) DangleBonesRunner.Register(this);
+        }
+
+        private void OnDisable()
+        {
+            DangleBonesRunner.Unregister(this);
+            RestorePose();
+        }
 
         /// <summary>Finds the dangle chains <paramref name="renderers"/> skin with (use <see cref="Bind"/> in the game).</summary>
         public void Rebind(IReadOnlyList<SkinnedMeshRenderer> renderers)
@@ -240,7 +254,6 @@ namespace KryticalNova.Rendering
             count = order.Count + leaves;
             bone = new Transform[count]; parent = new int[count]; leafOf = new int[count]; tipLocal = new Vector3[count];
             restPos = new Vector3[count]; restRot = new Quaternion[count]; profileOf = new int[count];
-            pos = new Vector3[count]; prev = new Vector3[count]; target = new Vector3[count];
             firstChild = new int[count]; nextSibling = new int[count];
             for (int i = 0; i < count; i++) { firstChild[i] = -1; nextSibling[i] = -1; leafOf[i] = -1; }
 
@@ -269,7 +282,9 @@ namespace KryticalNova.Rendering
             }
 
             BuildCapsules(bind);
+            keptPos = new Vector3[count]; keptPrev = new Vector3[count];
             live = false;
+            DangleBonesRunner.Changed(this);
             enabled = count > 0;
         }
 
@@ -329,7 +344,6 @@ namespace KryticalNova.Rendering
             }
             capsuleCount = a.Count;
             capA = a.ToArray(); capB = b.ToArray(); capRadius = radius.ToArray(); capExtend = extend.ToArray();
-            segA = new Vector3[capsuleCount]; segB = new Vector3[capsuleCount];
             reach = new float[count * capsuleCount];
             for (int i = 0; i < reach.Length; i++) reach[i] = 1f;
             side = new Vector3[count * capsuleCount];
@@ -382,20 +396,32 @@ namespace KryticalNova.Rendering
             return Mathf.Max(1e-4f, Mathf.Abs(s.y));
         }
 
-        private void Update() => BackToRest();
+        /// <summary>How particle <paramref name="i"/> moves.</summary>
+        internal Profile ProfileOf(int i) => profiles[profileOf[i]];
 
         /// <summary>One frame of <paramref name="dt"/> seconds without the animation: back to rest, then one step of the swing (for the tests).</summary>
         public void Step(float dt)
         {
             BackToRest();
-            Simulate(dt);
+            if (count == 0) return;
+            int keepIndex = batchIndex, keepStart = batchPStart;
+            var solo = new DangleBonesBatch(Allocator.TempJob);
+            solo.members.Add(this);
+            batchIndex = -1;
+            solo.Build();
+            var c = solo.chars[0];
+            PlanSimulate(dt, Physics.gravity, ref c);
+            solo.chars[0] = c;
+            solo.Run();
+            solo.Keep();
+            solo.Dispose();
+            batchIndex = keepIndex; batchPStart = keepStart;
         }
 
         private void BackToRest()
         {
             // The animation writes over these bones only if it has keys for them; either way the frame starts from rest.
-            if (!posed) return;
-            posed = false;
+            if (!TakePosed()) return;
             for (int i = 0; i < count; i++)
             {
                 var t = bone[i];
@@ -405,18 +431,34 @@ namespace KryticalNova.Rendering
             }
         }
 
-        private void LateUpdate()
+        /// <summary>True when the bones were swung since they were last put back at rest (the caller now does that).</summary>
+        internal bool TakePosed()
         {
-            float dt = Time.deltaTime;
+            bool was = posed;
+            posed = false;
+            return was;
+        }
+
+        /// <summary>What this character does this frame (the batch runs it): nothing, a half-rate hold or a step of the swing.</summary>
+        internal void PlanFrame(float dt, Vector3 gravity, ref DangleBonesBatch.CharData c)
+        {
+            c.mode = DangleBonesBatch.Mode.Skip;
             if (count == 0 || dt <= 0f) return;
             int level = lod != null ? Mathf.Max(0, lod.Tier) : 0;
-            if (level >= 2 || !Seen()) { live = false; return; } // rests in its bind pose (Update put it there)
+            if (level >= 2 || !Seen()) { live = false; return; } // rests in its bind pose (the batch put it there)
             pending += dt;
             frame++;
-            if (level == 1 && (frame & 1) == 1 && live) { Hold(); return; } // half rate at the second level
+            if (level == 1 && (frame & 1) == 1 && live)
+            {
+                // Half rate at the second level: between two steps the pieces keep the last swing, carried with the body.
+                c.mode = DangleBonesBatch.Mode.Hold;
+                c.moved = transform.position - lastRoot;
+                posed = true;
+                return;
+            }
             float step = Mathf.Min(pending, 1f / 20f);
             pending = 0f;
-            Simulate(step);
+            PlanSimulate(step, gravity, ref c);
         }
 
         private bool Seen()
@@ -426,119 +468,27 @@ namespace KryticalNova.Rendering
             return false;
         }
 
-        /// <summary>Between two half-rate steps: the pieces keep the last swing, carried along with the body.</summary>
-        private void Hold() => Aim(transform.position - lastRoot);
-
-        /// <summary>One step of the swing, <paramref name="dt"/> seconds long.</summary>
-        private void Simulate(float dt)
+        /// <summary>One step of the swing, <paramref name="dt"/> seconds long (or, after a teleport, a fresh start).</summary>
+        private void PlanSimulate(float dt, Vector3 gravity, ref DangleBonesBatch.CharData c)
         {
-            float scale = Scale();
-            ReadTargets();
+            c.scale = Scale();
             Vector3 root = transform.position;
             if (!live || (root - lastRoot).sqrMagnitude > TeleportMetres * TeleportMetres)
             {
-                for (int i = 0; i < count; i++) { pos[i] = target[i]; prev[i] = target[i]; }
+                c.mode = DangleBonesBatch.Mode.Reset; // the bones already stand where the animation put them
                 live = true;
                 lastRoot = root;
                 prevDt = dt;
-                return; // the bones already stand where the animation put them
-
+                return;
             }
-            Vector3 moved = root - lastRoot;
+            c.mode = DangleBonesBatch.Mode.Simulate;
+            c.moved = root - lastRoot;
             lastRoot = root;
-
-            for (int c = 0; c < capsuleCount; c++)
-            {
-                Vector3 p0 = capA[c].position, p1 = capB[c].position;
-                if (capExtend[c] > 0f) p1 = p0 + (p0 - p1).normalized * capExtend[c] * scale;
-                segA[c] = p0; segB[c] = p1;
-            }
-
-            float frames = dt / Step60;
-            float velScale = Mathf.Clamp(dt / Mathf.Max(1e-4f, prevDt), 0.25f, 4f);
+            c.dt = dt;
+            c.prevDt = prevDt;
             prevDt = dt;
-            Vector3 gravity = Physics.gravity * (dt * dt);
-            for (int i = 0; i < count; i++)
-            {
-                int pi = parent[i];
-                if (pi < 0) { pos[i] = target[i]; prev[i] = target[i]; continue; }
-                var prof = profiles[profileOf[i]];
-                Vector3 carry = moved * prof.follow;
-                Vector3 velocity = (pos[i] - prev[i]) * (Mathf.Pow(1f - prof.damping, frames) * velScale);
-                prev[i] = pos[i] + carry;
-                Vector3 p = pos[i] + velocity + carry + gravity * prof.gravity;
-
-                Vector3 restVec = target[i] - target[pi];
-                float length = restVec.magnitude;
-                Vector3 goal = pos[pi] + restVec;
-                p += (goal - p) * (1f - Mathf.Pow(1f - prof.stiffness, frames));
-
-                p = Keep(pos[pi], p, length);
-                float pr = prof.radius * scale;
-                for (int c = 0; c < capsuleCount; c++)
-                {
-                    float r = (capRadius[c] * scale + pr) * reach[i * capsuleCount + c];
-                    if (r <= 0f) continue;
-                    Vector3 q = ClosestOnSegment(segA[c], segB[c], p);
-                    Vector3 d = p - q;
-                    Vector3 sideLocal = side[i * capsuleCount + c];
-                    if (sideLocal != Vector3.zero)
-                    {
-                        // Crossed the middle of the body towards the other side, and still in front of it rather than
-                        // round it: back to its own side, as far out as the capsule keeps it. Only once it has crossed:
-                        // a piece that merely sinks into its own side is pushed out smoothly below, or a top knot
-                        // sagging into the head was thrown out half a radius at a time and twitched (owner, 24 Oct 2026).
-                        Vector3 n = capA[c].TransformDirection(sideLocal);
-                        float along = Vector3.Dot(d, n);
-                        Vector3 across = d - n * along;
-                        if (along < 0f && across.sqrMagnitude < r * r * SideReach * SideReach)
-                        {
-                            p = q + across + n * r;
-                            continue;
-                        }
-                    }
-                    float m = d.sqrMagnitude;
-                    if (m >= r * r || m < 1e-10f) continue;
-                    p = q + d * (r / Mathf.Sqrt(m));
-                }
-                pos[i] = p;
-            }
-            Aim(Vector3.zero);
-        }
-
-        private static Vector3 Keep(Vector3 anchor, Vector3 p, float length)
-        {
-            Vector3 d = p - anchor;
-            float m = d.magnitude;
-            return m > 1e-6f ? anchor + d * (length / m) : p;
-        }
-
-        /// <summary>Where the animation (or the bind pose) puts every particle this frame.</summary>
-        private void ReadTargets()
-        {
-            for (int i = 0; i < count; i++)
-                target[i] = bone[i] != null ? bone[i].position : bone[leafOf[i]].TransformPoint(tipLocal[i]);
-        }
-
-        /// <summary>Turns each bone, parents first, so it points at where its children swung (moved by <paramref name="shift"/>).</summary>
-        private void Aim(Vector3 shift)
-        {
+            c.gravity = gravity * (dt * dt);
             posed = true;
-            for (int i = 0; i < count; i++)
-            {
-                var t = bone[i];
-                if (t == null || firstChild[i] < 0) continue;
-                Vector3 from = Vector3.zero, to = Vector3.zero;
-                Vector3 at = t.position;
-                for (int c = firstChild[i]; c >= 0; c = nextSibling[c])
-                {
-                    Vector3 local = bone[c] != null ? restPos[c] : tipLocal[c];
-                    from += t.TransformPoint(local) - at;
-                    to += pos[c] + shift - at;
-                }
-                if (from.sqrMagnitude < 1e-10f || to.sqrMagnitude < 1e-10f) continue;
-                t.rotation = Quaternion.FromToRotation(from, to) * t.rotation;
-            }
         }
 
         /// <summary>Puts every swung bone back in its rest pose (done when the component is turned off).</summary>
