@@ -113,6 +113,8 @@ namespace KryticalNova.Networking
             bool hasRelevancy = KryticalNova.Diagnostics.PerformanceLog.TryGauge(KryticalNova.Diagnostics.PerformanceLog.GaugeNames.RelevancyMs, out double relevancy);
             bool hasEntities = KryticalNova.Diagnostics.PerformanceLog.TryGauge(KryticalNova.Diagnostics.PerformanceLog.GaugeNames.Entities, out double entities);
             bool hasGhosts = KryticalNova.Diagnostics.PerformanceLog.TryGauge(KryticalNova.Diagnostics.PerformanceLog.GaugeNames.Ghosts, out double ghosts);
+            bool hasSeparation = KryticalNova.Diagnostics.PerformanceLog.TryGauge(KryticalNova.Diagnostics.PerformanceLog.GaugeNames.SeparationMs, out double separation);
+            bool hasPredicted = KryticalNova.Diagnostics.PerformanceLog.TryGauge(KryticalNova.Diagnostics.PerformanceLog.GaugeNames.PredictedMs, out double predicted);
             long privateMb;
             try { using (Process self = Process.GetCurrentProcess()) privateMb = self.PrivateMemorySize64 / (1024 * 1024); }
             catch (Exception) { privateMb = -1; }
@@ -143,7 +145,8 @@ namespace KryticalNova.Networking
                     p50.ToString("0.00", CultureInfo.InvariantCulture), p99.ToString("0.00", CultureInfo.InvariantCulture),
                     ServerPerformanceColumns.Cell(hasBrains, brains, "0.000"), ServerPerformanceColumns.Cell(hasRelevancy, relevancy, "0.000"),
                     ServerPerformanceColumns.Cell(privateMb >= 0, privateMb, "0"), ServerPerformanceColumns.Cell(hasEntities, entities, "0"),
-                    ServerPerformanceColumns.Cell(hasGhosts, ghosts, "0"), string.Empty));
+                    ServerPerformanceColumns.Cell(hasGhosts, ghosts, "0"), string.Empty,
+                    ServerPerformanceColumns.Cell(hasSeparation, separation, "0.000"), ServerPerformanceColumns.Cell(hasPredicted, predicted, "0.000")));
                 file?.Flush();
             }
             catch (Exception e)

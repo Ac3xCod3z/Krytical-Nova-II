@@ -83,7 +83,9 @@ namespace KryticalNova.Hostiles.Entities
                               && (sense.Players[p].Flags & SensedFlags.Alive) != 0 && (sense.Players[p].Flags & SensedFlags.Dead) == 0;
                 float3 feet = aim.LastFeet;
                 if (sensed) feet = sense.Players[sense.ByGhostId[aim.GhostId]].Feet;
-                float range = abilities[math.min(b.Ability, abilities.Length - 1)].Range;
+                // never shorter than its strike spot (sticky spots, 15 Nov 2026): a body bigger than its range reaches from where it touches
+                float range = HostileRingRules.Reach(abilities[math.min(b.Ability, abilities.Length - 1)].Range,
+                    HostileRingRules.Stand(c.PlayerRadius, life.ValueRO.RadiusMm * 0.001f, c.SlotStandGap));
                 bool inReach = sensed && HostileRules.InReach(at, feet, range, c.ReachSlack, life.ValueRO.ReachAbove);
                 bool facing = sensed && HostileRules.Facing(m.Yaw, at, feet, c.FacingDegrees);
                 aim.Flags = (byte)((inReach ? HostileTargetFlags.InReach : 0) | (facing ? HostileTargetFlags.Facing : 0));

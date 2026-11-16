@@ -20,6 +20,8 @@ namespace KryticalNova.Networking
             "late_hits", "gone_targets", "worst_ping_ms",
             // wave 4 soak
             "tick_p50_ms", "tick_p99_ms", "brains_ms", "relevancy_ms", "private_mb", "entities", "ghosts", "bytes_out_per_s",
+            // perf round 4 (15 Nov 2026): the player separation and the whole predicted group, mean ms per tick
+            "separation_ms", "predicted_ms",
         };
 
         public static string Header => string.Join(",", Names);

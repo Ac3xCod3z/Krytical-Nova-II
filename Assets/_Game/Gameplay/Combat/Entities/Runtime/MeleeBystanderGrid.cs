@@ -114,6 +114,47 @@ namespace KryticalNova.Combat.Entities
 
         static int FloorDiv(int v, int d) => (int)math.floor((double)v / d);
 
+        /// <summary>Perf round 4: the grid for a parallel job (read only; <see cref="ReadOnlyView.Gather"/> needs no stamps).</summary>
+        public ReadOnlyView AsReadOnly() => new ReadOnlyView { Cells = m_Cells, Boxes = m_Boxes.AsArray(), Filed = m_Filed.AsArray() };
+
+        /// <summary>
+        /// <see cref="Gather"/> without writing anything: the same bodies, ascending (a body filed in several cells is met several
+        /// times and kept once, where <see cref="Gather"/> skips it by its stamp).
+        /// </summary>
+        public struct ReadOnlyView
+        {
+            [ReadOnly] public NativeParallelMultiHashMap<int2, int> Cells;
+            [ReadOnly] public NativeArray<int4> Boxes;
+            [ReadOnly] public NativeArray<bool> Filed;
+
+            public void Gather(int3 attackerFeetMm, int reachMm, NativeList<int> into)
+            {
+                into.Clear();
+                int reach = math.max(0, reachMm);
+                int ax = attackerFeetMm.x, az = attackerFeetMm.z;
+                int2 lo = Cell(Widen(ax, -reach), Widen(az, -reach)), hi = Cell(Widen(ax, reach), Widen(az, reach));
+                if (hi.x - lo.x > MaxCellSpan || hi.y - lo.y > MaxCellSpan)
+                {
+                    for (int i = 0; i < Boxes.Length; i++) if (Filed[i] && Near(Boxes[i], ax, az, reach)) into.Add(i);
+                    return;
+                }
+                for (int cx = lo.x; cx <= hi.x; cx++)
+                    for (int cz = lo.y; cz <= hi.y; cz++)
+                        Take(new int2(cx, cz), ax, az, reach, into);
+                Take(new int2(int.MinValue, int.MinValue), ax, az, reach, into);
+                into.Sort();
+                int kept = 0;
+                for (int i = 0; i < into.Length; i++) if (i == 0 || into[i] != into[i - 1]) into[kept++] = into[i];
+                into.ResizeUninitialized(kept);
+            }
+
+            void Take(int2 cell, int ax, int az, int reach, NativeList<int> into)
+            {
+                if (!Cells.TryGetFirstValue(cell, out int i, out NativeParallelMultiHashMapIterator<int2> it)) return;
+                do { if (Near(Boxes[i], ax, az, reach)) into.Add(i); } while (Cells.TryGetNextValue(out i, ref it));
+            }
+        }
+
         public void Dispose()
         {
             if (m_Cells.IsCreated) m_Cells.Dispose();
