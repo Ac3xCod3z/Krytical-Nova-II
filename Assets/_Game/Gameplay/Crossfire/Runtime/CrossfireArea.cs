@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using KryticalNova.Factions;
 using UnityEngine;
 
 namespace KryticalNova.Crossfire
@@ -16,6 +17,10 @@ namespace KryticalNova.Crossfire
         public AreaKind kind = AreaKind.MusterYard;
         [Tooltip("The box, in this object's space (centre at its position). A yard is about 50 x 10 x 40 m; the field about 200 m across.")]
         public Vector3 size = new Vector3(50f, 10f, 40f);
+        [Tooltip("A Muster Yard: the faction whose Rally Point it is (one per faction; owner, 16 Nov 2026). The Transit Row port lands that faction's called players here. None: nobody is landed here.")]
+        public FactionId faction = FactionId.None;
+        [Tooltip("A Muster Yard: where a player the Transit Row port sends lands, and the way they face (on the ground). Put it on the ground inside the box. Empty: the box's centre, facing as the box does.")]
+        public Transform landing;
 
         static readonly List<CrossfireArea> s_All = new List<CrossfireArea>();
 
@@ -49,6 +54,29 @@ namespace KryticalNova.Crossfire
                 CrossfireArea a = s_All[i];
                 if (a == null || (yardsOnly && a.kind != AreaKind.MusterYard)) continue;
                 if (a.Contains(world)) return true;
+            }
+            return false;
+        }
+
+        /// <summary>Where a player put on this yard lands (world, metres) and faces (degrees about up).</summary>
+        public void Landing(out Vector3 at, out float yawDegrees)
+        {
+            Transform t = landing != null ? landing : transform;
+            at = t.position;   // the centre is always inside the box, so the player counts as in the yard (a floor point would sit on its edge)
+            yawDegrees = t.eulerAngles.y;
+        }
+
+        /// <summary>The Rally Point (Muster Yard) of <paramref name="faction"/> in the loaded maps; false when it has none.</summary>
+        public static bool TryRallyPoint(FactionId faction, out CrossfireArea yard)
+        {
+            yard = null;
+            if (faction == FactionId.None) return false;
+            for (int i = 0; i < s_All.Count; i++)
+            {
+                CrossfireArea a = s_All[i];
+                if (a == null || a.kind != AreaKind.MusterYard || a.faction != faction) continue;
+                yard = a;
+                return true;
             }
             return false;
         }

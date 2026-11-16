@@ -579,6 +579,24 @@
 .showdown-title { font-size: 86px; letter-spacing: 6px; }
 .showdown-dim { opacity: 0.4; transition-property: opacity; transition-duration: 0.4s; }
 
+/* Crossfire's kill counter (owner, 16 Nov 2026): one number per side at the top of the screen, in the comic letters of the Callout. */
+.crossfire-score {
+    position: absolute; left: 0; right: 0; top: 2%;
+    flex-direction: row; justify-content: center;
+}
+.crossfire-score-side {
+    margin: 0 18px;
+    font-size: 30px;
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+    text-shadow: 3px 3px 0 rgb(10, 8, 20);
+    -unity-text-outline-width: 2px;
+    -unity-text-outline-color: rgb(10, 8, 20);
+}
+.crossfire-score--hegemony { color: rgb(120, 190, 255); }
+.crossfire-score--null { color: rgb(200, 120, 255); }
+.crossfire-score--covenant { color: rgb(255, 196, 96); }
+
 /* The Cadence combo (owner, 23 Oct 2026): "COMBO ×n" lettered like the comic words of a fight, at the right of the
    screen, with the time left for the next step as a bar that runs down from right to left. Hotter with every step. */
 .combo { position: absolute; right: 6%; top: 13%; align-items: flex-end; rotate: -6deg; transform-origin: right center; }

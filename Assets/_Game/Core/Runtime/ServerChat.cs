@@ -13,6 +13,12 @@ namespace KryticalNova.Core
         /// <summary>Tells every player a line in the System channel: (kind, text, highlight, rarity). Filled by Social.</summary>
         public static Action<AnnouncementKind, string, string, byte> Announce;
 
+        /// <summary>
+        /// Tells ONE player a line in the System channel and on their news ticker, as <see cref="Announce"/> tells everyone: (the player's
+        /// server body, kind, text, highlight, rarity). Crossfire's call names each player's own bracket (owner, 16 Nov 2026). Filled by Social.
+        /// </summary>
+        public static Action<GameObject, AnnouncementKind, string, string, byte> AnnounceTo;
+
         /// <summary>The name a player speaks with in chat. Filled by Social.</summary>
         public static Func<GameObject, string> SpeakerName;
 

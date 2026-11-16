@@ -215,7 +215,7 @@ namespace KryticalNova.Crossfire.Entities.Tests
                 string answer = Gm(what);
                 tw.TickUntil(() => a.Last.Now.Phase == expect && b.Last.Now.Phase == expect, 120);
                 AssertAgree(clock, a, b, expect, $"gm.crossfire {what} ({answer})");
-                StringAssert.Contains(expect.ToString(), Gm("status"), $"status after {what}");
+                StringAssert.Contains(CrossfireSettings.PhaseName(expect), Gm("status"), $"status after {what}");   // players read "Rally" for the Muster (13 Nov 2026)
             }
             StringAssert.StartsWith("gm.crossfire status", Gm("nonsense"), "an unknown word shows the usage");
         }
