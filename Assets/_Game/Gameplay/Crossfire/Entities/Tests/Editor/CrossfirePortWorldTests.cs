@@ -65,11 +65,16 @@ namespace KryticalNova.Crossfire.Entities.Tests
             return yard;
         }
 
-        (PlayerRig rig, CrossfireClockServerSystem clock, CrossfireEntryServerSystem entry) Start(int players)
+        /// <summary>
+        /// The worlds and players, then <paramref name="makeYards"/> (after the rig: loading its subscene replaces the scene, which would
+        /// take objects made before it), then the test's clock in the Call; the players are seen standing outside every yard first.
+        /// </summary>
+        (PlayerRig rig, CrossfireClockServerSystem clock, CrossfireEntryServerSystem entry) Start(int players, System.Action makeYards)
         {
             var starts = new int3[players];
             for (int i = 0; i < players; i++) starts[i] = new int3(-40000 + 5000 * i, 0, -40000);   // well outside every yard
             PlayerRig rig = PlayerRig.Create(players, starts: starts);
+            makeYards();
             var clock = rig.Server.GetExistingSystemManaged<CrossfireClockServerSystem>();
             var entry = rig.Server.GetExistingSystemManaged<CrossfireEntryServerSystem>();
             Assert.IsNotNull(clock, "the server world has Crossfire's clock");
@@ -93,10 +98,12 @@ namespace KryticalNova.Crossfire.Entities.Tests
         {
             var factions = new[] { FactionId.Hegemony, FactionId.Null, FactionId.Covenant };
             var landings = new[] { new Vector3(100, 0, 0), new Vector3(-100, 0, 0), new Vector3(0, 0, 100) };
-            for (int i = 0; i < 3; i++) RallyPoint(factions[i], landings[i] + new Vector3(0, 2, 0), landings[i], 90f * i);
             var levels = new[] { 112, 100, 105 };
 
-            var (rig, clock, entry) = Start(3);
+            var (rig, clock, entry) = Start(3, () =>
+            {
+                for (int i = 0; i < 3; i++) RallyPoint(factions[i], landings[i] + new Vector3(0, 2, 0), landings[i], 90f * i);
+            });
             using (rig)
             {
                 var before = new PlayerPose[3];
@@ -136,8 +143,7 @@ namespace KryticalNova.Crossfire.Entities.Tests
         [Test]
         public void LowerBrackets_AreToldTheyHaveNoZone_AndAreNotMoved()
         {
-            RallyPoint(FactionId.Hegemony, new Vector3(100, 2, 0), new Vector3(100, 0, 0), 0f);
-            var (rig, _, entry) = Start(3);
+            var (rig, _, entry) = Start(3, () => RallyPoint(FactionId.Hegemony, new Vector3(100, 2, 0), new Vector3(100, 0, 0), 0f));
             using (rig)
             {
                 var levels = new[] { 99, 55, 10 };
@@ -161,8 +167,7 @@ namespace KryticalNova.Crossfire.Entities.Tests
         [Test]
         public void OutsideTheCall_ThePortIsThePortalAsAlways_AndOtherPortalsAreUntouched()
         {
-            RallyPoint(FactionId.Hegemony, new Vector3(100, 2, 0), new Vector3(100, 0, 0), 0f);
-            var (rig, clock, entry) = Start(1);
+            var (rig, clock, entry) = Start(1, () => RallyPoint(FactionId.Hegemony, new Vector3(100, 2, 0), new Vector3(100, 0, 0), 0f));
             using (rig)
             {
                 Assert.IsNotNull(ZonePortal.TransferHandler);
