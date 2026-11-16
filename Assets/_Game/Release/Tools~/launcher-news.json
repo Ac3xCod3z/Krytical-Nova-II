@@ -1,69 +1,86 @@
 {
-  "build": 18,
+  "build": 19,
   "items": [
     {
-      "title": "The Monsters Are Back",
-      "body": "Monsters show up again in every zone of the live server, and you can target and fight them. Monsters a GM spawns can be seen too. In build 17 they were there on the server but never reached your screen, so the zones looked empty."
-    },
-    {
-      "title": "Monsters Hold Their Ground",
-      "body": "The monsters around you each keep their own spot: they step in to strike and step back out. No more circling you and swapping sides, and no more monsters standing inside your character while they swing."
-    },
-    {
-      "title": "Big Fights at Full Speed",
-      "body": "The server has had its biggest speed-up yet. In our tests with 200 players fighting in one place it keeps its full speed, and 200 players leaving at once no longer freezes it for a moment."
-    },
-    {
-      "title": "Smoother Crowds",
-      "body": "Capes, tails, long hair and beards of everyone around you now swing in one fast batch, with the same look as before. Crowded towns and big fights run smoother on your screen."
-    },
-    {
-      "title": "What You See: 150 m",
-      "body": "The server now sends you the players and monsters within 150 m of you. Those farther away appear as you come closer, so busy maps cost your connection much less."
-    },
-    {
-      "title": "GM Tools Work Again",
-      "body": "GM commands and Autopilot work on the live server again. Max Everything (gm.maxall) now gives only the top gear set of each level bracket instead of every set."
+      "title": "Known Issue: Can't Get In",
+      "body": "If nobody can get into the server after a lot of players drop at once (a crash or a network cut), restart the server. A fix is coming."
     }
   ],
   "patchNotes": [
     {
-      "heading": "Changed",
+      "heading": "Known issues",
       "lines": [
-        "You now get the players and monsters within 150 m of you; farther ones appear as you come closer.",
-        "Max Everything (gm.maxall) gives only the top gear set of each bracket the character can wear, not every set: at level 112 the Rare 75 and Rare 110 sets and the Epic 112 set, in its own faction, lineage and class line.",
-        "Server: the biggest speed-up yet, aimed at 200 players fighting in one place.",
-        "Server: every player's movement is packed once a turn for everyone, not once for each player who watches.",
-        "Server: orders meant for one player (their water, knockback and server orders) go only to that player.",
-        "Server: who is close to whom is worked out on every core of the server at once.",
-        "Server: melee swings and monster strikes find their targets straight away instead of searching every body.",
-        "Server: every melee swing is settled on every core at once, finding its target in one step instead of walking the whole list (it took half of each server turn in a moving 200-player fight).",
-        "Server: walking, jump flights and the record of recent hits run for every player at once on every core, with the same results as before.",
-        "Server: players pushing apart in a crowd find their close neighbours through a grid, worked out on every core at once.",
-        "Server: monster positions and player places are sent only when they change.",
-        "Server: shared Pack views look at a third of the players each turn, each still every 0.1 s.",
-        "Server: Autopilot saves its state only when something changed.",
-        "On your screen: capes, tails, long hair and beards swing in one fast batch for every character in view.",
-        "On your screen: effects reuse their pieces and read their colours once.",
-        "On your screen: character detail levels, doors, the minimap's Squad markers and Strike Dummies do less work every frame.",
-        "A Brambleback's landing burst reuses its leaves instead of making new ones every landing; it looks the same."
-      ]
-    },
-    {
-      "heading": "Fixed",
-      "lines": [
-        "Monsters appear again in every zone of the live server and can be targeted, fought and killed.",
-        "Monsters a GM spawns are visible again.",
-        "Monsters around you each keep their own spot round you: they step in to strike and step back, and no longer circle you or swap sides.",
-        "A monster joining the fight takes the free spot nearest to where it stands, so it never walks through you to get there.",
-        "Monsters no longer walk into your character while they wind up, swing or recover.",
-        "GM commands work on the live server again; they used to answer that no network session was running.",
-        "Autopilot works on the live server again.",
-        "When many players leave at once, the server spreads it over several turns instead of freezing for half a second; someone who rejoins straight away is let in at once."
+        "If nobody can get into the server after a lot of players drop at once (a crash or a network cut), restart the server. A fix is coming."
       ]
     }
   ],
   "history": [
+    {
+      "label": "16 Nov 2026 · The monsters are back & big fights at speed",
+      "items": [
+        {
+          "title": "The Monsters Are Back",
+          "body": "Monsters show up again in every zone of the live server, and you can target and fight them. Monsters a GM spawns can be seen too. In build 17 they were there on the server but never reached your screen, so the zones looked empty."
+        },
+        {
+          "title": "Monsters Hold Their Ground",
+          "body": "The monsters around you each keep their own spot: they step in to strike and step back out. No more circling you and swapping sides, and no more monsters standing inside your character while they swing."
+        },
+        {
+          "title": "Big Fights at Full Speed",
+          "body": "The server has had its biggest speed-up yet. In our tests with 200 players fighting in one place it keeps its full speed, and 200 players leaving at once no longer freezes it for a moment."
+        },
+        {
+          "title": "Smoother Crowds",
+          "body": "Capes, tails, long hair and beards of everyone around you now swing in one fast batch, with the same look as before. Crowded towns and big fights run smoother on your screen."
+        },
+        {
+          "title": "What You See: 150 m",
+          "body": "The server now sends you the players and monsters within 150 m of you. Those farther away appear as you come closer, so busy maps cost your connection much less."
+        },
+        {
+          "title": "GM Tools Work Again",
+          "body": "GM commands and Autopilot work on the live server again. Max Everything (gm.maxall) now gives only the top gear set of each level bracket instead of every set."
+        }
+      ],
+      "patchNotes": [
+        {
+          "heading": "Changed",
+          "lines": [
+            "You now get the players and monsters within 150 m of you; farther ones appear as you come closer.",
+            "Max Everything (gm.maxall) gives only the top gear set of each bracket the character can wear, not every set: at level 112 the Rare 75 and Rare 110 sets and the Epic 112 set, in its own faction, lineage and class line.",
+            "Server: the biggest speed-up yet, aimed at 200 players fighting in one place.",
+            "Server: every player's movement is packed once a turn for everyone, not once for each player who watches.",
+            "Server: orders meant for one player (their water, knockback and server orders) go only to that player.",
+            "Server: who is close to whom is worked out on every core of the server at once.",
+            "Server: melee swings and monster strikes find their targets straight away instead of searching every body.",
+            "Server: every melee swing is settled on every core at once, finding its target in one step instead of walking the whole list (it took half of each server turn in a moving 200-player fight).",
+            "Server: walking, jump flights and the record of recent hits run for every player at once on every core, with the same results as before.",
+            "Server: players pushing apart in a crowd find their close neighbours through a grid, worked out on every core at once.",
+            "Server: monster positions and player places are sent only when they change.",
+            "Server: shared Pack views look at a third of the players each turn, each still every 0.1 s.",
+            "Server: Autopilot saves its state only when something changed.",
+            "On your screen: capes, tails, long hair and beards swing in one fast batch for every character in view.",
+            "On your screen: effects reuse their pieces and read their colours once.",
+            "On your screen: character detail levels, doors, the minimap's Squad markers and Strike Dummies do less work every frame.",
+            "A Brambleback's landing burst reuses its leaves instead of making new ones every landing; it looks the same."
+          ]
+        },
+        {
+          "heading": "Fixed",
+          "lines": [
+            "Monsters appear again in every zone of the live server and can be targeted, fought and killed.",
+            "Monsters a GM spawns are visible again.",
+            "Monsters around you each keep their own spot round you: they step in to strike and step back, and no longer circle you or swap sides.",
+            "A monster joining the fight takes the free spot nearest to where it stands, so it never walks through you to get there.",
+            "Monsters no longer walk into your character while they wind up, swing or recover.",
+            "GM commands work on the live server again; they used to answer that no network session was running.",
+            "Autopilot works on the live server again.",
+            "When many players leave at once, the server spreads it over several turns instead of freezing for half a second; someone who rejoins straight away is let in at once."
+          ]
+        }
+      ]
+    },
     {
       "label": "15 Nov 2026 · A better start, seasons & a new sky",
       "items": [
