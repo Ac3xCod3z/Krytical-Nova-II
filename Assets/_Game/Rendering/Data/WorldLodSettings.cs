@@ -13,7 +13,7 @@ namespace KryticalNova.Rendering
     /// Design/Rendering-Bible.md, "Level of detail".
     /// </summary>
     [CreateAssetMenu(menuName = "Krytical Nova/Rendering/World LOD Settings", fileName = "WorldLodSettings")]
-    public sealed class WorldLodSettings : ScriptableObject
+    public sealed class WorldLodSettings : ScriptableObject, ICharacterLodSettings
     {
         [Serializable]
         public struct Band
@@ -97,6 +97,12 @@ namespace KryticalNova.Rendering
         }
 
         /// <summary>A character's LOD brings the settings in: the preset's tier is applied from them.</summary>
+        float ICharacterLodSettings.CharacterMidDistance => characterMidDistance;
+        float ICharacterLodSettings.CharacterFarDistance => characterFarDistance;
+        float ICharacterLodSettings.CharacterHiddenDistance => characterHiddenDistance;
+        float ICharacterLodSettings.CharacterRefresh => characterRefresh;
+        void ICharacterLodSettings.Use() => Use(this);
+
         public static void Use(WorldLodSettings settings)
         {
             if (settings == null || settings == active) return;

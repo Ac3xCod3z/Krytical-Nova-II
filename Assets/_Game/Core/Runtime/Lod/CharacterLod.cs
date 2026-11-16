@@ -1,6 +1,8 @@
+#if !UNITY_SERVER
 using Unity.Netcode;
-using UnityEngine;
 using UnityEngine.Rendering;
+#endif
+using UnityEngine;
 
 namespace KryticalNova.Rendering
 {
@@ -8,22 +10,25 @@ namespace KryticalNova.Rendering
     /// Level of detail for a character (players, Hostiles, NPCs, pets), on the machines that draw it. A character is
     /// assembled from parts at run time and animated, so it is not remeshed like the world: with distance from the
     /// camera it skins with fewer bones, then casts no shadow and animates only while seen, then is not drawn or
-    /// animated at all (<see cref="WorldLodSettings"/>). The local player is always drawn whole. Does nothing where
-    /// nothing is drawn (a dedicated server). Where the game is decided (a host, the offline game) only the drawing
+    /// animated at all (WorldLodSettings, through <see cref="ICharacterLodSettings"/>). The local player is always drawn whole.
+    /// On a dedicated server it is an empty shell (owner rule, no visual code in the server build): the player prefab carries
+    /// it, so the server knows the script and never logs it as missing. Where the game is decided (a host, the offline game) only the drawing
     /// gets lighter: animation is never culled there, because weapon swings and a Hostile's strikes come from it.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class CharacterLod : MonoBehaviour
     {
+#if !UNITY_SERVER
         private const float DefaultMid = 25f, DefaultFar = 60f, DefaultHidden = 150f, DefaultRefresh = 0.4f;
         // Parts are added and swapped at run time (gear, the creator): looked for again now and then.
         private const float RecollectSeconds = 5f;
 
-        [SerializeField] private WorldLodSettings settings;
+        [Tooltip("The world's LOD settings (WorldLodSettings).")]
+        [SerializeField] private ScriptableObject settings;
         [Tooltip("Always drawn whole (the local player's own character).")]
         [SerializeField] private bool alwaysWhole;
 
-        private static WorldLodSettings shared;
+        private static ScriptableObject shared;
         // Characters hidden by something else (a de-rezzed body and its pet): never shown again by the LOD.
         private static readonly System.Collections.Generic.HashSet<Transform> held = new System.Collections.Generic.HashSet<Transform>();
         private static int holdStamp;
@@ -95,7 +100,7 @@ namespace KryticalNova.Rendering
         private void OnEnable()
         {
             if (settings != null) shared = settings;
-            if (shared != null) WorldLodSettings.Use(shared);
+            if (shared is ICharacterLodSettings use) use.Use();
             net = GetComponentInParent<NetworkObject>();
             tier = -1;
             next = 0f;
@@ -107,8 +112,8 @@ namespace KryticalNova.Rendering
         private void Update()
         {
             if (DrivenExternally || Application.isBatchMode || Time.time < next) return;
-            WorldLodSettings s = settings != null ? settings : shared;
-            next = Time.time + (s != null ? s.characterRefresh : DefaultRefresh);
+            var s = (settings != null ? settings : shared) as ICharacterLodSettings;
+            next = Time.time + (s != null ? s.CharacterRefresh : DefaultRefresh);
             if (Time.time >= nextCollect) { Collect(); nextCollect = Time.time + RecollectSeconds; tier = -1; }
             if (eye == null || !eye.isActiveAndEnabled) eye = Camera.main;
             if (eye == null) return;
@@ -118,9 +123,9 @@ namespace KryticalNova.Rendering
             // The player this machine plays is always whole.
             bool whole = alwaysWhole || (net != null && net.IsSpawned && net.IsOwner && net.IsPlayerObject);
             int wanted = whole ? 0
-                : distance >= (s != null ? s.characterHiddenDistance : DefaultHidden) ? 3
-                : distance >= (s != null ? s.characterFarDistance : DefaultFar) ? 2
-                : distance >= (s != null ? s.characterMidDistance : DefaultMid) ? 1 : 0;
+                : distance >= (s != null ? s.CharacterHiddenDistance : DefaultHidden) ? 3
+                : distance >= (s != null ? s.CharacterFarDistance : DefaultFar) ? 2
+                : distance >= (s != null ? s.CharacterMidDistance : DefaultMid) ? 1 : 0;
             if (wanted != tier || seenHoldStamp != holdStamp) { seenHoldStamp = holdStamp; Apply(wanted); }
         }
 
@@ -168,5 +173,6 @@ namespace KryticalNova.Rendering
                     : level == 2 ? AnimatorCullingMode.CullUpdateTransforms : animatorCulling[i];
             }
         }
+#endif
     }
 }

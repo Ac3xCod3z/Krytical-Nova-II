@@ -20,13 +20,13 @@ script, which is then published to the link above. `--baseline` saves today's up
 ## Today
 
 <!-- map:summary -->
-Generated 15 Nov 2026, 21:20: 1099 runtime scripts (205,777 lines) declaring 2076 types (228 MonoBehaviours, 65 NetworkBehaviours, 125 ScriptableObject classes); 384 test scripts; 4796 prefabs, 48 scenes and 2836 assets read. 236 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 4 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
+Generated 16 Nov 2026, 01:39: 1109 runtime scripts (207,621 lines) declaring 2084 types (229 MonoBehaviours, 65 NetworkBehaviours, 125 ScriptableObject classes); 388 test scripts; 4796 prefabs, 48 scenes and 2836 assets read. 235 system-to-system links, of which 0 run uphill, 0 pairs of systems use each other both ways, and 4 links would have to go for the systems to form a clean stack. The largest tangle, classes that all reach each other through some chain of uses, holds 10 classes from 1 systems (UI 10, ...).
 <!-- /map:summary -->
 
 **Checked against the compiler.**
 
 <!-- map:compiler -->
-Checked against the 241 references the assemblies declare between systems: every link the map found is one the compiler allows. 5 declared references name no type in code: GameFeel -> Gameplay/CharacterCreation, Gameplay/Crossfire -> Networking, Gameplay/Factions -> Core, Gameplay/Wallet -> Core, Tools -> Gameplay/NPC. Each is either unused and can go, or needed by the compiler for a type reached through another assembly's member (error CS0012 when removed), which reading the code as text cannot see.
+Checked against the 241 references the assemblies declare between systems: every link the map found is one the compiler allows. 6 declared references name no type in code: GameFeel -> Gameplay/CharacterCreation, GameFeel -> Rendering, Gameplay/Crossfire -> Networking, Gameplay/Factions -> Core, Gameplay/Wallet -> Core, Tools -> Gameplay/NPC. Each is either unused and can go, or needed by the compiler for a type reached through another assembly's member (error CS0012 when removed), which reading the code as text cannot see.
 <!-- /map:compiler -->
 
 ## How to read it
@@ -64,9 +64,9 @@ Checked against the 241 references the assemblies declare between systems: every
 <!-- map:systems -->
 | System | Layer | Scripts | Lines | Uses (types) | Used by (types) | Instability | Tests | Types touched by a test |
 |---|---|---|---|---|---|---|---|---|
-| Core | Foundation | 80 | 6,881 | 0 | 462 | 0.0 | 10 | 62 of 76 |
-| Networking | Infrastructure | 100 | 15,315 | 44 | 146 | 0.23 | 46 | 117 of 178 |
-| Rendering | Infrastructure | 23 | 4,186 | 3 | 42 | 0.07 | 2 | 3 of 28 |
+| Core | Foundation | 86 | 7,150 | 0 | 477 | 0.0 | 11 | 63 of 79 |
+| Networking | Infrastructure | 101 | 15,354 | 45 | 146 | 0.24 | 46 | 117 of 180 |
+| Rendering | Infrastructure | 22 | 4,484 | 8 | 35 | 0.19 | 4 | 2 of 28 |
 | Environment | Simulation | 6 | 869 | 0 | 2 | 0.0 | 0 | 0 of 6 |
 | Gameplay/Crafting | Simulation | 3 | 426 | 25 | 9 | 0.74 | 1 | 4 of 6 |
 | Gameplay/Forge | Simulation | 1 | 461 | 46 | 4 | 0.92 | 0 | 0 of 2 |
@@ -77,24 +77,24 @@ Checked against the 241 references the assemblies declare between systems: every
 | Gameplay/Crossfire | Simulation | 9 | 911 | 9 | 5 | 0.64 | 5 | 15 of 17 |
 | Gameplay/Economy | Simulation | 23 | 4,660 | 85 | 48 | 0.64 | 10 | 24 of 37 |
 | Gameplay/Social | Simulation | 42 | 6,871 | 83 | 49 | 0.63 | 14 | 34 of 55 |
-| Gameplay/Persistence | Simulation | 70 | 20,484 | 427 | 14 | 0.97 | 53 | 59 of 253 |
+| Gameplay/Persistence | Simulation | 70 | 20,490 | 427 | 14 | 0.97 | 53 | 59 of 253 |
 | Gameplay/Autopilot | Simulation | 11 | 1,587 | 46 | 15 | 0.75 | 5 | 7 of 12 |
-| Gameplay/Hostiles | Simulation | 52 | 6,153 | 84 | 45 | 0.65 | 26 | 60 of 76 |
+| Gameplay/Hostiles | Simulation | 52 | 6,349 | 84 | 45 | 0.65 | 27 | 60 of 76 |
 | Gameplay/Pets | Simulation | 12 | 1,550 | 40 | 33 | 0.55 | 6 | 14 of 19 |
-| Gameplay/Combat | Simulation | 35 | 6,168 | 95 | 45 | 0.68 | 19 | 35 of 60 |
-| Gameplay/Player | Simulation | 85 | 22,881 | 78 | 240 | 0.25 | 54 | 164 of 211 |
+| Gameplay/Combat | Simulation | 35 | 6,560 | 95 | 45 | 0.68 | 19 | 35 of 60 |
+| Gameplay/Player | Simulation | 88 | 23,501 | 80 | 240 | 0.25 | 54 | 164 of 213 |
 | Gameplay/CharacterCreation | Simulation | 28 | 3,268 | 27 | 96 | 0.22 | 11 | 26 of 30 |
-| Gameplay/Items | Simulation | 87 | 13,391 | 65 | 306 | 0.18 | 16 | 75 of 115 |
-| World | Simulation | 56 | 12,224 | 29 | 85 | 0.25 | 11 | 50 of 91 |
-| Gameplay/Progression | Simulation | 49 | 9,178 | 36 | 241 | 0.13 | 15 | 54 of 63 |
+| Gameplay/Items | Simulation | 87 | 13,399 | 65 | 306 | 0.18 | 16 | 75 of 115 |
+| World | Simulation | 57 | 12,234 | 29 | 85 | 0.25 | 11 | 50 of 91 |
+| Gameplay/Progression | Simulation | 49 | 9,180 | 36 | 241 | 0.13 | 15 | 54 of 63 |
 | Gameplay/Wallet | Simulation | 4 | 146 | 0 | 21 | 0.0 | 0 | 2 of 2 |
 | Gameplay/NPC | Simulation | 3 | 299 | 5 | 20 | 0.2 | 1 | 3 of 4 |
 | Gameplay/Factions | Simulation | 7 | 197 | 0 | 29 | 0.0 | 0 | 2 of 4 |
 | Gameplay/Brains | Simulation | 10 | 1,570 | 1 | 56 | 0.02 | 4 | 34 of 39 |
 | GameFeel | Presentation | 32 | 6,101 | 60 | 2 | 0.97 | 8 | 21 of 40 |
-| UI | Presentation | 149 | 38,514 | 358 | 5 | 0.99 | 33 | 52 of 157 |
+| UI | Presentation | 149 | 38,515 | 358 | 5 | 0.99 | 33 | 52 of 157 |
 | Audio | Presentation | 15 | 1,299 | 10 | 16 | 0.38 | 2 | 5 of 15 |
-| Tools | Tooling | 37 | 6,485 | 228 | 0 | 1.0 | 12 | 3 of 40 |
+| Tools | Tooling | 37 | 6,488 | 228 | 0 | 1.0 | 12 | 3 of 40 |
 <!-- /map:systems -->
 
 ## Links running uphill
@@ -146,7 +146,7 @@ Each row is the cheaper side of a loop: cut these references and the two systems
 | WeaponClassId | Gameplay/Progression | enum | 31 | 10 | 480 | 12 | 0 |
 | IBodyRequests | Core | interface | 31 | 14 | 468 | 1 | 0 |
 | DamageResult | Core | plain | 29 | 12 | 392 | 16 | 0 |
-| PlayerPose | Gameplay/Player | plain | 28 | 6 | 37 | 14 | 0 |
+| PlayerPose | Gameplay/Player | plain | 29 | 6 | 38 | 14 | 0 |
 <!-- /map:ripple -->
 
 ## Hubs (static members reached from other systems)
@@ -204,7 +204,7 @@ Classes over 700 lines. Several of them also reach into three or more other syst
 | ServerSave | Gameplay/Persistence | 1217 | Core, Networking | 23 |
 | PlayerCombatSkills | Gameplay/Progression | 1208 | Core, Networking | 26 |
 | PlayerMeleeCombat | Gameplay/Combat | 1166 | Core, Gameplay/Player, Gameplay/Progression, Networking | 17 |
-| PetFollower | Gameplay/Items | 1066 | Rendering | 5 |
+| PetFollower | Gameplay/Items | 1066 | Core, Rendering | 5 |
 | HudLayoutEditor | UI | 1042 | - | 14 |
 | PlayerMounts | Gameplay/Mounts | 1018 | Core, Gameplay/Hostiles, Gameplay/Player, Gameplay/Progression, Gameplay/Social, Networking | 10 |
 | NetworkConnectionManager | Networking | 977 | Core | 15 |
@@ -332,7 +332,7 @@ Each ScriptableObject class, how many assets of it exist, and where they are wir
 | TownsfolkViewAssets | Gameplay/Townsfolk | 1 | 2 | 0 / 0 / 0 |
 | TownsfolkWorldAssets | Gameplay/Townsfolk | 1 | 1 | 0 / 0 / 0 |
 | RelevancySettings | Networking | 1 | 2 | 0 / 0 / 0 |
-| WorldLodSettings | Rendering | 1 | 2 | 1 / 0 / 0 |
+| WorldLodSettings | Rendering | 1 | 1 | 1 / 0 / 0 |
 | GlowHaloFeature | Rendering | 1 | 0 | 0 / 0 / 2 |
 | SunShaftsFeature | Rendering | 1 | 0 | 0 / 0 / 1 |
 | GuideLibrary | UI | 1 | 5 | 0 / 41 / 0 |
@@ -360,7 +360,7 @@ Each ScriptableObject class, how many assets of it exist, and where they are wir
 Where tuning still lives in code, and other links the compiler cannot see:
 
 <!-- map:smells -->
-- **Gameplay numbers fixed in code:** 476 in 163 files. Most: `Gameplay/Crafting/Data/CraftingSettings.cs` (28), `Gameplay/Player/Entities/Runtime/WallWalk.cs` (20), `Gameplay/Player/Runtime/PlayerWallRunMotor.cs` (18), `Gameplay/Player/Runtime/PlayerVaultMotor.cs` (15), `Gameplay/Player/Runtime/PointAndClickPlayer.cs` (15), `Gameplay/Items/Data/GearProgressionSettings.cs` (13), `Gameplay/Items/Runtime/WeaponPaintRules.cs` (11), `Gameplay/Player/Runtime/PlayerWallRunMotor.WallWalk.cs` (10).
+- **Gameplay numbers fixed in code:** 477 in 164 files. Most: `Gameplay/Crafting/Data/CraftingSettings.cs` (28), `Gameplay/Player/Entities/Runtime/WallWalk.cs` (20), `Gameplay/Player/Runtime/PlayerWallRunMotor.cs` (18), `Gameplay/Player/Runtime/PlayerVaultMotor.cs` (15), `Gameplay/Player/Runtime/PointAndClickPlayer.cs` (15), `Gameplay/Items/Data/GearProgressionSettings.cs` (13), `Gameplay/Items/Runtime/WeaponPaintRules.cs` (11), `Gameplay/Player/Runtime/PlayerWallRunMotor.WallWalk.cs` (10).
 - **Settings fallbacks** (`settings != null ? settings.x : 8`): 116.
 - **Runtime writes to shared assets** (ScriptableObject or pipeline fields): 26 — `GameFeel/Runtime/GameFeelPresenter.cs:295`, `Rendering/Runtime/PipelineRebuilds.cs:60`, `Rendering/Runtime/PipelineRebuilds.cs:68`, `Rendering/Runtime/PipelineRebuilds.cs:104`, `Rendering/Runtime/PipelineRebuilds.cs:105`, `UI/Runtime/Settings/GraphicsSettingsApplier.cs:142`, `UI/Runtime/Settings/GraphicsSettingsApplier.cs:143`, `UI/Runtime/Settings/GraphicsSettingsApplier.cs:144`.
 - **Lookups by name** (Type.GetType, Find("..."), Resources.Load, SendMessage): 49.
