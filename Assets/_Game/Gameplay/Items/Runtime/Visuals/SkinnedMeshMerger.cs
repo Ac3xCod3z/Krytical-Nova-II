@@ -143,6 +143,63 @@ namespace KryticalNova.Items.Visuals
         {
             referenceBones = bones ?? Array.Empty<Transform>();
             referenceBindposes = bindposes ?? Array.Empty<Matrix4x4>();
+            ReferenceKey = ReferenceSignature.For(referenceBones, referenceBindposes);
+        }
+
+        /// <summary>
+        /// What the reference bones give every merge of this rig (their names in order and their bind poses), one shared
+        /// object per distinct rig: two mergers with the same one start every merged mesh alike (<see cref="MergedMeshCache"/>).
+        /// </summary>
+        public object ReferenceKey { get; private set; }
+
+        /// <summary>One distinct set of reference bones (names, null = pruned) and bind poses, kept once for the whole game.</summary>
+        private sealed class ReferenceSignature
+        {
+            private static readonly List<ReferenceSignature> Known = new List<ReferenceSignature>();
+            private string[] names;
+            private Matrix4x4[] bindposes;
+
+            // Enter Play Mode runs without a domain reload, so statics must be reset by hand.
+            [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+            private static void ResetStatics() => Known.Clear();
+
+            public static ReferenceSignature For(Transform[] bones, Matrix4x4[] poses)
+            {
+                // A bone past the bind poses is bound at its live pose (Merge): this rig's merges are its own, never shared.
+                if (poses.Length < bones.Length) return new ReferenceSignature { names = Array.Empty<string>(), bindposes = Array.Empty<Matrix4x4>() };
+                for (int k = 0; k < Known.Count; k++)
+                    if (Known[k].Matches(bones, poses)) return Known[k];
+                var made = new ReferenceSignature { names = new string[bones.Length], bindposes = (Matrix4x4[])poses.Clone() };
+                for (int i = 0; i < bones.Length; i++) made.names[i] = bones[i] != null ? bones[i].name : null;
+                Known.Add(made);
+                return made;
+            }
+
+            private bool Matches(Transform[] bones, Matrix4x4[] poses)
+            {
+                if (names.Length != bones.Length || bindposes.Length != poses.Length) return false;
+                for (int i = 0; i < bones.Length; i++)
+                    if (!string.Equals(names[i], bones[i] != null ? bones[i].name : null, StringComparison.Ordinal)) return false;
+                for (int i = 0; i < poses.Length; i++)
+                    if (!bindposes[i].Equals(poses[i])) return false;
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Does to this skeleton what <see cref="Merge"/> does to it for <paramref name="parts"/>, without building a mesh:
+        /// each part's dangle bones go back under their parent at rest and the missing ones are grown, part by part in
+        /// the same order. Used when this character shows a mesh another merger already merged for the same look.
+        /// </summary>
+        public void PrepareBones(IReadOnlyList<SidekickPartRef> parts)
+        {
+            foreach (var part in parts)
+            {
+                if (!part.IsValid || !part.mesh.isReadable) continue; // Merge skips such a part before touching a bone
+                ConformExtraBones(part.extraBones);
+                foreach (var boneName in part.boneNames)
+                    if (!skeleton.ContainsKey(boneName)) TryCreateBone(boneName, part.extraBones, out _);
+            }
         }
 
         /// <summary>The paints of the last merge: submesh i + 1 is drawn in paint i (submesh 0 is the colour-mapped body).</summary>

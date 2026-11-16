@@ -140,7 +140,7 @@ namespace KryticalNova.Items.Visuals
         private void OnDestroy()
         {
             if (sharedSource != null) sharedSource.Rebuilt -= OnSourceRebuilt;
-            if (ownedMesh != null) Destroy(ownedMesh);
+            if (ownedMesh != null) ReleaseMesh(ownedMesh);
             lightHalo?.Clear();
             eyeGlow?.Dispose();
             cloth?.Dispose();
@@ -298,13 +298,57 @@ namespace KryticalNova.Items.Visuals
         {
             dirty = false;
             if (merger == null || !IsConfigured) return;
+            long started = Diagnostics.PerformanceLog.IsRecording ? System.Diagnostics.Stopwatch.GetTimestamp() : 0;
             ResolveParts();
             if (mergeParts) RebuildMerged(); else RebuildSeparate();
             RebuildLights(partList);
             RebuildEyeGlow(partList);
             RebuildCloth(partList);
             BindDangleBones();
+            if (started != 0) RebuildStats.Add(started);
             Rebuilt?.Invoke();
+        }
+
+        /// <summary>
+        /// The frame's rebuilds as ONE performance-log marker, "appearance.merge" (number = meshes merged, detail = how
+        /// many were merged and how many shared one already merged, time = every rebuild of the frame together), written
+        /// before the frame renders so a slow frame's line shows it. 200 markers a frame would push everything else out
+        /// of the ring.
+        /// </summary>
+        private static class RebuildStats
+        {
+            public static int merged, shared, rebuilds;
+            private static long ticks, last;
+            private static bool hooked;
+
+            [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+            private static void ResetStatics()
+            {
+                merged = shared = rebuilds = 0;
+                ticks = last = 0;
+                if (hooked) Application.onBeforeRender -= Flush;
+                hooked = false;
+            }
+
+            public static void Add(long started)
+            {
+                last = System.Diagnostics.Stopwatch.GetTimestamp();
+                ticks += last - started;
+                rebuilds++;
+                if (hooked) return;
+                Application.onBeforeRender += Flush;
+                hooked = true;
+            }
+
+            private static void Flush()
+            {
+                if (rebuilds == 0) return;
+                if (Diagnostics.PerformanceLog.IsRecording)
+                    Diagnostics.PerformanceLog.Markers.Add("appearance.merge", $"{rebuilds} rebuilt {merged} merged {shared} shared", merged,
+                        (float)(ticks * 1000.0 / System.Diagnostics.Stopwatch.Frequency), false, last);
+                merged = shared = rebuilds = 0;
+                ticks = 0;
+            }
         }
 
         private void LateUpdate()
@@ -476,9 +520,16 @@ namespace KryticalNova.Items.Visuals
             ClearDebugRenderers();
             SplitCloth(partList);
             merger.KeepReadable = KeepMeshReadable;
-            var mesh = merger.Merge(mergeList, bodyShape, boneBuffer, name + "_Merged", idleFace,
-                liveFaceShapes != null ? liveFaceShapes : blink ? (IReadOnlyList<string>)FaceBlinker.LiveShapes : null, bareBody);
+            var live = liveFaceShapes != null ? liveFaceShapes : blink ? (IReadOnlyList<string>)FaceBlinker.LiveShapes : null;
+            // A look already merged for another character is shown as it is (MergedMeshCache). A mesh kept readable is
+            // read and freed by its owner (the townsfolk's LOD baker), so it is never shared.
+            bool shareable = !KeepMeshReadable && MergedMeshCache.Describe(merger.ReferenceKey, mergeList, bodyShape, idleFace, live, bareBody);
+            if (shareable && ShowMerged(MergedMeshCache.TryShare())) return;
+            var mesh = merger.Merge(mergeList, bodyShape, boneBuffer, name + "_Merged", idleFace, live, bareBody);
             if (mesh == null) return;
+            if (shareable) MergedMeshCache.Keep(mesh, boneBuffer, merger.Paints, merger.PaintParts);
+            else MergedMeshCache.CountMerge();
+            if (Diagnostics.PerformanceLog.IsRecording) RebuildStats.merged++;
             var old = ownedMesh;
             ownedMesh = mesh;
             boneNames.Clear();
@@ -489,7 +540,40 @@ namespace KryticalNova.Items.Visuals
             shownPaintParts.Clear();
             shownPaintParts.AddRange(merger.PaintParts);
             ApplyPaints(targetRenderer);
-            if (old != null) Destroy(old);
+            if (old != null) ReleaseMesh(old);
+        }
+
+        /// <summary>
+        /// Shows a mesh merged for the same look on another character exactly as this one's own merge would have: the
+        /// skeleton gets the same dangle-bone changes (<see cref="SkinnedMeshMerger.PrepareBones"/>), the mesh's bones
+        /// are this skeleton's of the same names, and the paints are this renderer's own. False when there is none.
+        /// </summary>
+        private bool ShowMerged(MergedMeshCache.Entry entry)
+        {
+            if (entry == null) return false;
+            merger.PrepareBones(mergeList);
+            var names = entry.BoneNames;
+            var bones = new Transform[names.Length];
+            for (int i = 0; i < names.Length; i++) bones[i] = merger.FindBone(names[i]) ?? transform;
+            var old = ownedMesh;
+            ownedMesh = entry.Mesh;
+            boneNames.Clear();
+            boneNames.AddRange(names);
+            ApplyToRenderer(targetRenderer, entry.Mesh, bones);
+            shownPaints.Clear();
+            shownPaints.AddRange(entry.Paints);
+            shownPaintParts.Clear();
+            shownPaintParts.AddRange(entry.PaintParts);
+            ApplyPaints(targetRenderer);
+            if (old != null) ReleaseMesh(old);
+            if (Diagnostics.PerformanceLog.IsRecording) RebuildStats.shared++;
+            return true;
+        }
+
+        /// <summary>This character stops showing its merged mesh: a shared one is let go, its own destroyed.</summary>
+        private static void ReleaseMesh(Mesh mesh)
+        {
+            if (!MergedMeshCache.Release(mesh)) Destroy(mesh);
         }
 
         private void ApplyToRenderer(SkinnedMeshRenderer smr, Mesh mesh, Transform[] bones)
@@ -509,7 +593,7 @@ namespace KryticalNova.Items.Visuals
             var bones = new Transform[names.Count];
             for (int i = 0; i < names.Count; i++) bones[i] = merger.FindBone(names[i]) ?? transform;
             ClearDebugRenderers();
-            if (ownedMesh != null) { Destroy(ownedMesh); ownedMesh = null; }
+            if (ownedMesh != null) { ReleaseMesh(ownedMesh); ownedMesh = null; }
             boneNames.Clear();
             boneNames.AddRange(names);
             ApplyToRenderer(targetRenderer, sharedSource.CurrentMesh, bones);
