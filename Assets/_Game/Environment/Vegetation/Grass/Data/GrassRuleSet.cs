@@ -71,6 +71,14 @@ namespace KryticalNova.Vegetation.Grass
         [Tooltip("Max real clumps per grass type per camera per frame.")]
         public int capacityPerType = 64000;
 
+        [Header("Soft fade (no blinking)")]
+        [Tooltip("Blades grow and shrink with distance instead of switching on and off. Each blade keeps a fixed rank, " +
+                 "so the same blades are always the ones that thin out, and they do it smoothly. Off: the old hard cut.")]
+        public bool softFade = true;
+        [Tooltip("How wide the grow-in is, as a share of each blade's own rank (0.4 = it grows from nothing to full while " +
+                 "the distance LOD falls by 40% of the point where it appears). Wider is softer, but more half-grown blades.")]
+        [Range(0.05f, 1f)] public float softFadeBand = 0.4f;
+
         [Header("Far grass (smoke and mirrors)")]
         [Tooltip("Cheap tufts that carry the field past the real grass, following the same mask, biomes and types.")]
         public bool farGrass = true;

@@ -29,6 +29,10 @@ Shader "KryticalNova/Grass Blades"
     float4 _GrassParams;    // x mid point, y brightness variation, z root occlusion, w normal-up
     float4 _GrassMotion;    // x wind strength, y flutter, z player bend (0 = takes no part in interaction), w mesh height
     int    _KN_GrassDebug;
+    // Soft fade (GrassRenderer sets them each frame, the same numbers the generator used).
+    float4 _KN_GrassLod;     // the generator's _Lod
+    float4 _KN_GrassFade;    // the generator's _Fade
+    float4 _GrassFadePass;   // per draw: x pass (0 near, 1 far, 2 fill), y pass max distance, z band (0 = hard cut)
     // The trample map (GrassTrampleMap): where grass round the camera has been pushed, and which way.
     TEXTURE2D(_KN_GrassTrample);
     SAMPLER(sampler_KN_GrassTrample);
@@ -56,6 +60,14 @@ Shader "KryticalNova/Grass Blades"
         float scale = inst.size.x;
         float widthMul = inst.size.y;
         float rand = inst.size.z;
+        // Soft fade: the blade grows from nothing as the distance LOD passes its stable rank, and shrinks back the same way.
+        // Fully grown blades are untouched; a growing one is short and slim (width with the square root, so it never
+        // lies flat on the ground as a wide sliver).
+        float appearAt = ((inst.packed >> 16) & 255u) / KN_GRASS_APPEAR_SCALE;
+        float lod = KNGrassLod((int)_GrassFadePass.x, distance(root.xz, _WorldSpaceCameraPos.xz), _KN_GrassLod, _KN_GrassFade, _GrassFadePass.y);
+        float growth = KNGrassGrowth(lod, appearAt, _GrassFadePass.z);
+        scale *= growth;
+        widthMul *= growth < 1.0 ? rsqrt(max(growth, 1e-4)) : 1.0;
 
         float h01 = saturate(positionOS.y / max(_GrassMotion.w, 0.001));
         float s, c;
@@ -141,7 +153,7 @@ Shader "KryticalNova/Grass Blades"
         o.rand = rand;
         o.moisture = (inst.packed >> 24) / 255.0;
         o.rootWS = root;
-        o.debug = inst.packed & 0x00FFFFFFu;
+        o.debug = inst.packed & 0x0000FFFFu;
         return o;
     }
 
@@ -176,7 +188,7 @@ Shader "KryticalNova/Grass Blades"
         return KNSeasonGrassColour(col, height01, rootWS);
     }
 
-    float3 UnpackDebug(uint d) { return float3((d >> 16) & 255u, (d >> 8) & 255u, d & 255u) / 255.0; }
+    float3 UnpackDebug(uint d) { return float3(((d >> 11) & 31u) / 31.0, ((d >> 5) & 63u) / 63.0, (d & 31u) / 31.0); }
     ENDHLSL
 
     SubShader

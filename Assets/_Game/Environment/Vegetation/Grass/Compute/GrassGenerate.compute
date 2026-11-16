@@ -36,6 +36,7 @@ float4 _Fade;           // x hand-off start, y hand-off end (= near max), z far 
 float4 _FarParams;      // x pass (0 near, 1 far, 2 fill), y far width scale
 float4 _FillParams;     // x fill width scale, y fill mesh height, z fill height scale
 float4 _LawnClip;       // x root inset from a lawn's edge, y bare band kept just outside a lawn
+float  _SoftFadeBand;   // soft fade band (GrassRuleSet.softFadeBand; 0 = the old hard cut)
 float4 _Frustum[6];
 
 float4 _BiomeParams[4];                 // x density, y entry count, z fill density
@@ -102,7 +103,7 @@ float VolumeMask(float2 p)
     return m;
 }
 
-uint PackColor(float3 c) { c = saturate(c); return ((uint)(c.r * 255) << 16) | ((uint)(c.g * 255) << 8) | (uint)(c.b * 255); }
+uint PackColor(float3 c) { c = saturate(c); return ((uint)(c.r * 31 + 0.5) << 11) | ((uint)(c.g * 63 + 0.5) << 5) | (uint)(c.b * 31 + 0.5); }
 
 [numthreads(8, 8, 1)]
 void Generate(uint3 id : SV_DispatchThreadID)
@@ -144,16 +145,9 @@ void Generate(uint3 id : SV_DispatchThreadID)
 
     // Distance LOD. Near: full → mid → far bands, then fades out across the hand-off band.
     // Far: fades in across the hand-off band, then thins toward the far edge.
+    // (KNGrassLod in GrassCommon.hlsl: the blades' soft fade reads the same curve.)
     float handOff = smoothstep(_Fade.x, _Fade.y, camDist);
-    float lod;
-    if (far)
-        lod = handOff * lerp(1.0, _Fade.w, smoothstep(_Fade.y, _Fade.z, camDist));
-    else if (fill)
-        lod = 1.0 - smoothstep(passMax * 0.6, passMax, camDist);
-    else
-        lod = (camDist < _Lod.x ? 1.0
-            : camDist < _Lod.y ? lerp(1.0, _Lod.z, smoothstep(_Lod.x, _Lod.y, camDist))
-            : lerp(_Lod.z, _Lod.w, smoothstep(_Lod.y, _Fade.y, camDist))) * (1.0 - handOff);
+    float lod = KNGrassLod(far ? 1 : fill ? 2 : 0, camDist, _Lod, _Fade, passMax);
 
     // Pick a grass type from the biome, weighted and optionally clumped into stands. The far pass also weighs by
     // each type's density so the tuft mix matches what the near field shows.
@@ -180,7 +174,12 @@ void Generate(uint3 id : SV_DispatchThreadID)
     float density = maskDensity * (fill ? bp.z : bp.x) * _Grid.w * VolumeMask(p);
     float typeDensity = cheap ? 1.0 : _TypeA[max(type, 0)].x;
     float keepRoll = Rand(seed);
-    bool keep = type >= 0 && type < _TypeCount && keepRoll < density * lod * typeDensity;
+    // The blade's stable rank as the LOD share it appears at (8 bits, so the blades read exactly what was tested here).
+    // Kept while it is at all grown; the blade shader grows it in and out across the band instead of a blink.
+    float share = density * typeDensity;
+    uint appearBits = share > 0.0 ? (uint)min(keepRoll / share * KN_GRASS_APPEAR_SCALE + 0.5, 255.0) : 255u;
+    float appearAt = appearBits / KN_GRASS_APPEAR_SCALE;
+    bool keep = type >= 0 && type < _TypeCount && share > 0.0 && KNGrassGrowth(lod, appearAt, _SoftFadeBand) > 0.0;
 
     float3 debugColor = 0;
     if (!keep)
@@ -224,7 +223,8 @@ void Generate(uint3 id : SV_DispatchThreadID)
     GrassInstance inst;
     inst.posRot = float4(pos, Rand(seed) * 6.2831853);
     inst.size = float3(height / max(meshHeight, 0.01), width, Rand(seed));
-    inst.packed = ((uint)(saturate(moisture) * 255.0) << 24) | PackColor(debugColor);
+    // A placement-debug stub (not kept) shows at once: appear-at 0.
+    inst.packed = ((uint)(saturate(moisture) * 255.0) << 24) | ((keep ? appearBits : 0u) << 16) | PackColor(debugColor);
 
     uint draw = _DrawBase + (uint)type;
     uint slot;

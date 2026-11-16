@@ -64,5 +64,21 @@ namespace KryticalNova.DevTools
             var g = GrassRenderer.Instance;
             return g == null ? NoGrass : g.Stats();
         }
+
+        [Command("grass.fade", "Soft fade (blades grow and shrink with distance instead of blinking): grass.fade on|off, or no word to go back to the rule set.")]
+        private static string Fade() { GrassRenderer.SoftFadeOverride = -1; return "Grass soft fade: as the rule set says."; }
+
+        [Command("grass.fade")]
+        private static string Fade(bool on) { GrassRenderer.SoftFadeOverride = on ? 1 : 0; return on ? "Grass soft fade on." : "Grass soft fade off (the old hard cut)."; }
+
+        [Command("grass.count", "Watch the grass counts before the cap (no stall): grass.count on, then grass.count to read (and restart) them, grass.count off to stop.")]
+        private static string Count()
+        {
+            var g = GrassRenderer.Instance;
+            return g == null ? NoGrass : g.CountLine(reset: true);
+        }
+
+        [Command("grass.count")]
+        private static string Count(bool on) { GrassRenderer.CountWatch = on; return on ? "Grass counts watched." : "Grass counts no longer watched."; }
     }
 }

@@ -52,6 +52,15 @@ namespace KryticalNova.Vegetation.Grass
         public static bool FillEnabled = true;
         /// <summary>Runtime switch (debug: compare the cost): off walks the whole square round the camera, as it used to.</summary>
         public static bool ViewOnly = true;
+        /// <summary>Runtime switch for the soft fade (debug: compare it with the old hard cut). -1 = the rule set, 0 off, 1 on.</summary>
+        public static int SoftFadeOverride = -1;
+        private float SoftFadeBand => (SoftFadeOverride < 0 ? rules.softFade : SoftFadeOverride > 0) ? Mathf.Clamp01(rules.softFadeBand) : 0f;
+        /// <summary>
+        /// Debug counters (grass plan step 1): while on, the game camera's counts per draw before the cap are read back
+        /// each frame without a stall (AsyncGPUReadback), so <see cref="CountLine"/> can say how close each pass runs to
+        /// its cap and how often it overflows.
+        /// </summary>
+        public static bool CountWatch;
         private long cellsWalked, cellsInSquares;   // by the game camera's last frame, for Stats
         private float Density => (float.IsNaN(DensityOverride) ? rules.densityScale : DensityOverride) * DensityMultiplier;
         private float NearDistance => float.IsNaN(DistanceOverride) ? rules.maxDistance : DistanceOverride;
@@ -96,12 +105,22 @@ namespace KryticalNova.Vegetation.Grass
         private static readonly int WetTintId = Shader.PropertyToID("_WetTint");
         private static readonly int GrassParamsId = Shader.PropertyToID("_GrassParams");
         private static readonly int GrassMotionId = Shader.PropertyToID("_GrassMotion");
+        private static readonly int SoftFadeBandId = Shader.PropertyToID("_SoftFadeBand");
+        private static readonly int GlobalLodId = Shader.PropertyToID("_KN_GrassLod");
+        private static readonly int GlobalFadeId = Shader.PropertyToID("_KN_GrassFade");
+        private static readonly int FadePassId = Shader.PropertyToID("_GrassFadePass");
 
         private readonly List<GrassType> types = new List<GrassType>(MaxTypes);
         private readonly MaterialPropertyBlock[] blocks = new MaterialPropertyBlock[DrawCount];
         private GraphicsBuffer instances;
         private GraphicsBuffer argsBuffer;   // IndirectArguments: what RenderMeshIndirect reads
         private GraphicsBuffer countBuffer;  // Raw twin the compute shader counts into, copied to argsBuffer on the GPU
+        private GraphicsBuffer rawCountCopy; // CountWatch only: the counts before the cap, for the readback
+        private readonly uint[] rawCounts = new uint[DrawCount * 5];
+        private readonly long[] passFramesOver = new long[PassCount];
+        private readonly uint[] passPeak = new uint[PassCount];
+        private long watchedFrames;
+        private bool readbackPending;
         private uint[] argsTemplate;
         private int generateKernel = -1, clampKernel = -1;
         private int nearCapacity, farCapacity, fillCapacity;
@@ -254,6 +273,9 @@ namespace KryticalNova.Vegetation.Grass
             argsBuffer = null;
             countBuffer?.Release();
             countBuffer = null;
+            rawCountCopy?.Release();
+            rawCountCopy = null;
+            readbackPending = false;
             instances?.Release();
             instances = null;
             trample.Release();
@@ -320,8 +342,15 @@ namespace KryticalNova.Vegetation.Grass
             cs.SetVector(TerrainPosId, new Vector4(tPos.x, tPos.y, tPos.z, tSize.y * 2f));
             cs.SetVector(TerrainSizeId, new Vector4(tSize.x, tSize.z, data.heightmapResolution, rules.mask.width));
             cs.SetVector(CamPosId, camPos);
-            cs.SetVector(LodId, new Vector4(rules.lodDistances.x, rules.lodDistances.y, rules.lodKeep.x, rules.lodKeep.y));
-            cs.SetVector(FadeId, new Vector4(handOffStart, nearMax, farMax, rules.farKeepAtEnd));
+            // Soft fade: the blades read the same LOD curve as the generator (GrassCommon.hlsl KNGrassLod).
+            float band = SoftFadeBand;
+            var lod = new Vector4(rules.lodDistances.x, rules.lodDistances.y, rules.lodKeep.x, rules.lodKeep.y);
+            var fade = new Vector4(handOffStart, nearMax, farMax, rules.farKeepAtEnd);
+            cs.SetVector(LodId, lod);
+            cs.SetVector(FadeId, fade);
+            cs.SetFloat(SoftFadeBandId, band);
+            Shader.SetGlobalVector(GlobalLodId, lod);
+            Shader.SetGlobalVector(GlobalFadeId, fade);
             cs.SetVectorArray(FrustumId, frustum);
             cs.SetVectorArray(BiomeParamsId, biomeParams);
             cs.SetVectorArray(BiomeSlotsId, biomeSlots);
@@ -345,6 +374,8 @@ namespace KryticalNova.Vegetation.Grass
             // Fill pass: cheap tufts between the real clumps, close to the camera.
             if (fill) Dispatch(cs, cam, rules.fillCellSize, fillMax, FillPass, MaxTypes * (nearCapacity + farCapacity), fillCapacity);
 
+            if (CountWatch && cam.cameraType == CameraType.Game) WatchCounts();
+
             cs.SetBuffer(clampKernel, ArgsId, countBuffer);
             fourInts[0] = nearCapacity; fourInts[1] = farCapacity; fourInts[2] = MaxTypes; fourInts[3] = fillCapacity;
             cs.SetInts(ClampCapsId, fourInts);
@@ -355,9 +386,9 @@ namespace KryticalNova.Vegetation.Grass
             var farBounds = new Bounds(camPos, new Vector3(farMax * 2f, tSize.y + 20f, farMax * 2f));
             for (int i = 0; i < types.Count; i++)
             {
-                Draw(cam, types[i].mesh, i, nearBounds);
-                if (far) Draw(cam, rules.farMesh, MaxTypes * FarPass + i, farBounds);
-                if (fill) Draw(cam, rules.fillMesh, MaxTypes * FillPass + i, nearBounds);
+                Draw(cam, types[i].mesh, i, nearBounds, new Vector4(NearPass, nearMax, band, 0f));
+                if (far) Draw(cam, rules.farMesh, MaxTypes * FarPass + i, farBounds, new Vector4(FarPass, farMax, band, 0f));
+                if (fill) Draw(cam, rules.fillMesh, MaxTypes * FillPass + i, nearBounds, new Vector4(FillPass, fillMax, band, 0f));
             }
         }
 
@@ -413,8 +444,9 @@ namespace KryticalNova.Vegetation.Grass
             return Rect.MinMaxRect(minX - FootprintMargin, minZ - FootprintMargin, maxX + FootprintMargin, maxZ + FootprintMargin);
         }
 
-        private void Draw(Camera cam, Mesh mesh, int draw, Bounds bounds)
+        private void Draw(Camera cam, Mesh mesh, int draw, Bounds bounds, Vector4 fadePass)
         {
+            blocks[draw].SetVector(FadePassId, fadePass);
             var rp = new RenderParams(grassMaterial)
             {
                 camera = cam,
@@ -427,6 +459,69 @@ namespace KryticalNova.Vegetation.Grass
                 motionVectorMode = MotionVectorGenerationMode.Object,
             };
             Graphics.RenderMeshIndirect(rp, mesh, argsBuffer, 1, draw);
+        }
+
+        // CountWatch: copy this frame's counts before the cap and read them back when the GPU has them (one at a time).
+        private void WatchCounts()
+        {
+            if (readbackPending) return;
+            rawCountCopy ??= new GraphicsBuffer(GraphicsBuffer.Target.Raw | GraphicsBuffer.Target.CopyDestination, DrawCount * 5, sizeof(uint));
+            Graphics.CopyBuffer(countBuffer, rawCountCopy);
+            readbackPending = true;
+            AsyncGPUReadback.Request(rawCountCopy, request =>
+            {
+                readbackPending = false;
+                if (request.hasError || rawCountCopy == null) return;
+                request.GetData<uint>().CopyTo(rawCounts);
+                watchedFrames++;
+                for (int pass = 0; pass < PassCount; pass++)
+                {
+                    int cap = Capacity(pass);
+                    bool over = false;
+                    for (int i = 0; i < types.Count; i++)
+                    {
+                        uint n = rawCounts[(MaxTypes * pass + i) * 5 + 1];
+                        if (n > passPeak[pass]) passPeak[pass] = n;
+                        if (n > cap) over = true;
+                    }
+                    if (over) passFramesOver[pass]++;
+                }
+            });
+        }
+
+        private int Capacity(int pass) => pass == NearPass ? nearCapacity : pass == FarPass ? farCapacity : fillCapacity;
+
+        /// <summary>
+        /// CountWatch result: per pass the total and the largest per-type count before the cap in the last read frame,
+        /// the cap, the peak since the last reset, and in how many read frames any type went over its cap (its extra
+        /// blades are then dropped in a different random order every frame: real flicker).
+        /// </summary>
+        public string CountLine(bool reset = false)
+        {
+            if (watchedFrames == 0) return "grass counts: nothing read yet (CountWatch " + (CountWatch ? "on" : "off") + ")";
+            var sb = new System.Text.StringBuilder("grass counts over ").Append(watchedFrames).Append(" frames:");
+            string[] names = { "near", "far", "fill" };
+            for (int pass = 0; pass < PassCount; pass++)
+            {
+                uint largest = 0, total = 0;
+                for (int i = 0; i < types.Count; i++)
+                {
+                    uint n = rawCounts[(MaxTypes * pass + i) * 5 + 1];
+                    total += n;
+                    if (n > largest) largest = n;
+                }
+                sb.Append(' ').Append(names[pass]).Append(" total ").Append(total).Append(" max/type ").Append(largest)
+                  .Append('/').Append(Capacity(pass)).Append(" peak ").Append(passPeak[pass])
+                  .Append(" over-cap frames ").Append(passFramesOver[pass]).Append(';');
+            }
+            sb.Append(" soft fade band ").Append(SoftFadeBand.ToString("0.##"));
+            if (reset)
+            {
+                watchedFrames = 0;
+                System.Array.Clear(passFramesOver, 0, PassCount);
+                System.Array.Clear(passPeak, 0, PassCount);
+            }
+            return sb.ToString();
         }
 
         /// <summary>Synchronous GPU readback of the last camera's counts (debug command only; stalls a frame).</summary>
