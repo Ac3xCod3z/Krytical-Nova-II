@@ -12,7 +12,7 @@ namespace KryticalNova.Networking.Tests
         {
             Assert.AreEqual(
                 "time,players,fps,busy_avg_ms,busy_p95_ms,busy_worst_ms,slow_frames,frames,managed_mb,reserved_mb,late_hits,gone_targets,worst_ping_ms," +
-                "tick_p50_ms,tick_p99_ms,brains_ms,relevancy_ms,private_mb,entities,ghosts,bytes_out_per_s",
+                "tick_p50_ms,tick_p99_ms,brains_ms,relevancy_ms,private_mb,entities,ghosts,bytes_out_per_s,separation_ms,predicted_ms",
                 ServerPerformanceColumns.Header);
         }
 
@@ -24,6 +24,8 @@ namespace KryticalNova.Networking.Tests
             CollectionAssert.Contains(ServerPerformanceColumns.Names, PerformanceLog.GaugeNames.Entities);
             CollectionAssert.Contains(ServerPerformanceColumns.Names, PerformanceLog.GaugeNames.Ghosts);
             CollectionAssert.Contains(ServerPerformanceColumns.Names, PerformanceLog.GaugeNames.Players);
+            CollectionAssert.Contains(ServerPerformanceColumns.Names, PerformanceLog.GaugeNames.SeparationMs);
+            CollectionAssert.Contains(ServerPerformanceColumns.Names, PerformanceLog.GaugeNames.PredictedMs);
         }
 
         [Test]
