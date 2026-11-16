@@ -43,6 +43,10 @@ namespace KryticalNova.Vegetation.Grass
         public float CurrentDensity => Density;
         /// <summary>The ECS tiles' debug line (KryticalNova.Vegetation.Grass.Entities writes it; grass.tiles reads it).</summary>
         public static string TileLine = "grass tiles: not running";
+        /// <summary>Runtime switch for the ECS tiles (tests: grass.tiles on|off; never saved). -1 = the rule set, 0 off, 1 on.</summary>
+        public static int TilesOverride = -1;
+        /// <summary>Whether the ECS tiles run now.</summary>
+        public bool TilesOn => rules != null && (TilesOverride < 0 ? rules.ecsTiles : TilesOverride > 0);
         /// <summary>Set by grass.tiles after reading: the tiles restart their averages.</summary>
         public static bool TileLineRead;
 

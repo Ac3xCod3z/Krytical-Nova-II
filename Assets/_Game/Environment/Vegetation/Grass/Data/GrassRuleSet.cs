@@ -81,8 +81,9 @@ namespace KryticalNova.Vegetation.Grass
 
         [Header("Tiles (client-only ECS, grass plan step 3)")]
         [Tooltip("The ground is cut into tiles (entities in the client world) that Burst jobs stream, cull and pick a look for " +
-                 "on every core. Off: no tile entities.")]
-        public bool ecsTiles = true;
+                 "on every core. Off (the default until the owner approves the new grass): no tile entities, and today's " +
+                 "renderer draws exactly as before.")]
+        public bool ecsTiles = false;
         [Tooltip("Metres across a tile.")]
         [Range(8f, 128f)] public float tileSize = 32f;
         [Tooltip("Tiles across a section (a section's tiles share a chunk and are culled together first).")]

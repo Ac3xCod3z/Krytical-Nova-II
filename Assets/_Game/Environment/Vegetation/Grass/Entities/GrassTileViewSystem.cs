@@ -51,7 +51,7 @@ namespace KryticalNova.Vegetation.Grass.Entities
         {
             m_Watch.Restart();
             GrassRenderer grass = GrassRenderer.Instance;
-            bool on = grass != null && grass.isActiveAndEnabled && grass.Rules != null && grass.Rules.ecsTiles;
+            bool on = grass != null && grass.isActiveAndEnabled && grass.TilesOn;
             if (!on || grass != m_For)
             {
                 ClearTiles();
@@ -88,7 +88,7 @@ namespace KryticalNova.Vegetation.Grass.Entities
                     $"main {m_MainMs / m_Frames:0.000}, workers {m_WorkerMs / m_Frames:0.000}";
                 if (GrassRenderer.TileLineRead) { GrassRenderer.TileLineRead = false; m_MainMs = m_WorkerMs = 0; m_Frames = 0; }
             }
-            else GrassRenderer.TileLine = "grass tiles: off (no grass, or the rule set's ecsTiles is off)";
+            else GrassRenderer.TileLine = "grass tiles: off (no grass, or tiles off: GrassRuleSet.ecsTiles / grass.tiles on)";
         }
 
         static float4 Pack(Plane p) => new float4(p.normal.x, p.normal.y, p.normal.z, p.distance);

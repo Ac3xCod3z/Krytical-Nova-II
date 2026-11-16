@@ -81,6 +81,9 @@ namespace KryticalNova.DevTools
         [Command("grass.tiles", "The ECS grass tiles: counts per look, visible, built, queued, and the main-thread and worker ms per frame (averaged since the last read).")]
         private static string Tiles() { string line = GrassRenderer.TileLine; GrassRenderer.TileLineRead = true; return line; }
 
+        [Command("grass.tiles")]
+        private static string Tiles(bool on) { GrassRenderer.TilesOverride = on ? 1 : 0; return on ? "Grass tiles on (test; not saved)." : "Grass tiles off."; }
+
         [Command("grass.count")]
         private static string Count(bool on) { GrassRenderer.CountWatch = on; return on ? "Grass counts watched." : "Grass counts no longer watched."; }
     }
