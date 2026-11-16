@@ -5,6 +5,7 @@
         "KryticalNova.Runtime",
         "KryticalNova.Autopilot",
         "KryticalNova.Brains",
+        "KryticalNova.Hostiles",
         "KryticalNova.Hostiles.Entities",
         "KryticalNova.Combat",
         "KryticalNova.Combat.Entities",
