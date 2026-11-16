@@ -89,6 +89,28 @@ namespace KryticalNova.Player.Entities
             if (m_Serial) SerialUpdate(tick, cfg.PersonalRadiusMm, stepMm, surface);
             else JobUpdate(tick, cfg.PersonalRadiusMm, stepMm, surface);
             m_Gauge.Add(KryticalNova.Diagnostics.PerformanceLog.GaugeNames.SeparationMs, started);
+            Report(started);
+        }
+
+        long m_ReportAt, m_ReportTicks;
+        int m_ReportActiveMost, m_ReportSlides, m_ReportBlocked, m_ReportFellBack;
+        double m_ReportMs;
+
+        /// <summary>Every 10 s while the server CSV is written: what the separation did (why it costs what it costs).</summary>
+        void Report(long started)
+        {
+            if (!KryticalNova.Diagnostics.PerformanceLog.GaugesOn) return;
+            long now = Stopwatch.GetTimestamp();
+            if (m_ReportAt == 0) { m_ReportAt = now; m_ReportSlides = Slides; m_ReportBlocked = Blocked; m_ReportFellBack = FellBack; }
+            m_ReportTicks++;
+            m_ReportMs += (now - started) * 1000.0 / Stopwatch.Frequency;
+            m_ReportActiveMost = math.max(m_ReportActiveMost, Active);
+            if (now - m_ReportAt < 10 * Stopwatch.Frequency) return;
+            UnityEngine.Debug.Log($"[Separation] {(m_Serial ? "serial" : "jobs")}: {m_ReportTicks} ticks, {m_ReportMs / m_ReportTicks:F3} ms/tick, " +
+                $"{m_Players.CalculateEntityCount()} players, most to the checked slides {m_ReportActiveMost}, slides {Slides - m_ReportSlides}, " +
+                $"blocked {Blocked - m_ReportBlocked}, run again {FellBack - m_ReportFellBack}");
+            m_ReportAt = now; m_ReportTicks = 0; m_ReportMs = 0; m_ReportActiveMost = 0;
+            m_ReportSlides = Slides; m_ReportBlocked = Blocked; m_ReportFellBack = FellBack;
         }
 
         void JobUpdate(uint tick, int radiusMm, double stepMm, IWalkableSurface surface)
