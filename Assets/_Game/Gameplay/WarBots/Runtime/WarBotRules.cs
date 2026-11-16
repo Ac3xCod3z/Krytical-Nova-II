@@ -11,7 +11,7 @@ namespace KryticalNova.WarBots
     /// teammate-attacking enemies, keeps out of fights it would clearly lose, heals ITSELF with Stims (no healers), runs when swarmed,
     /// plays its weapon class (ranged kite, tanks stay with the side), follows its party leader and the leader's follow / hold / attack
     /// order. "Human" is a reaction delay, a sometimes second-best choice and a beat it does not always keep; there is no aim to miss.
-    /// Started from the test-lane bot brain (<c>KnBotBrainRules</c>: nearest target with a crowd penalty).
+    /// Started from the test-lane bot brain's target rule (nearest target with a crowd penalty); it is not named here, so release builds compile without it.
     /// </summary>
     public static class WarBotRules
     {
