@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using KryticalNova.Core;
+#if !UNITY_SERVER
+using KryticalNova.Player.Entities.Presentation;
+#endif
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -57,6 +60,9 @@ namespace KryticalNova.Player.Entities.Bodies
             holder.SetActive(false);
             GameObject body = Object.Instantiate(prefab, holder.transform);
             body.name = prefab.name;
+#if !UNITY_SERVER
+            BodySpawnCost.Mark(BodySpawnCost.Step.Instantiate);
+#endif
 
             BodyRoleTag tag = body.AddComponent<BodyRoleTag>();
             tag.Assign(role, key, connectionSerial, isLocal);
@@ -64,11 +70,16 @@ namespace KryticalNova.Player.Entities.Bodies
             BodyBuildReport report = Apply(body, shape);
 
             body.transform.SetPositionAndRotation(position, Quaternion.Euler(0f, yawDegrees, 0f));
-            foreach (Rigidbody rb in body.GetComponentsInChildren<Rigidbody>(true))
+            body.GetComponentsInChildren(true, s_Rigidbodies);
+            foreach (Rigidbody rb in s_Rigidbodies)
             {
                 rb.isKinematic = true; // a dynamic body would be pushed by physics against the ghost that moves it
                 rb.useGravity = false;
             }
+            s_Rigidbodies.Clear();
+#if !UNITY_SERVER
+            BodySpawnCost.Mark(BodySpawnCost.Step.Strip);
+#endif
             return new BodyBuild(body, holder, tag, report);
         }
 
@@ -82,6 +93,9 @@ namespace KryticalNova.Player.Entities.Bodies
                 if (Application.isPlaying) Object.Destroy(build.Holder);
                 else Object.DestroyImmediate(build.Holder);
             }
+#if !UNITY_SERVER
+            BodySpawnCost.Mark(BodySpawnCost.Step.Wake);   // the parts' Awake / OnEnable ran just now
+#endif
             return build.Body;
         }
 
@@ -92,12 +106,16 @@ namespace KryticalNova.Player.Entities.Bodies
         public static BodyBuildReport Apply(GameObject root, BodyShape shape)
         {
             var report = new BodyBuildReport();
-            var strip = new List<Component>();
-            var disable = new List<Component>();
-            foreach (Component c in root.GetComponentsInChildren<Component>(true))
+            // the lists are kept between bodies and the type facts cached (R3-5 B: ~2.7 MB a client body; this ran reflection and a
+            // name string per component of the whole prefab for every body, with the same answer each time). Same result as before.
+            List<Component> strip = s_Strip, disable = s_Disable;
+            strip.Clear();
+            disable.Clear();
+            root.GetComponentsInChildren(true, s_All);
+            foreach (Component c in s_All)
             {
                 if (c == null || c is Transform) continue;
-                PartAction action = PlayerRoleTable.ActionFor(shape, c.GetType().Name);
+                PartAction action = PlayerRoleTable.ActionFor(shape, NameOf(c.GetType()));
                 if (action == PartAction.Strip) strip.Add(c);
                 else if (action == PartAction.Disable) disable.Add(c);
             }
@@ -111,7 +129,7 @@ namespace KryticalNova.Player.Entities.Bodies
                     Component c = strip[i];
                     if (c == null) { strip.RemoveAt(i); continue; }
                     if (IsRequiredByAnother(c)) continue;
-                    string name = c.GetType().Name;
+                    string name = NameOf(c.GetType());
                     Object.DestroyImmediate(c);
                     report.Stripped.Add(name);
                     strip.RemoveAt(i);
@@ -122,14 +140,17 @@ namespace KryticalNova.Player.Entities.Bodies
             {
                 if (c == null) continue;
                 SwitchOff(c);
-                report.Downgraded.Add(c.GetType().Name);
+                report.Downgraded.Add(NameOf(c.GetType()));
             }
             foreach (Component c in disable)
             {
                 if (c == null) continue;
                 SwitchOff(c);
-                report.Disabled.Add(c.GetType().Name);
+                report.Disabled.Add(NameOf(c.GetType()));
             }
+            s_All.Clear();
+            strip.Clear();
+            disable.Clear();
             return report;
         }
 
@@ -137,16 +158,44 @@ namespace KryticalNova.Player.Entities.Bodies
         public static bool IsRequiredByAnother(Component c)
         {
             Type have = c.GetType();
-            foreach (Component other in c.gameObject.GetComponents<Component>())
+            c.gameObject.GetComponents(s_Siblings);
+            try
             {
-                if (other == null || other == c) continue;
-                foreach (RequireComponent attribute in other.GetType().GetCustomAttributes(typeof(RequireComponent), true))
+                foreach (Component other in s_Siblings)
                 {
-                    if (Satisfies(attribute.m_Type0, have) || Satisfies(attribute.m_Type1, have) || Satisfies(attribute.m_Type2, have))
-                        return true;
+                    if (other == null || other == c) continue;
+                    foreach (RequireComponent attribute in RequiresOf(other.GetType()))
+                    {
+                        if (Satisfies(attribute.m_Type0, have) || Satisfies(attribute.m_Type1, have) || Satisfies(attribute.m_Type2, have))
+                            return true;
+                    }
                 }
+                return false;
             }
-            return false;
+            finally { s_Siblings.Clear(); }
+        }
+
+        // kept between bodies (main thread only; Apply never runs inside another Apply)
+        static readonly List<Component> s_All = new List<Component>(512);
+        static readonly List<Component> s_Strip = new List<Component>(64);
+        static readonly List<Component> s_Disable = new List<Component>(64);
+        static readonly List<Component> s_Siblings = new List<Component>(32);
+        static readonly List<Rigidbody> s_Rigidbodies = new List<Rigidbody>(8);
+        // facts about a type never change while the game runs: asked once per type, not once per component of every body
+        static readonly Dictionary<Type, string> s_Names = new Dictionary<Type, string>(256);
+        static readonly Dictionary<Type, RequireComponent[]> s_Requires = new Dictionary<Type, RequireComponent[]>(256);
+
+        static string NameOf(Type type)
+        {
+            if (!s_Names.TryGetValue(type, out string name)) s_Names[type] = name = type.Name;
+            return name;
+        }
+
+        static RequireComponent[] RequiresOf(Type type)
+        {
+            if (!s_Requires.TryGetValue(type, out RequireComponent[] requires))
+                s_Requires[type] = requires = (RequireComponent[])type.GetCustomAttributes(typeof(RequireComponent), true);
+            return requires;
         }
 
         private static bool Satisfies(Type required, Type have) => required != null && required.IsAssignableFrom(have);
