@@ -65,7 +65,9 @@ namespace KryticalNova.EditorTools
         /// </summary>
         public static bool EnsurePlayer(string what)
         {
-            bool wrong = EditorUserBuildSettings.standaloneBuildSubtarget != StandaloneBuildSubtarget.Player;
+            // a game never builds with the server's "no render pipeline" a killed server build may have left (black-sky rule)
+            ServerRenderPipelineOff.RestoreLeftover(what);
+            bool wrong =EditorUserBuildSettings.standaloneBuildSubtarget != StandaloneBuildSubtarget.Player;
             if (wrong)
             {
                 Debug.LogWarning($"[Build] {what}: the standalone subtarget was {EditorUserBuildSettings.standaloneBuildSubtarget} (a server build left it); forcing Player.");
