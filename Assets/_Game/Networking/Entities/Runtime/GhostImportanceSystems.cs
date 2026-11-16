@@ -15,6 +15,13 @@ namespace KryticalNova.Networking.Entities
     public static class RelevancySetup
     {
         /// <summary>
+        /// Build 19 (owner OK, 16 Nov 2026): false = <see cref="Install"/> leaves the package's distance importance out.
+        /// The dedicated server sets it false (<c>KnServerEntry</c>): with importance on, every relevancy-on server crashed in
+        /// GhostSendSystem.GhostDespawnParallelJob after 17-37 min. True (the default) for the Editor and the tests.
+        /// </summary>
+        public static bool WithImportance = true;
+
+        /// <summary>
         /// Installs relevancy into <paramref name="server"/> from <paramref name="settings"/> (null = the asset in Resources) and
         /// says what it did in the log. <paramref name="serverSwitch"/> is the server's own <c>relevancy</c> key
         /// (<see cref="KnServerSettings.Relevancy"/>): null = the asset's <see cref="RelevancySettings.enabled"/> decides, false = off,
@@ -33,14 +40,14 @@ namespace KryticalNova.Networking.Entities
                 Debug.Log("[Relevancy] off (" + (serverSwitch.HasValue ? KnServerSettings.FileName : "the settings asset") + "): every client gets every player and monster.");
                 return false;
             }
-            InstallImportance(server, settings);
+            if (WithImportance) InstallImportance(server, settings);
             EntityManager em = server.EntityManager;
             RelevancyConfig config = RelevancyConfig.From(settings);
             using (EntityQuery q = em.CreateEntityQuery(ComponentType.ReadOnly<RelevancyConfig>()))
                 if (q.IsEmpty) em.CreateSingleton(config);
             Debug.Log($"[Relevancy] on{(serverSwitch.HasValue ? " (" + KnServerSettings.FileName + ")" : string.Empty)}: players {config.PlayerRadius:0} m, " +
                       $"monsters {config.ObjectRadius:0} m, gone {config.LeaveMargin:0} m past that, a fill every {config.FillIntervalTicks} ticks, " +
-                      $"importance tiles of {settings.importanceTileSize} m.");
+                      (WithImportance ? $"importance tiles of {settings.importanceTileSize} m." : "no distance importance."));
             return true;
         }
 
