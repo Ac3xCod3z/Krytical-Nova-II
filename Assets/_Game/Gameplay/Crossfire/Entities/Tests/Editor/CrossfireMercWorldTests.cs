@@ -45,12 +45,16 @@ namespace KryticalNova.Crossfire.Entities.Tests
             m_Settings.capPerFaction = 1;
             m_Settings.mercOfferSeconds = 5f;
             m_Now = Origin;
+            m_HadBots = WarBots.Fill;
             CrossfireClockServerSystem.ClockSource = () => (false, default(WorldEnvironmentState));
         }
+
+        IWarBotFill m_HadBots;
 
         [TearDown]
         public void TearDown()
         {
+            WarBots.Fill = m_HadBots;
             CrossfireClockServerSystem.ClockSource = null;
             foreach (GameObject go in m_Made) if (go != null) Object.DestroyImmediate(go);
             m_Made.Clear();
@@ -87,6 +91,7 @@ namespace KryticalNova.Crossfire.Entities.Tests
             RallyPoint(FactionId.Covenant, new Vector3(0, 0, 100));
             var clock = rig.Server.GetExistingSystemManaged<CrossfireClockServerSystem>();
             var entry = rig.Server.GetExistingSystemManaged<CrossfireEntryServerSystem>();
+            WarBots.Fill = null;   // no War Bots here (the real system fills the slot when the server world is made)
             entry.FactionOf = g => FactionId.Hegemony;   // three Hegemony players, one place on Hegemony's side
             entry.LevelOf = g => 112;
             clock.Settings = m_Settings;
@@ -152,6 +157,7 @@ namespace KryticalNova.Crossfire.Entities.Tests
             RallyPoint(FactionId.Null, new Vector3(-100, 0, 0));
             var clock = rig.Server.GetExistingSystemManaged<CrossfireClockServerSystem>();
             var entry = rig.Server.GetExistingSystemManaged<CrossfireEntryServerSystem>();
+            WarBots.Fill = null;   // no War Bots here (the real system fills the slot when the server world is made)
             entry.FactionOf = g => FactionId.Hegemony;
             clock.Settings = m_Settings;
             clock.Clock = () => m_Now;
@@ -178,6 +184,7 @@ namespace KryticalNova.Crossfire.Entities.Tests
             RallyPoint(FactionId.Null, new Vector3(-100, 0, 0));
             var clock = rig.Server.GetExistingSystemManaged<CrossfireClockServerSystem>();
             var entry = rig.Server.GetExistingSystemManaged<CrossfireEntryServerSystem>();
+            WarBots.Fill = null;   // no War Bots here (the real system fills the slot when the server world is made)
             entry.FactionOf = g => FactionId.Hegemony;
             clock.Settings = m_Settings;
             clock.Clock = () => m_Now;
