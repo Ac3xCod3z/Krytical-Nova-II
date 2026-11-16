@@ -58,10 +58,12 @@ namespace KryticalNova.Crossfire.Entities
         {
             m_Port = new PortHandler { System = this, Next = ZonePortal.TransferHandler };
             ZonePortal.TransferHandler = m_Port;
+            CreateWar();
         }
 
         protected override void OnDestroy()
         {
+            DestroyWar();
             if (ReferenceEquals(ZonePortal.TransferHandler, m_Port)) ZonePortal.TransferHandler = m_Port.Next;
             if (m_Port != null) m_Port.System = null;   // a handler another world put on top of this one now passes straight through
         }
@@ -78,8 +80,7 @@ namespace KryticalNova.Crossfire.Entities
             foreach (GhostBodyEntry e in GhostBodyRegistry.Entries)
             {
                 if (!ReferenceEquals(e.World, World) || !ReferenceEquals(e.Body, body) || !em.Exists(e.Ghost) || !em.HasComponent<PlayerLevelTag>(e.Ghost)) continue;
-                IFactionMember member = body.GetComponentInParent<IFactionMember>();
-                return Port(e.Ghost, em.GetComponentData<PlayerLevelTag>(e.Ghost).Level, member != null ? member.Faction : FactionId.None, portalId, out result);
+                return Port(e.Ghost, em.GetComponentData<PlayerLevelTag>(e.Ghost).Level, HomeOf(body), portalId, out result);
             }
             return false;
         }
@@ -96,6 +97,14 @@ namespace KryticalNova.Crossfire.Entities
             if (answer == CrossfirePortAnswer.NotThisPort || answer == CrossfirePortAnswer.NotCalled) return false;
             string message = CrossfirePort.Message(settings, answer, level);
             EntityManager em = EntityManager;
+            if (answer == CrossfirePortAnswer.Land && !m_Sides.TryGetSide(ghost, out _) && SideFull(faction))
+            {
+                Refused++;
+                bool offered = TryOfferMerc(ghost, faction, settings);
+                result = new ZoneTransferResult(false, offered ? null : Fill(settings.sideFullText, settings, m_Sides.Real(faction)));
+                FlushTells();
+                return true;
+            }
             if (answer != CrossfirePortAnswer.Land || !em.Exists(ghost) || !em.HasComponent<TeleportRequest>(ghost))
             {
                 result = new ZoneTransferResult(false, answer == CrossfirePortAnswer.Land ? settings.portNoRallyText : message);
@@ -105,6 +114,7 @@ namespace KryticalNova.Crossfire.Entities
             var mm = new int3((int)math.round(at.x * 1000f), (int)math.round(at.y * 1000f), (int)math.round(at.z * 1000f));
             int yawCdeg = (int)math.round(Mathf.Repeat(yaw, 360f) * 100f) % 36000;
             PlayerEntitiesSetup.Teleport(em, ghost, mm, yawCdeg);
+            m_Arriving.Add(ghost);
             Ported++;
             result = new ZoneTransferResult(true, message);
             return true;
@@ -128,16 +138,31 @@ namespace KryticalNova.Crossfire.Entities
                 {
                     Vector3 at = Meters(pose.ValueRO);
                     var spot = new CrossfireSpot { Mm = new Vector3Int(pose.ValueRO.XMm, pose.ValueRO.YMm, pose.ValueRO.ZMm), YawCdeg = pose.ValueRO.YawCdeg };
-                    m_Entries.Observe(entity, spot, CrossfireArea.AnyContains(at, false), CrossfireArea.AnyContains(at, true), joinOpen);
+                    bool inArea = CrossfireArea.AnyContains(at, false), inYard = inArea && CrossfireArea.AnyContains(at, true);
+                    // a newcomer to a Rally Point while it takes players in: their side takes them, or (full) puts them back
+                    if (IsBot(entity)) continue;   // War Bots are never admitted, paid or sent back as real players (review 1, item 4)
+                    if (!inArea && m_Sides.TryGetSide(entity, out _) && !m_Arriving.Contains(entity)) m_Leaving.Add(entity);   // left the war (item 2)
+                    if (inArea) m_Arriving.Remove(entity);
+                    if (inArea && m_Mercs.Contains(entity) && !m_MercInside.Contains(entity)) m_ToSide.Add(entity);   // a Merc only once inside the war area
+                    if (inYard && joinOpen && !m_Entries.TryEntry(entity, out _) && m_Entries.TryOutside(entity, out CrossfireSpot from) && !Admit(entity, from))
+                        continue;
+                    m_Entries.Observe(entity, spot, inArea, inYard, joinOpen);
                 }
+                foreach (Entity who in m_ToSide) EnterAsMerc(who);
+                m_ToSide.Clear();
+                foreach (Entity who in m_Leaving) LeaveWar(who, true);
+                m_Leaving.Clear();
+                SendRefusedBack();
                 m_Entries.ForgetWhere(e => !em.Exists(e) || !em.HasComponent<PlayerPose>(e));
             }
             // the war is over: back to the Gap (the End ran out, or a GM called it off), or out of the End into another war a GM started
+            RunWar(state, m_Clock.Now);
             CrossfirePhase phase = state.Now.Phase;
             bool over = phase != m_LastPhase && m_LastPhase != CrossfirePhase.Gap
                 && (phase == CrossfirePhase.Gap || m_LastPhase == CrossfirePhase.End);
             m_LastPhase = phase;
             if (!over) return;
+            EndWar();
             List<(Entity who, CrossfireSpot to)> back = m_Entries.TakeSendBack(e =>
                 em.Exists(e) && em.HasComponent<PlayerPose>(e) && CrossfireArea.AnyContains(Meters(em.GetComponentData<PlayerPose>(e)), false));
             foreach ((Entity who, CrossfireSpot to) in back)

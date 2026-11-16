@@ -27,6 +27,38 @@ MonoBehaviour:
   maxLevel: 112
   zoneBrackets: 0a000000
   portPortalId: zone01-northeast
+  capPerFaction: 33
+  sideFullText: 'Crossfire: your side is full ({cap} of {cap}), so you can''t join
+    this war.'
+  leftWarText: 'Crossfire: you left the war, so you lose your place and its pay.'
+  tookBotsPlaceText: 'Crossfire: you take a War Bot''s place on your side.'
+  offerMercs: 1
+  mercOfferSeconds: 20
+  mercEyebrow: MERC
+  mercOfferText: Your side is full ({cap} of {cap}). Fight this war as a Merc for the
+    {side}?
+  mercJoinedText: 'Crossfire: you fight this war as a Merc for the {side}.'
+  mercDeclinedText: 'Crossfire: your side is full, so you miss this war.'
+  voteSeconds: 20
+  voteClosesBeforeGatesSeconds: 1
+  endWithoutRealPlayersSeconds: 15
+  voteEyebrow: CROSSFIRE
+  voteText: Your side has {real} of {cap} players. Fill it to {cap} with War Bots?
+  votePassedText: 'Crossfire: your side voted yes. War Bots fill it to {cap}.'
+  voteFailedText: 'Crossfire: your side voted no. You fight with {real}.'
+  characterExpPercent: {x: 10, y: 6, z: 4}
+  companionExpPercent: {x: 0.5, y: 0.35, z: 0.25}
+  topWinCreds: 50000
+  tieAndLossCredsShare: {x: 0.6, y: 0.4}
+  maxedCredsShare: {x: 0.5, y: 0.1, z: 0.1}
+  wonText: 'Crossfire is over: your side WON with {kills} kills ({score}). {pay}'
+  tiedText: 'Crossfire is over: a TIE at {kills} kills ({score}). {pay}'
+  lostText: 'Crossfire is over: your side lost with {kills} kills ({score}). {pay}'
+  noKillsText: 'Crossfire is over: no side scored a kill, so nobody is paid.'
+  killDropChance: 0.0005
+  killDropLevelsBelow: 9
+  killDropBestRarity: 1
+  killDropText: 'Crossfire: your kill dropped {item}!'
   callText: 'Crossfire! Bracket {bracket} (levels {levels}): the war starts in {time}.
     {where}'
   whereText: Go through the Transit Row port to reach your Rally Point.

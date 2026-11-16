@@ -30,6 +30,9 @@ namespace KryticalNova.Crossfire
 
         public bool TryEntry(T who, out CrossfireSpot spot) => m_Entry.TryGetValue(who, out spot);
 
+        /// <summary>The last place <paramref name="who"/> was seen outside the war area.</summary>
+        public bool TryOutside(T who, out CrossfireSpot spot) => m_Outside.TryGetValue(who, out spot);
+
         /// <summary>One look at a player: where they stand, whether that is in the war area and in a yard, and whether the yards take players in.</summary>
         public void Observe(T who, CrossfireSpot now, bool inArea, bool inYard, bool joinOpen)
         {

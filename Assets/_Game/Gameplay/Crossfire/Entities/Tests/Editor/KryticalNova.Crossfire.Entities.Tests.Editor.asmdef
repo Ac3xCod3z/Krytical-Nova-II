@@ -18,7 +18,9 @@
         "KryticalNova.Factions",
         "KryticalNova.Player.Entities",
         "KryticalNova.Player.Entities.Tests.Editor",
-        "Unity.Mathematics"
+        "Unity.Mathematics",
+        "KryticalNova.Progression",
+        "KryticalNova.Items"
     ],
     "includePlatforms": [
         "Editor"

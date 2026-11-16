@@ -13,7 +13,13 @@
         "Unity.Mathematics",
         "Unity.Transforms",
         "Unity.Netcode.Runtime",
-        "KryticalNova.Factions"
+        "KryticalNova.Factions",
+        "KryticalNova.Progression",
+        "KryticalNova.Items",
+        "KryticalNova.Economy",
+        "KryticalNova.Wallet",
+        "KryticalNova.Hostiles",
+        "KryticalNova.Player"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
