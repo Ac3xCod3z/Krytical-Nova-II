@@ -127,7 +127,9 @@ namespace KryticalNova.Crossfire.Entities.Tests
                 }
                 Assert.AreEqual(3, entry.Ported);
                 Assert.AreEqual(3, entry.Joined, $"landed in their yard while it takes players in: all three joined the war (seen outside {entry.SeenOutside}, "
-                    + $"join open {entry.LastJoinOpen}, looks {entry.Looks}, now {clock.Now}, joins from {clock.Current.JoinOpensAt}, war {clock.Current.Now.WarStart})");
+                    + $"join open {entry.LastJoinOpen}, looks {entry.Looks}, now {clock.Now}, joins from {clock.Current.JoinOpensAt}, war {clock.Current.Now.WarStart}; "
+                    + $"settings alive {m_Settings != null}, the clock's are the test's {ReferenceEquals(clock.Settings, m_Settings)}, clock's null {clock.Settings == null}, "
+                    + $"call min {(clock.ActiveSettings != null ? clock.ActiveSettings.callMinutes : -1f)})");
 
                 // the war runs out: everyone the port brought is sent back where they stood before
                 m_Now = Origin + 200;
