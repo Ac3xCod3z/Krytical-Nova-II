@@ -38,10 +38,28 @@ namespace KryticalNova.Crossfire
         [Min(1)] public int bracketSize = 10;
         [Tooltip("Brackets in all; the last one takes every level above it (X: 100-112).")]
         [Min(1)] public int bracketCount = 10;
+        [Tooltip("The highest level a player can reach: the top of the last bracket, as its call names it (X: 100-112).")]
+        [Min(1)] public int maxLevel = 112;
+
+        [Header("Where each bracket fights (owner, 16 Nov 2026)")]
+        [Tooltip("The brackets that have a Crossfire zone now (1 = I ... 10 = X). Players of every other bracket still get their own call, which says plainly that their bracket has no zone yet.")]
+        public int[] zoneBrackets = { 10 };
+        [Tooltip("The portal (its ZonePortal id) that takes a called player of a bracket with a zone onto their own faction's Rally Point, on this server: the Transit Row port.")]
+        public string portPortalId = "zone01-northeast";
 
         [Header("Announcements (the top-of-screen news every player gets, as GM broadcasts)")]
-        [Tooltip("The call, sent when the Call starts and again every Call Repeat Seconds until the gates open. {time}: how long until the gates open; {level}: the lowest level called.")]
-        [TextArea] public string callText = "Crossfire! The war starts in {time}. Level {level} and up: get to your Rally Point.";
+        [Tooltip("The call, sent when the Call starts and again every Call Repeat Seconds until the gates open, to each player for THEIR OWN bracket. {time}: how long until the gates open; {bracket}: the bracket's numeral (X); {levels}: its levels (100-112); {level}: its lowest level; {where}: Where Text, or No Zone Text for a bracket with no zone yet.")]
+        [TextArea] public string callText = "Crossfire! Bracket {bracket} (levels {levels}): the war starts in {time}. {where}";
+        [Tooltip("{where} of the call for a bracket with a zone.")]
+        [TextArea] public string whereText = "Go through the Transit Row port to reach your Rally Point.";
+        [Tooltip("{where} of the call for a bracket with no zone yet.")]
+        [TextArea] public string noZoneText = "Your bracket has no Crossfire zone yet, so there is no war for it this time.";
+        [Tooltip("Told to a called player whose bracket has no zone yet when they go through the Transit Row port. {bracket}, {levels} as in the call.")]
+        [TextArea] public string portNoZoneText = "Crossfire: bracket {bracket} has no zone yet.";
+        [Tooltip("Told to a player of a bracket with a zone when their faction has no Rally Point on this map yet.")]
+        [TextArea] public string portNoRallyText = "Crossfire: your faction's Rally Point is not built yet.";
+        [Tooltip("Told to a player the Transit Row port has just put on their Rally Point (empty: nothing is said).")]
+        [TextArea] public string portArrivedText = "Crossfire: you are at your Rally Point. Wait for the Rally Gates to open.";
         [Tooltip("Sent once when the gates close after a war.")]
         [TextArea] public string gatesClosedText = "Crossfire is over: the gates are closed.";
         [Tooltip("The last seconds before the gates open count down, one line a second (10: 10 .. 1). No other line names seconds. 0 = none.")]
@@ -76,6 +94,21 @@ namespace KryticalNova.Crossfire
         }
 
         /// <summary>The phase lengths in seconds, for <see cref="CrossfireRules"/>.</summary>
+        /// <summary>The bracket of a level (1 = I ...), 0 below <see cref="minLevel"/>: no call.</summary>
+        public int BracketOf(int level) => CrossfireRules.BracketOf(level, minLevel, bracketSize, bracketCount);
+
+        /// <summary>This bracket has a Crossfire zone now (<see cref="zoneBrackets"/>).</summary>
+        public bool HasZone(int bracket) => bracket > 0 && zoneBrackets != null && System.Array.IndexOf(zoneBrackets, bracket) >= 0;
+
+        /// <summary>The levels of a bracket, as its call names them: "10-19" ... "100-112" (the last one runs to <see cref="maxLevel"/>).</summary>
+        public string LevelsOf(int bracket)
+        {
+            if (bracket <= 0) return string.Empty;
+            int low = minLevel + (bracket - 1) * bracketSize;
+            int high = bracket >= bracketCount ? System.Math.Max(low, maxLevel) : low + bracketSize - 1;
+            return low + "-" + high;
+        }
+
         public CrossfireTimes Times => new CrossfireTimes
         {
             CallSeconds = callMinutes * 60.0,

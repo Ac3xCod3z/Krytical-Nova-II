@@ -1,5 +1,8 @@
 using System.Collections.Generic;
+using KryticalNova.Factions;
 using KryticalNova.Player.Entities;
+using KryticalNova.Player.Entities.Presentation;
+using KryticalNova.World.Portals;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
@@ -12,6 +15,8 @@ namespace KryticalNova.Crossfire.Entities
     /// Muster Yard while the yards take players in has joined (<see cref="CrossfireEntries{T}"/>). When the clock goes back to the Gap
     /// (the End ran out, or a GM called the war off), everyone who joined and is still in the war area is put back where they came from
     /// (<see cref="PlayerEntitiesSetup.Teleport"/>). A map with no areas does nothing.
+    /// It also answers the Transit Row port while a war is called (owner, 16 Nov 2026; <see cref="CrossfirePort"/>): a called player of a
+    /// bracket with a zone is put on their own faction's Rally Point, on this server; any other use of the portal is the portal's as before.
     /// </summary>
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
@@ -25,6 +30,78 @@ namespace KryticalNova.Crossfire.Entities
         /// <summary>Players who joined the war under way; players sent back so far (tests).</summary>
         public int Joined => m_Entries.Count;
         public int SentBack { get; private set; }
+        /// <summary>Players the Transit Row port put on their Rally Point (tests).</summary>
+        public int Ported { get; private set; }
+
+        PortHandler m_Port;
+
+        /// <summary>Stands in front of the portals' handler: Crossfire's port first, everything else as before (<see cref="Next"/>).</summary>
+        sealed class PortHandler : IZoneTransferHandler
+        {
+            public CrossfireEntryServerSystem System;
+            public IZoneTransferHandler Next;
+
+            public ZoneTransferResult TryTransfer(ZonePortal portal, GameObject player)
+            {
+                if (System != null && portal != null && System.TryPort(portal.PortalId, player, out ZoneTransferResult result)) return result;
+                return Next != null ? Next.TryTransfer(portal, player) : new ZoneTransferResult(false, portal != null ? portal.SealedMessage : null);
+            }
+        }
+
+        protected override void OnCreate()
+        {
+            m_Port = new PortHandler { System = this, Next = ZonePortal.TransferHandler };
+            ZonePortal.TransferHandler = m_Port;
+        }
+
+        protected override void OnDestroy()
+        {
+            if (ReferenceEquals(ZonePortal.TransferHandler, m_Port)) ZonePortal.TransferHandler = m_Port.Next;
+            if (m_Port != null) m_Port.System = null;   // a handler another world put on top of this one now passes straight through
+        }
+
+        /// <summary>
+        /// The Transit Row port for a server body: true when Crossfire answered (moved the player, or told them why not), false when the
+        /// portal should do what it always does. The player's level is their <see cref="PlayerLevelTag"/>, their faction their body's.
+        /// </summary>
+        public bool TryPort(string portalId, GameObject body, out ZoneTransferResult result)
+        {
+            result = default;
+            if (body == null) return false;
+            EntityManager em = EntityManager;
+            foreach (GhostBodyEntry e in GhostBodyRegistry.Entries)
+            {
+                if (!ReferenceEquals(e.World, World) || !ReferenceEquals(e.Body, body) || !em.Exists(e.Ghost) || !em.HasComponent<PlayerLevelTag>(e.Ghost)) continue;
+                IFactionMember member = body.GetComponentInParent<IFactionMember>();
+                return Port(e.Ghost, em.GetComponentData<PlayerLevelTag>(e.Ghost).Level, member != null ? member.Faction : FactionId.None, portalId, out result);
+            }
+            return false;
+        }
+
+        /// <summary>The Transit Row port for a player ghost of <paramref name="level"/> and <paramref name="faction"/> (see <see cref="TryPort"/>).</summary>
+        public bool Port(Entity ghost, int level, FactionId faction, string portalId, out ZoneTransferResult result)
+        {
+            result = default;
+            m_Clock ??= World.GetExistingSystemManaged<CrossfireClockServerSystem>();
+            if (m_Clock == null) return false;
+            CrossfireSettings settings = m_Clock.ActiveSettings;
+            CrossfirePortAnswer answer = CrossfirePort.Decide(settings, m_Clock.Current, portalId, level, faction, out CrossfireArea yard);
+            if (answer == CrossfirePortAnswer.NotThisPort || answer == CrossfirePortAnswer.NotCalled) return false;
+            string message = CrossfirePort.Message(settings, answer, level);
+            EntityManager em = EntityManager;
+            if (answer != CrossfirePortAnswer.Land || !em.Exists(ghost) || !em.HasComponent<TeleportRequest>(ghost))
+            {
+                result = new ZoneTransferResult(false, answer == CrossfirePortAnswer.Land ? settings.portNoRallyText : message);
+                return true;
+            }
+            yard.Landing(out Vector3 at, out float yaw);
+            var mm = new int3((int)math.round(at.x * 1000f), (int)math.round(at.y * 1000f), (int)math.round(at.z * 1000f));
+            int yawCdeg = (int)math.round(Mathf.Repeat(yaw, 360f) * 100f) % 36000;
+            PlayerEntitiesSetup.Teleport(em, ghost, mm, yawCdeg);
+            Ported++;
+            result = new ZoneTransferResult(true, message);
+            return true;
+        }
 
         static Vector3 Meters(in PlayerPose p) => new Vector3(p.XMm, p.YMm, p.ZMm) * 0.001f;
 

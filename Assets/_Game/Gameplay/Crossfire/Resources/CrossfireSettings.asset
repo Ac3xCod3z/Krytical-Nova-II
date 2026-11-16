@@ -24,8 +24,18 @@ MonoBehaviour:
   minLevel: 10
   bracketSize: 10
   bracketCount: 10
-  callText: 'Crossfire! The war starts in {time}. Level {level} and up: get to your
-    Rally Point.'
+  maxLevel: 112
+  zoneBrackets: 0a000000
+  portPortalId: zone01-northeast
+  callText: 'Crossfire! Bracket {bracket} (levels {levels}): the war starts in {time}.
+    {where}'
+  whereText: Go through the Transit Row port to reach your Rally Point.
+  noZoneText: Your bracket has no Crossfire zone yet, so there is no war for it this
+    time.
+  portNoZoneText: 'Crossfire: bracket {bracket} has no zone yet.'
+  portNoRallyText: 'Crossfire: your faction''s Rally Point is not built yet.'
+  portArrivedText: 'Crossfire: you are at your Rally Point. Wait for the Rally Gates
+    to open.'
   gatesClosedText: 'Crossfire is over: the gates are closed.'
   finalCountdownSeconds: 10
   countdownText: 'Crossfire: the gates open in {n}'

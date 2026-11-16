@@ -14,7 +14,11 @@
         "Unity.Entities",
         "Unity.NetCode",
         "Unity.Networking.Transport",
-        "Unity.Netcode.Runtime"
+        "Unity.Netcode.Runtime",
+        "KryticalNova.Factions",
+        "KryticalNova.Player.Entities",
+        "KryticalNova.Player.Entities.Tests.Editor",
+        "Unity.Mathematics"
     ],
     "includePlatforms": [
         "Editor"
