@@ -1,0 +1,46 @@
+{
+    "name": "KryticalNova.WarBots.Entities.Tests.Editor",
+    "rootNamespace": "KryticalNova.WarBots.Entities.Tests",
+    "references": [
+        "KryticalNova.Runtime",
+        "KryticalNova.WarBots",
+        "KryticalNova.WarBots.Entities",
+        "KryticalNova.Crossfire",
+        "KryticalNova.Crossfire.Entities",
+        "KryticalNova.Factions",
+        "KryticalNova.World",
+        "KryticalNova.Progression",
+        "KryticalNova.Persistence",
+        "KryticalNova.Persistence.Entities",
+        "KryticalNova.Player",
+        "KryticalNova.Player.Entities",
+        "KryticalNova.Player.Entities.Presentation",
+        "KryticalNova.Player.Entities.Bodies",
+        "KryticalNova.Networking",
+        "KryticalNova.Networking.Entities",
+        "KryticalNova.Networking.Entities.Tests.Editor",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner",
+        "Unity.Entities",
+        "Unity.NetCode",
+        "Unity.Collections",
+        "Unity.Mathematics",
+        "Unity.Networking.Transport",
+        "Unity.Netcode.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
