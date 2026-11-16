@@ -21,10 +21,11 @@ namespace KryticalNova.Player.Entities
     {
         BufferLookup<PlayerMoveTrace> m_Traces;
         ComponentLookup<PlayerVitals> m_Vitals;
+        bool m_Serial;
 
-        [BurstCompile]
-        public void OnCreate(ref SystemState state)
+        public void OnCreate(ref SystemState state)   // not Burst: reads the command line once (perf round 4 switch)
         {
+            m_Serial = PlayerPerfSwitches.MoveSerial;
             state.RequireForUpdate<NetworkTime>();
             state.RequireForUpdate<PlayerGhostTag>();
             m_Traces = state.GetBufferLookup<PlayerMoveTrace>();
@@ -44,7 +45,7 @@ namespace KryticalNova.Player.Entities
 
             m_Traces.Update(ref state);
             m_Vitals.Update(ref state);
-            new MoveJob
+            var job = new MoveJob
             {
                 TickMicros = PlayerMovement.TickMicros(simRate),
                 Tick = nt.ServerTick.TickIndexForValidTick,
@@ -52,7 +53,9 @@ namespace KryticalNova.Player.Entities
                 Cfg = cfg,
                 Traces = m_Traces,
                 Vitals = m_Vitals,
-            }.Schedule();
+            };
+            // perf round 4: each player's step reads and writes only its own entity (same math, every core); -knmove-serial = one thread
+            if (m_Serial) job.Schedule(); else job.ScheduleParallel();
         }
 
         [BurstCompile(FloatMode = FloatMode.Deterministic, FloatPrecision = FloatPrecision.High)]

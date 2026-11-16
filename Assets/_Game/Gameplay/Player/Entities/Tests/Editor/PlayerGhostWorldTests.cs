@@ -62,6 +62,38 @@ namespace KryticalNova.Player.Entities.Tests
             }
         }
 
+        // ---------------------------------------------------------------------------------------------- perf round 4
+        /// <summary>
+        /// Perf round 4: the walk (and the jump flight) run as parallel Burst jobs. Four owners click seeded goals (three each, the
+        /// later ones mid-walk) at 100 ms delay; every owner's predicted ticks must equal the server's, integer for integer, and every
+        /// player must end where its server ghost stands.
+        /// </summary>
+        [TestCase(7)]
+        [TestCase(31)]
+        public void FourOwners_SeededClicks_InParallel_EveryOwnerMatchesTheServer(int seed)
+        {
+            var rng = new System.Random(seed);
+            var starts = new int3[4];
+            for (int i = 0; i < 4; i++) starts[i] = new int3(rng.Next(-8000, 8000), 0, 6000 * i);
+            using var rig = PlayerRig.Create(4, 100, starts);
+            uint from = rig.ServerTick;
+            for (int round = 0; round < 3; round++)
+            {
+                for (int i = 0; i < 4; i++)
+                    rig.Sources[i].Click(new int3(rng.Next(-15000, 15000), 0, rng.Next(-15000, 15000)));
+                rig.Tick(40 + rng.Next(40));
+            }
+            rig.Tick(260);   // everyone arrives
+            for (int i = 0; i < 4; i++)
+            {
+                var cmp = rig.CompareOwner(i, from, rig.ServerTick - 1);
+                Log($"perf round 4 seed {seed} owner {i}: common {cmp.Common} mismatches {cmp.Mismatch} first {cmp.FirstMismatchTick}");
+                Assert.GreaterOrEqual(cmp.Common, 100, $"owner {i}: too few ticks compared");
+                Assert.AreEqual(0, cmp.Mismatch, $"owner {i}: integer state differs at tick {cmp.FirstMismatchTick}: {cmp.FirstDump}");
+                Assert.AreEqual(rig.ServerPose(i), rig.OwnerPose(i), $"owner {i} stands where the server has it");
+            }
+        }
+
         [Test]
         public void ADogleg_WithACorner_Converges()
         {
