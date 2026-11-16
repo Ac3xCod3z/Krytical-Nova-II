@@ -100,6 +100,8 @@ namespace KryticalNova.Crossfire
         [TextArea] public string wonText = "Crossfire is over: your side WON with {kills} kills ({score}). {pay}";
         [TextArea] public string tiedText = "Crossfire is over: a TIE at {kills} kills ({score}). {pay}";
         [TextArea] public string lostText = "Crossfire is over: your side lost with {kills} kills ({score}). {pay}";
+        [Tooltip("Told to everyone when the war ends with no kill on any side: then nobody is paid (owner, 16 Nov 2026).")]
+        [TextArea] public string noKillsText = "Crossfire is over: no side scored a kill, so nobody is paid.";
         [Tooltip("The chance a kill of a real player by a real player drops an item (1 in 2,000; War Bots never drop).")]
         [Range(0f, 1f)] public float killDropChance = 0.0005f;
         [Tooltip("The drop is a piece of gear a Hostile of the killer's level can drop (the mobs' own rule): of the highest item level at or under it, within this many levels below.")]

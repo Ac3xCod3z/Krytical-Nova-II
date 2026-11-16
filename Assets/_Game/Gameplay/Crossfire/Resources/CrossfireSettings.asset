@@ -53,6 +53,7 @@ MonoBehaviour:
   wonText: 'Crossfire is over: your side WON with {kills} kills ({score}). {pay}'
   tiedText: 'Crossfire is over: a TIE at {kills} kills ({score}). {pay}'
   lostText: 'Crossfire is over: your side lost with {kills} kills ({score}). {pay}'
+  noKillsText: 'Crossfire is over: no side scored a kill, so nobody is paid.'
   killDropChance: 0.0005
   killDropLevelsBelow: 9
   killDropBestRarity: 1
