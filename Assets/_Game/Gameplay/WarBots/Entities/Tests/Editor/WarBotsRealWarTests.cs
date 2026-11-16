@@ -32,6 +32,7 @@ namespace KryticalNova.WarBots.Entities.Tests
     public sealed class WarBotsRealWarTests
     {
         const int PerSide = 32;
+        const string GhostSubScenePath = "Assets/_Game/Gameplay/Player/Entities/Scenes/PlayerGhostPrefabs.unity";   // the real one, as StrikeDummyTests
         const int MaxFightTicks = 5400;   // 3 minutes of game time at 30 Hz
         static readonly Vector3 Centre = new Vector3(900f, 0f, 900f);   // away from anything the scene has
         static readonly Vector3 HegemonyRally = Centre + new Vector3(-14f, 0f, 0f);
@@ -64,9 +65,13 @@ namespace KryticalNova.WarBots.Entities.Tests
                 tw = new KnTestWorld();
                 tw.CreateWorlds(0);
                 tw.Listen();
-                Assert.IsNotNull(PlayerWorldsSetup.InstallServer(tw.Server), "the game's server setup");
+                // the game's server setup; its real ghost subscene loaded the test world's way (ticked by hand, so it streams in here)
+                Assert.IsNotNull(PlayerWorldsSetup.InstallServer(tw.Server, loadGhostScene: false), "the game's server setup");
+                string guid = UnityEditor.AssetDatabase.AssetPathToGUID(GhostSubScenePath);
+                Assert.IsFalse(string.IsNullOrEmpty(guid), "no ghost subscene: run Build Player Ghost Assets");
+                tw.LoadSubScene(new Unity.Entities.Hash128(guid), 600, tw.Server);
                 Assert.GreaterOrEqual(tw.TickUntil(() => Ready(tw.Server), 600), 0,
-                    "the real ghost subscene loaded");
+                    "the real PlayerGhostPrefab is in the server world (the admission's own check)");
                 bots = tw.Server.GetExistingSystemManaged<WarBotServerSystem>();
                 Assert.IsNotNull(bots, "the server world runs War Bots");
                 Assert.AreSame(bots, KryticalNova.Crossfire.Entities.WarBots.Fill, "War Bots is Crossfire's IWarBotFill");
@@ -163,7 +168,7 @@ namespace KryticalNova.WarBots.Entities.Tests
             yield return new ExitPlayMode();
         }
 
-        static bool Ready(Unity.Entities.World server) => KnTestWorld.Count<Unity.NetCode.GhostCollectionPrefab>(server) > 0;
+        static bool Ready(Unity.Entities.World server) => KnTestWorld.Count<PlayerGhostPrefab>(server) == 1;
 
         static bool Dead(EntityManager em, Entity ghost)
         {
