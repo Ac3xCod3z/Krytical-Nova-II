@@ -141,7 +141,9 @@ namespace KryticalNova.Player
         private readonly RaycastHit[] groundHit = new RaycastHit[1];
         private readonly RaycastHit[] pointerHits = new RaycastHit[16];
         private PlayerSkillHotbar hotbar;
+#if !UNITY_SERVER
         private KryticalNova.Rendering.OccluderFader occluderFader;
+#endif
         private EventSystem pointerEventSystem;
         private PointerEventData pointerEventData;
         private bool isOrbiting;
@@ -401,6 +403,7 @@ namespace KryticalNova.Player
             }
             PointOrbitCameraAtThisBody();
 
+#if !UNITY_SERVER
             // Fade props that block the view of this (local) player.
             var cam = gameplayCamera != null ? gameplayCamera : Camera.main;
             if (cam != null)
@@ -410,6 +413,7 @@ namespace KryticalNova.Player
                 fader.Configure(transform, occluderDitherShader);
                 occluderFader = fader;
             }
+#endif
 
             // Soft hero light so the local character stays readable at night.
             PlayerNightLight.AttachTo(transform);
@@ -664,7 +668,9 @@ namespace KryticalNova.Player
             for (int i = 0; i < count; i++)
             {
                 Collider c = pointerHits[i].collider;
+#if !UNITY_SERVER
                 if (occluderFader != null && occluderFader.IsFaded(pointerHits[i])) continue;
+#endif
                 // the entity server's hidden body of a Hostile (Play DOTS here): the click takes its view, which stands in the same spot (M6.4)
                 if (c.GetComponentInParent<KryticalNova.Core.IHiddenServerBody>() is { IsHiddenServerBody: true }) continue;
                 var damageable = c.GetComponentInParent<IDamageable>();

@@ -1,3 +1,4 @@
+#if !UNITY_SERVER
 using System.Collections.Generic;
 using KryticalNova.Rendering;
 using UnityEngine;
@@ -640,3 +641,4 @@ namespace KryticalNova.Progression
         }
     }
 }
+#endif

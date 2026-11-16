@@ -4,7 +4,9 @@ using KryticalNova.Core;
 using KryticalNova.Factions;
 using KryticalNova.Networking;
 using KryticalNova.Player;
+#if !UNITY_SERVER
 using KryticalNova.Rendering;
+#endif
 using KryticalNova.World;
 using Unity.AI.Navigation;
 using Unity.Netcode;
@@ -320,8 +322,10 @@ namespace KryticalNova.Housing
             yield return lawnView.FillOverFrames(settings.warmPiecesPerFrame);
 
             // Tall furnishings between the camera and the player thin out like any other prop.
+#if !UNITY_SERVER
             Camera view = mover != null && mover.GameplayCamera != null ? mover.GameplayCamera : Camera.main;
             if (view != null && view.TryGetComponent(out OccluderFader fader)) fader.AlsoFade(1 << HomeView.FurnishingLayer);
+#endif
 
             yield return null;
             Warm(lot.transform.position, Mathf.Max(lot.Size.x, lot.Size.y));

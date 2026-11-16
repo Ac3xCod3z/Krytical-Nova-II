@@ -5,7 +5,6 @@
         "KryticalNova.Runtime",
         "KryticalNova.Networking",
         "KryticalNova.Progression",
-        "KryticalNova.Rendering",
         "Unity.Netcode.Runtime",
         "Unity.Networking.Transport",
         "Unity.Collections",

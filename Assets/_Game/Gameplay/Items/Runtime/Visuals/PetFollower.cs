@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+#if !UNITY_SERVER
 using KryticalNova.Rendering;
+#endif
 using UnityEngine;
 
 namespace KryticalNova.Items.Visuals
@@ -43,7 +45,9 @@ namespace KryticalNova.Items.Visuals
         private float stageScale = 1f;
         private PetGlowLook glow;
         private GameObject sparkles;
+#if !UNITY_SERVER
         private GlowRim rim;       // this pet's own: every pet glows in its own colour
+#endif
         private bool rimOn;
         private float baseScale = 1f;
 
@@ -440,7 +444,9 @@ namespace KryticalNova.Items.Visuals
             chargeBone = null;
             charging = false;
             chargeOffset = Vector3.zero;
+#if !UNITY_SERVER
             rim?.Detach();   // its halo was the old pet's outline
+#endif
             rimOn = false;
             hasBounds = false;
             GameObject model = stageModel != null ? stageModel : current != null ? current.petPrefab : null;
@@ -449,8 +455,10 @@ namespace KryticalNova.Items.Visuals
             pet = Instantiate(model, transform.position, transform.rotation);
             pet.name = $"Pet ({current.displayName})";
             VisualUtility.PrepareCosmetic(pet, gameObject.layer);
+#if !UNITY_SERVER
             ActorDrawOrder.On(pet); // a Nova hides the pets behind it
             CharacterLod.Ensure(pet); // lighter with distance
+#endif
             bodyRenderers = pet.GetComponentsInChildren<Renderer>(true); // before its effects are added: the body only
             vanished = false;
             bool posed = PetAnimations.Pose(pet, restPose); // before its Animator starts: this is the pose it goes back to
@@ -836,6 +844,7 @@ namespace KryticalNova.Items.Visuals
         /// </summary>
         private void ApplyRim()
         {
+#if !UNITY_SERVER
             if (glow.strength <= 0f || glow.noRim)
             {
                 if (rimOn) rim.Detach();
@@ -853,6 +862,7 @@ namespace KryticalNova.Items.Visuals
             });
             if (!rimOn) rim.Attach(pet);
             rimOn = true;
+#endif
         }
 
         /// <summary>Soft sparkles coming off the body: more of them, larger and more solid, with every stage.</summary>
@@ -1049,7 +1059,9 @@ namespace KryticalNova.Items.Visuals
         private void OnDestroy()
         {
             if (pet != null) Destroy(pet);
+#if !UNITY_SERVER
             rim?.Detach();
+#endif
         }
 
 #if UNITY_EDITOR

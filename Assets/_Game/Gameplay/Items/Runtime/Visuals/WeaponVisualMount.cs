@@ -1,7 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using KryticalNova.Core;
+#if !UNITY_SERVER
 using KryticalNova.Rendering;
+#endif
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -66,7 +68,9 @@ namespace KryticalNova.Items.Visuals
         private bool capeWorn;
         private Coroutine settleRoutine;
 
+#if !UNITY_SERVER
         private GlowRim glow;           // this mount's own: every weapon glows in its own colour
+#endif
         private bool glowOn;
 
         /// <summary>True while the weapon is in the hand rather than carried.</summary>
@@ -465,6 +469,7 @@ namespace KryticalNova.Items.Visuals
                 glowOn = false;
                 return;
             }
+#if !UNITY_SERVER
             if (glow == null) glow = new GlowRim();
             glow.Set(new GlowHaloLook
             {
@@ -472,23 +477,33 @@ namespace KryticalNova.Items.Visuals
                 pulse = look.pulse, pulseSpeed = look.pulseSpeed, pulseWidth = look.pulseWidth,
                 twinkle = look.twinkle, lightning = look.lightning, flame = look.flame, ember = look.ember,
             });
+#endif
             if (!glowOn) AttachGlow();
             glowOn = true;
         }
 
         private void AttachGlow()
         {
+#if !UNITY_SERVER
             if (glow == null) return;
             glow.Detach(); // the models it was on may be gone: a new look spawns new ones
             if (spawned != null) glow.Attach(spawned);
             if (spawnedOff != null) glow.Attach(spawnedOff);
+#endif
         }
 
-        private void DetachGlow() => glow?.Detach();
+        private void DetachGlow()
+        {
+#if !UNITY_SERVER
+            glow?.Detach();
+#endif
+        }
 
         private void OnDestroy()
         {
+#if !UNITY_SERVER
             glow?.Detach();
+#endif
         }
 
 #if UNITY_EDITOR

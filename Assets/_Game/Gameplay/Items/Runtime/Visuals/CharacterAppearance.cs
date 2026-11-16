@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+#if !UNITY_SERVER
 using KryticalNova.Rendering;
+#endif
 using UnityEngine;
 
 namespace KryticalNova.Items.Visuals
@@ -71,12 +73,16 @@ namespace KryticalNova.Items.Visuals
         private readonly List<string> boneNames = new List<string>(160);
         private readonly List<SkinnedMeshRenderer> debugRenderers = new List<SkinnedMeshRenderer>();
         private readonly List<SkinnedMeshRenderer> lightRenderers = new List<SkinnedMeshRenderer>();
+#if !UNITY_SERVER
         private GlowHalo lightHalo; // made on first use: a halo draws its beat from Random, which a component's constructor may not call
+#endif
         private SkinnedMeshMerger merger;
         private EyeGlow eyeGlow;
         // Parts that move by real cloth (GearClothLook, a cloak): left out of the merge and drawn by this, with Unity's Cloth.
         private GearCloth cloth;
+#if !UNITY_SERVER
         private CharacterLod lod;
+#endif
         private readonly List<SidekickPartRef> mergeList = new List<SidekickPartRef>(48);
         private readonly List<(SidekickPartRef part, GearClothLook look)> clothParts = new List<(SidekickPartRef, GearClothLook)>();
         private bool eyesGlow;
@@ -141,7 +147,9 @@ namespace KryticalNova.Items.Visuals
         {
             if (sharedSource != null) sharedSource.Rebuilt -= OnSourceRebuilt;
             if (ownedMesh != null) Destroy(ownedMesh);
+#if !UNITY_SERVER
             lightHalo?.Clear();
+#endif
             eyeGlow?.Dispose();
             cloth?.Dispose();
         }
@@ -312,7 +320,9 @@ namespace KryticalNova.Items.Visuals
             if (dirty) RebuildNow();
             else if (paintsStale) ApplyPaints(targetRenderer);
             // a far-away character's cloak hangs as skinned: its cloth stops (the same tier the dangle bones rest at)
+#if !UNITY_SERVER
             if (cloth != null && cloth.Renderers.Count > 0) cloth.SetSimulated(lod == null || lod.Tier < 2);
+#endif
         }
 
         /// <summary>The parts to merge, and the cloth parts kept out of the merge (<see cref="GearCloth"/>).</summary>
@@ -332,7 +342,9 @@ namespace KryticalNova.Items.Visuals
             if (!mergeParts || merger == null || targetRenderer == null) return;
             SplitCloth(parts);
             if (clothParts.Count == 0) { cloth?.Clear(); return; }
+#if !UNITY_SERVER
             if (lod == null) lod = GetComponentInParent<CharacterLod>();
+#endif
             cloth ??= new GearCloth();
             cloth.Show(clothParts, targetRenderer.transform.parent, targetRenderer.gameObject.layer, targetRenderer.rootBone,
                 targetRenderer.localBounds, bodyShape, merger.FindBone, ClothMaterial);
@@ -528,8 +540,10 @@ namespace KryticalNova.Items.Visuals
         // Capes, sashes, long hair and beards swing on their dangle bones (presentation only, never on a server).
         private void BindDangleBones()
         {
+#if !UNITY_SERVER
             if (mergeParts || debugRenderers.Count == 0) DangleBones.Bind(gameObject, new[] { targetRenderer });
             else DangleBones.Bind(gameObject, debugRenderers);
+#endif
         }
 
         private void StopSharing()
@@ -595,6 +609,7 @@ namespace KryticalNova.Items.Visuals
                     smr.SetBlendShapeWeight(i, bodyShape.WeightFor(lights.mesh.GetBlendShapeName(i)));
                 lightRenderers.Add(smr);
                 // Bloom is off in this game, so the lights glow through the screen-space halo, in their own colour.
+#if !UNITY_SERVER
                 if (lightHalo == null) lightHalo = new GlowHalo();
                 lightHalo.Set(new GlowHaloLook
                 {
@@ -603,6 +618,7 @@ namespace KryticalNova.Items.Visuals
                     pulse = lightGlowPulse, pulseSpeed = lightGlowPulseSpeed
                 });
                 lightHalo.Add(go);
+#endif
             }
         }
 
@@ -610,7 +626,9 @@ namespace KryticalNova.Items.Visuals
 
         private void ClearLights()
         {
+#if !UNITY_SERVER
             lightHalo?.Clear();
+#endif
             foreach (var r in lightRenderers) if (r != null) Destroy(r.gameObject);
             lightRenderers.Clear();
         }
