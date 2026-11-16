@@ -241,7 +241,9 @@ namespace KryticalNova.Persistence.Entities
                 uint look = em.HasComponent<PlayerLook>(e) ? em.GetComponentData<PlayerLook>(e).Version : 0u;
                 line.Append(" owner=").Append(em.GetComponentData<GhostOwner>(e).NetworkId)
                     .Append(" look=").Append(look)
+#if !UNITY_SERVER   // the body presentation is client only
                     .Append(" body=").Append(em.HasComponent<KryticalNova.Player.Entities.Presentation.PlayerBodyLink>(e) ? "yes" : "no")
+#endif
                     .Append(" pos=").Append(p.x.ToString("F1", CultureInfo.InvariantCulture)).Append(',').Append(p.z.ToString("F1", CultureInfo.InvariantCulture));
             }
             return "[KnSight] others=" + others + line;
