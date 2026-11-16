@@ -36,7 +36,6 @@ KNOWN = {
                                                  "systems: move them down to Player.Entities, then the body spawn/follow part goes off",
     "KryticalNova.Rendering": "10 server assemblies call it (LOD, glow, occluder fade, DangleBones): Core seams first, then !UNITY_SERVER",
     "KryticalNova.World": "World/Runtime/Presentation (sky, weather, foliage presenters) to split into KryticalNova.World.Presentation",
-    "KryticalNova.Vegetation.Grass": "grass-coder's PR takes it off the server",
 }
 
 
