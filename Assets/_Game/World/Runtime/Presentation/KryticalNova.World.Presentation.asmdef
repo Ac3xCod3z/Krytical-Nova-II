@@ -1,0 +1,41 @@
+{
+    "name": "KryticalNova.World.Presentation",
+    "rootNamespace": "KryticalNova.World",
+    "references": [
+        "KryticalNova.World",
+        "KryticalNova.Runtime",
+        "KryticalNova.Networking",
+        "KryticalNova.Progression",
+        "KryticalNova.Rendering",
+        "Unity.Netcode.Runtime",
+        "Unity.Networking.Transport",
+        "Unity.Collections",
+        "Unity.Services.Core",
+        "Unity.Services.Authentication",
+        "Unity.Services.Multiplayer",
+        "Unity.Services.Multiplayer.Server",
+        "Unity.AI.Navigation",
+        "Unity.Addressables",
+        "Unity.ResourceManager",
+        "Unity.Splines",
+        "Unity.Mathematics",
+        "Unity.InputSystem",
+        "Unity.Cinemachine",
+        "Kybernetik.Animancer",
+        "BoingKit",
+        "MotionWarping.Runtime",
+        "Unity.RenderPipelines.Core.Runtime",
+        "Unity.RenderPipelines.Universal.Runtime"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "!UNITY_SERVER"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

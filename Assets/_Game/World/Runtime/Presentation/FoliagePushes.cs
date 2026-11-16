@@ -13,7 +13,7 @@ namespace KryticalNova.World
     public static class FoliagePushes
     {
         /// <summary>The most alive at once; must match KN_MAX_SWING_PUSHES in GrassTrample.compute (a test reads it).</summary>
-        public const int MaxPushes = 8;
+        public const int MaxPushes = FoliagePushSettings.MaxPushes;
         /// <summary>float4s per push in the published array.</summary>
         public const int VectorsPerPush = 4;
         public const int PublishedVectors = MaxPushes * VectorsPerPush;

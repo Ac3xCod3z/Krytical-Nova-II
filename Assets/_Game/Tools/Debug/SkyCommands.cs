@@ -1,3 +1,4 @@
+#if !UNITY_SERVER   // these commands move what World.Presentation draws (client only: no visual code in the server build)
 using System.Globalization;
 using KryticalNova.World;
 using QFSW.QC;
@@ -167,3 +168,4 @@ namespace KryticalNova.DevTools
         }
     }
 }
+#endif

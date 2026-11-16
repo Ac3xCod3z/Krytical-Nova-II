@@ -683,9 +683,11 @@ namespace KryticalNova.Hostiles
         private void ShowAttack(int attackIndex, float windupSeconds, bool heavy)
         {
             // The grass in front of the swing is thrown aside as it lands, wider for a bigger body (day list item 20; client views only).
+#if !UNITY_SERVER   // World.Presentation is client only (no visual code in the server build)
             if (IsView && definition != null && KryticalNova.World.FoliagePushes.Settings is { } pushes)
                 KryticalNova.World.FoliagePushes.Add(KryticalNova.World.FoliagePushKind.Hostile, transform.position, transform.forward,
                     pushes.BodyScale(definition.bodySize.x, definition.scale), delaySeconds: windupSeconds);
+#endif
             if (heavy)
             {
                 float height = definition != null ? definition.bodySize.y * definition.scale : 1.8f;
