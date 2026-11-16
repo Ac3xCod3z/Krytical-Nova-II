@@ -279,6 +279,9 @@ def make(asm):
         refs = [r for r in refs if r.startswith("KryticalNova") or r[:-7] in names]
         present = {r[:-7] for r in refs} | set(re.findall(r'<Reference Include="([^",]+)', text))
         ecs_lines = ecs_references(names, present) + ecs_generators(names)
+    if SERVER:   # Unity drops a reference to an assembly the server leaves out (!UNITY_SERVER): so must this check, or it
+        # compiles client-only code (Rendering, World.Presentation) with UNITY_SERVER defined and reports errors Unity never has
+        refs = [r for r in refs if "!UNITY_SERVER" not in asmdefs.get(r[:-7], {}).get("defineConstraints", [])]
     text = re.sub(r"\s*<ProjectReference Include=\"[^\"]+\" />", "", text)
     lines = []
     uses[asm] = [r[:-7] for r in refs if r.startswith("KryticalNova")]
