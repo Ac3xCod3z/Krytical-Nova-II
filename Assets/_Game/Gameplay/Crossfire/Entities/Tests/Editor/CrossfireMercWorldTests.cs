@@ -149,6 +149,108 @@ namespace KryticalNova.Crossfire.Entities.Tests
                 Assert.AreEqual(0, rig.Get<PvpSwitch>(rig.Clients[viewer], rig.GhostIn(viewer, 1)).WarSide, $"client {viewer}: home again");
         }
 
+        /// <summary>A stand-in War Bots: a count per side, and the bots that left for a real player.</summary>
+        sealed class SideBots : IWarBotFill
+        {
+            public readonly Dictionary<FactionId, int> Bots = new Dictionary<FactionId, int>();
+            public int Released;
+            public int Fill(in WarBotRequest request, IReadOnlyList<Entity> realPlayers) => 0;
+            public int Release(FactionId faction, int count) { int n = math.min(count, Count(faction)); Bots[faction] = Count(faction) - n; Released += n; return n; }
+            public int Count(FactionId faction) => Bots.TryGetValue(faction, out int n) ? n : 0;
+            public bool IsWarBot(Entity ghost) => false;
+            public FactionId SideOf(Entity ghost) => FactionId.None;
+            public void EndWar() => Bots.Clear();
+        }
+
+        (PlayerRig rig, CrossfireClockServerSystem clock, CrossfireEntryServerSystem entry) Start(int players, bool covenant = true)
+        {
+            var starts = new int3[players];
+            for (int i = 0; i < players; i++) starts[i] = new int3(-40000 + 5000 * i, 0, -40000);
+            PlayerRig rig = PlayerRig.Create(players, starts: starts);
+            RallyPoint(FactionId.Hegemony, new Vector3(100, 0, 0));
+            RallyPoint(FactionId.Null, new Vector3(-100, 0, 0));
+            if (covenant) RallyPoint(FactionId.Covenant, new Vector3(0, 0, 100));
+            var clock = rig.Server.GetExistingSystemManaged<CrossfireClockServerSystem>();
+            var entry = rig.Server.GetExistingSystemManaged<CrossfireEntryServerSystem>();
+            WarBots.Fill = null;
+            entry.FactionOf = g => FactionId.Hegemony;
+            entry.LevelOf = g => 112;
+            clock.Settings = m_Settings;
+            clock.Clock = () => m_Now;
+            clock.Interval = 0f;
+            m_Now = Origin + 5;
+            Settle(rig);
+            return (rig, clock, entry);
+        }
+
+        /// <summary>Review 1, item 1: War Bots never block a Merc place; the Merc takes a bot's place.</summary>
+        [Test]
+        public void ASideFullOfBots_StillTakesAMerc_InABotsPlace()
+        {
+            var (rig, _, entry) = Start(2, covenant: false);
+            using (rig)
+            {
+                var bots = new SideBots();
+                bots.Bots[FactionId.Null] = 1;   // Null's one place is a bot's
+                WarBots.Fill = bots;
+                entry.Port(rig.ServerGhosts[0], 112, FactionId.Hegemony, m_Settings.portPortalId, out _);
+                Settle(rig);
+                entry.Port(rig.ServerGhosts[1], 112, FactionId.Hegemony, m_Settings.portPortalId, out _);
+                Assert.IsTrue(entry.HasOffer(rig.ServerGhosts[1]), "offered Null's place although a bot holds it");
+                Assert.IsTrue(entry.AnswerMerc(rig.ServerGhosts[1], true));
+                Settle(rig);
+                Assert.IsTrue(entry.Sides.TryGetSide(rig.ServerGhosts[1], out FactionId side) && side == FactionId.Null);
+                Assert.AreEqual(1, bots.Released, "the bot left for the Merc");
+            }
+        }
+
+        /// <summary>Review 1, item 3: a decline is final for this war; coming back is not a new offer.</summary>
+        [Test]
+        public void ADecline_IsFinalForTheWar()
+        {
+            var (rig, _, entry) = Start(2);
+            using (rig)
+            {
+                entry.Port(rig.ServerGhosts[0], 112, FactionId.Hegemony, m_Settings.portPortalId, out _);
+                Settle(rig);
+                entry.Port(rig.ServerGhosts[1], 112, FactionId.Hegemony, m_Settings.portPortalId, out _);
+                Assert.IsFalse(entry.AnswerMerc(rig.ServerGhosts[1], false), "no");
+                Assert.IsTrue(entry.Declined(rig.ServerGhosts[1]));
+                entry.Port(rig.ServerGhosts[1], 112, FactionId.Hegemony, m_Settings.portPortalId, out _);   // tries again
+                rig.Teleport(1, new int3(100000, 0, 0));                                                   // and walks into the full yard
+                Settle(rig);
+                Assert.AreEqual(1, entry.MercOffers, "never offered again this war");
+                Assert.IsFalse(entry.HasOffer(rig.ServerGhosts[1]));
+                Assert.IsFalse(entry.Sides.TryGetSide(rig.ServerGhosts[1], out _), "still misses the war");
+            }
+        }
+
+        /// <summary>Review 1, item 2: a Merc who leaves the war area leaves the war, and is their home faction again at once.</summary>
+        [Test]
+        public void AMercWhoLeaves_IsHomeAgainAtOnce_AndNotPaid()
+        {
+            var (rig, clock, entry) = Start(2);
+            using (rig)
+            {
+                entry.Port(rig.ServerGhosts[0], 112, FactionId.Hegemony, m_Settings.portPortalId, out _);
+                Settle(rig);
+                entry.Port(rig.ServerGhosts[1], 112, FactionId.Hegemony, m_Settings.portPortalId, out _);
+                Assert.IsTrue(entry.AnswerMerc(rig.ServerGhosts[1], true));
+                Settle(rig);
+                Assert.AreNotEqual(0, rig.Get<PvpSwitch>(rig.Server, rig.ServerGhosts[1]).WarSide, "fights as a Merc");
+                rig.Teleport(1, new int3(-60000, 0, -60000));   // leaves the war area
+                Settle(rig);
+                Assert.AreEqual(0, rig.Get<PvpSwitch>(rig.Server, rig.ServerGhosts[1]).WarSide, "home again at once");
+                Assert.AreEqual(0, rig.Get<PvpSwitch>(rig.Clients[0], rig.GhostIn(0, 1)).WarSide, "on the clients too");
+                Assert.AreEqual(0, entry.Mercs.Count);
+                Assert.IsFalse(entry.Sides.TryGetSide(rig.ServerGhosts[1], out _));
+                m_Now = Origin + 136;
+                Settle(rig);
+                Assert.AreEqual(CrossfirePhase.End, clock.Current.Now.Phase);
+                Assert.IsFalse(entry.LastPay.ContainsKey(rig.ServerGhosts[1]), "not paid");
+            }
+        }
+
         [Test]
         public void AnOfferNobodyAnswers_RunsOut_AndMissesTheWar()
         {

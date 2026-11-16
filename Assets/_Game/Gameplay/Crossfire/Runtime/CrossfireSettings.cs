@@ -52,6 +52,8 @@ namespace KryticalNova.Crossfire
         [Min(1)] public int capPerFaction = 33;
         [Tooltip("Told to a real player refused because their side is full. {cap}: the cap.")]
         [TextArea] public string sideFullText = "Crossfire: your side is full ({cap} of {cap}), so you can't join this war.";
+        [Tooltip("Told to a player who left the war area during the war: their place and pay are gone.")]
+        [TextArea] public string leftWarText = "Crossfire: you left the war, so you lose your place and its pay.";
         [Tooltip("Told to a real player who takes a War Bot's place on their side.")]
         [TextArea] public string tookBotsPlaceText = "Crossfire: you take a War Bot's place on your side.";
 
@@ -72,6 +74,8 @@ namespace KryticalNova.Crossfire
         [Header("The War Bot vote of a short side (before the gates open)")]
         [Tooltip("Seconds a short side has to vote, from the Rally's start (it always closes a second before the gates open). Nobody answering is a no.")]
         [Min(1f)] public float voteSeconds = 20f;
+        [Tooltip("The vote always closes at least this many seconds before the gates open, so the bots are in before the war.")]
+        [Min(0f)] public float voteClosesBeforeGatesSeconds = 1f;
         [Tooltip("The small heading of the vote's accept / decline panel.")]
         public string voteEyebrow = "CROSSFIRE";
         [Tooltip("The question. {real}: the side's real players; {cap}: the cap.")]
