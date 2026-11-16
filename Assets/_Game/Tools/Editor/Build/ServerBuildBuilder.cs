@@ -311,12 +311,13 @@ namespace KryticalNova.EditorTools
                 File.WriteAllText(settings, EntityReleaseServer.SettingsJson(EntityReleaseServer.ReadNgoSettings()));
                 Debug.Log($"[Build] Entity server (release): wrote real-lane settings ({settings}: port {EntityReleaseServer.GamePort}, page {EntityReleaseServer.PagePort}, save service {EntityReleaseServer.SaveService}, DTLS, list entry \"{EntityReleaseServer.ListName}\"; GMs and secrets carried, not printed).");
             }
-            if (!EntityReleaseServer.CopyCertificates(Path.Combine(EntityReleaseServer.NgoWindowsFolder, "certificates"), EntityReleaseServer.CertificatesFolder, out string problem))
+            if (!EntityReleaseServer.CopyCertificates(Path.Combine(EntityReleaseServer.NgoWindowsFolder, "certificates"), EntityReleaseServer.CertificatesFolder,
+                    EntityReleaseServer.BackupCertificateFolders(), out string usedFolder, out string problem))
             {
-                Debug.LogError("[Build] Entity server (release): " + problem + ". The server would not start without encryption; fix it before step 9.");
+                Debug.LogError("[Build] Entity server (release): no certificate anywhere (" + problem + "). The server would not start without encryption; fix it before step 9.");
                 return false;
             }
-            Debug.Log($"[Build] Entity server (release): certificate and key copied beside the build ({EntityReleaseServer.CertificatesFolder}); never into the repository.");
+            Debug.Log($"[Build] Entity server (release): certificate and key beside the build ({EntityReleaseServer.CertificatesFolder}), from {usedFolder}; never into the repository.");
             return true;
         }
 

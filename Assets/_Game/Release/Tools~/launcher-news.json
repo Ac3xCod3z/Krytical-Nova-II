@@ -1,116 +1,102 @@
 {
-  "build": 17,
+  "build": 18,
   "items": [
     {
-      "title": "A Better Start in Nova",
-      "body": "New characters start with 20 HP Stims, 20 Flux Stims, 2,500 Creds and 5 stat points to place. Level 1 Hostiles pay a little more, every weapon class has its own Instructor in the Training Yard, Stims work at any time, even mid-charge, and new percentage Stims are at the Apothecary."
+      "title": "The Monsters Are Back",
+      "body": "Monsters show up again in every zone of the live server, and you can target and fight them. Monsters a GM spawns can be seen too. In build 17 they were there on the server but never reached your screen, so the zones looked empty."
     },
     {
-      "title": "Defense and Crits Reworked",
-      "body": "Defense cuts every hit by a share, can block a hit for 70 % less damage and resists crits. Crit buffs add to your crit chance with no cap, crit on gear comes from rings, and weapon Tuning raises Critical Damage. On the Cadence beat, a Redline three-hit crits with all three hits."
+      "title": "Monsters Hold Their Ground",
+      "body": "The monsters around you each keep their own spot: they step in to strike and step back out. No more circling you and swapping sides, and no more monsters standing inside your character while they swing."
     },
     {
-      "title": "Seasons and a New Sky",
-      "body": "The world turns through Spring, Summer, Autumn and Winter, two real weeks each, with real snow that holds your footprints and trees that change colour. A new star map, shooting stars, nebulae, a second sun and eclipses fill the sky, and the World Map has a Calendar with a 7-day forecast."
+      "title": "Big Fights at Full Speed",
+      "body": "The server has had its biggest speed-up yet. In our tests with 200 players fighting in one place it keeps its full speed, and 200 players leaving at once no longer freezes it for a moment."
     },
     {
-      "title": "Bigger Moments",
-      "body": "Levelling up raises a pillar of light in your faction's colour with a LEVEL banner, and your mount's evolutions get the milestone banner too. Callouts open with a letterbox, and loot on the ground now shows the real item instead of a crate: a ring is tiny, a claymore lies long."
+      "title": "Smoother Crowds",
+      "body": "Capes, tails, long hair and beards of everyone around you now swing in one fast batch, with the same look as before. Crowded towns and big fights run smoother on your screen."
     },
     {
-      "title": "Aegis, Guard and Squad Stances",
-      "body": "Aegis now also raises Defense, and its shield counts down live hit by hit. Every class's Guard ward also raises Elemental Attack. Shared Stances give Squad mates half their strength."
+      "title": "What You See: 150 m",
+      "body": "The server now sends you the players and monsters within 150 m of you. Those farther away appear as you come closer, so busy maps cost your connection much less."
     },
     {
-      "title": "Sky Concord Comes Alive",
-      "body": "Sky Concord has townsfolk now: workers, strollers, joggers, shoppers, gossips, street performers and guards, each with a personality and a day plan. Fewer come out at night and they shelter from the rain. The vendors are new faces too: they look up as you pass and wave you over."
-    },
-    {
-      "title": "Your Mount Walks Beside You",
-      "body": "Press Y and your mount walks beside you, keeps giving its stats and has HP of its own (the new Mount Stim heals it). Set it to DPS and it fights with you, HEALER and it heals you, TANK and it pulls Hostiles off you (PvE only). Its stances grow with it, and kills it helps with grow it faster."
+      "title": "GM Tools Work Again",
+      "body": "GM commands and Autopilot work on the live server again. Max Everything (gm.maxall) now gives only the top gear set of each level bracket instead of every set."
     }
   ],
   "patchNotes": [
     {
-      "heading": "New",
-      "lines": [
-        "Starter kit: every new character begins with 20 small HP Stims, 20 small Flux Stims and 2,500 Creds.",
-        "Block: Defense gives a chance to block a hit (up to 40 % of hits), taking 70 % off it. The number reads BLOCKED.",
-        "Percentage Stims: restore a share of your HP or Flux (or both, with the Dual Stims), sold at the Apothecary.",
-        "Level up: a pillar of light in your faction's colour, rays, a ground ring and a LEVEL banner on your screen.",
-        "Callouts open with a letterbox, and the HUD slides out of the way for the bout.",
-        "Seven more Instructors: every weapon class of every faction now has its own in the Training Yard.",
-        "The Deck (P) can be moved and placed in the HUD layout editor, and keeps its place. Its bars now change colour with the music, with falling peak caps and a beat pulse (or pick Faction Glow or Classic).",
-        "Crossfire, the hourly faction war, now keeps time on the server: from level 10 you are called 10 minutes before nightfall, with a banner and a countdown on your HUD. The battleground itself opens in a later build.",
-        "Mini Deck: in every fight the minimap gives way to a small click-wheel player with the Deck's music and the Cadence beat, and comes back when the fight ends (M still opens the full map). In a Callout the chat fades too; Enter brings it back.",
-        "Mount milestones: when your mount evolves, the same milestone banner as a pet's shows its new stage.",
-        "Real drop models: everything that drops shows its own 3D model on the ground (weapons by class, armour by slot, alloys, chips, Stims, Serums, Passes, pets, mounts and more), sized for realism: rings, chips and vials are small, armour and capes larger, claymores, axes and glaives the longest, lying low so they never block the view.",
-        "Emotes from the saddle: waves, cheers, points, salutes, beckons, laughs and taunts play while riding; the others say you can't do that while riding.",
-        "Townsfolk on Sky Concord: up to 80 by day and 35 at night, from every faction, walking, working, shopping and chatting by their own personality and the hour.",
-        "Crowd Detail (Settings, Graphics): Low to Ultra sets how many townsfolk are drawn in full, how far away, and which cast shadows; far ones become light flat cards. It follows the preset.",
-        "Townsfolk fill the whole of Sky Concord, not only the Sky Lift square: plazas, back streets, stairs, upper tiers and the rails all have people, and nobody carries a weapon around town.",
-        "Townsfolk walk round planters, kiosks and the deck's edge instead of through them, and a crowd never pushes anyone off the deck.",
-        "Townsfolk stay full bodies much farther away and fade smoothly into lighter versions of themselves with distance; only the far crowd becomes flat cards.",
-        "Vendors are dressed like the rest of the town and notice you: their heads follow you, they wave or beckon when you look their way, show their goods when you step up and bow when you open their shop.",
-        "Mount Companion: Y calls your selected mount out to walk beside you, or sends it home. FREE stance (no fighting, allowed in PvP); hunger drains 10x faster while out and is its only time limit.",
-        "Mount Companion HP: enemy players' area skills in PvP can hurt it; at 0 HP it is knocked out, goes home and rests 5 minutes (it can still be ridden). It regains 2 % a minute at home.",
-        "Mount Stim (Apothecary): heals your mount's companion HP by 40 %, never yours.",
-        "Companion stances DPS and HEALER (Mount window): DPS joins the fight you are in and strikes beside you with its own damage buff; HEALER heals you over time while you fight. Neither ever draws aggro, and both stay out of PvP (they act as FREE in PvP zones, duels and Crossfire).",
-        "Companion stance TANK (Mount window): your mount taunts the Hostile you fight and the others after you nearby every 6 s, so they turn on it and strike it instead of you; it takes less damage, deals none and acts as FREE in PvP.",
-        "Companion stances grow with your mount: the more it has grown, the harder DPS strikes (about 40 % of your strike at the start, 70 % fully grown), the more HEALER heals (1.5 % to 3 % of your max HP every 2 s) and the tougher TANK is (65 % to 70 % less damage, up to twice its HP). Riding stats are unchanged; the stance tooltips show your mount's numbers.",
-        "Helped kills: a Hostile kill your Mount Companion helped with in the last 10 s (a DPS strike, a TANK taunt, or a HEALER heal while you fought it) gives your mount 1.5x its kill EXP; with a Rider Booster that is 3x. FREE never helps.",
-        "Game Masters can now max a character in one go (Max Everything, gm.maxall): top level, skills, ladders, every mount and pet, its own Rare and Epic gear and a full kit of items. Only a GM can use it, and every use is logged.",
-        "Swings move the grass: every swing throws the grass in front of it aside and it springs back; area skills send a ring across it and big hits a wave. Hostiles' swings push it too, the bigger the beast the wider.",
-        "World effects (Settings, Graphics): how much the world's little effects do on your screen, Low to Ultra; on Low four swings move the grass at once instead of eight; on Low the sky shows fewer shooting stars at once and no aurora.",
-        "A unique sky: the old dot stars are replaced by a star map that turns with the calendar, with eight constellations of bright stars spread far apart (at least 45 degrees of empty sky between any two). The moon is bigger and closer, and no star shows in front of it.",
-        "Sky events everyone sees at the same moment: a rare shooting star (about one every 1 to 3 minutes) with a long, softly fading trail, and a big nebula three nights in each moon cycle, one of three (the teal-violet Soul Tide, the warm Ember Rose or the cyan-to-gold Veil Ribbon).",
-        "The Emberfall once a game year: a storm of long, glowing blue streaks with white-hot heads falling from one point of the sky. The Pale Wanderer comet passes every few real months, and the aurora comes with Winter.",
-        "The second sun: an amber sun with its own path, drawn like our sun, only by day (it sets with ours and never shows at night). It is only in the sky: it gives no light or shadow and changes nothing on the ground.",
-        "Total eclipse every two game years: the second sun leaves the sky, the moon rises opposite the sun, crosses the sky, passes in front of the sun and keeps going, a pearl corona flares and the day dims almost to night, then comes back exactly as it was.",
-        "Seasons: the world turns through Spring, Summer, Autumn and Winter, two real weeks each, changing every second Monday at 00:00 UTC (Winter arrives 23 Nov). Each brings its own weather, its own daylight (short winter days, long summer ones) and its own colours: spring flowers, orange autumn trees, frosted winter woods.",
-        "Snow: it builds up like real snow, slowly and thin in light snow, fast and deep in a blizzard, and settles only on what is flat enough. It has real depth (grass gets buried) and every foot leaves its own print, boots or paws, that fills back in. World effects on Low lets less rain and snow fall.",
-        "Autumn: every kind of tree turns its own colour (maples red, birches gold, oaks brown), grass goes dull, leaves blow across the ground, and the trees are almost bare by Winter. Pines stay green.",
-        "Calendar: the World Map (M) has a CALENDAR tab: today's date (season, day of 14, year), the moon and when it is next full or new, tonight's constellation, four moon cycles with The Emberfall, The Pale Wanderer, eclipses, aurora and nebula nights marked, and what is coming up with a countdown in real time.",
-        "Forecast: the Calendar shows the next 7 days with highs, lows and the chance of rain, snow and storms, and a small line under the minimap shows the date, the time, the air and the weather. Temperatures show in °F; pick °C in Settings ▸ Accessibility ▸ Units."
-      ]
-    },
-    {
       "heading": "Changed",
       "lines": [
-        "Defense cuts every hit by a share instead of a flat amount: more Defense always helps, with diminishing returns and never full immunity.",
-        "Crit resistance: Defense, Evasion and capes lower the crit chance of hits against you (up to 60 %). Evasion also takes part of a crit's extra damage and adds a little Backlash.",
-        "Crit chance on gear comes from rings only (Common +5 up to Legendary +25 at level 112), and each 1 % of a ring's Temper adds 1 % of that crit (a Legendary ring at 120 % gives +30 more). Weapon Tuning now gives +1 % Critical Damage a stage instead of crit chance.",
-        "Holoweave keeps one Weave per weapon class and one per gear set; switching keeps each look. Weaves you already had carry over to the piece you wear.",
-        "Names can't contain GM as a part of their own (Magma is still fine).",
-        "Players no longer stand inside each other: if you stop on top of someone, you step aside. Walking through each other still works.",
-        "Concord (the Sky Lift's sky city) is now its own file beside the starter town's, so an update to the town no longer downloads Concord again. Nothing in Concord changed.",
-        "Level 1 Hostiles pay more: 5 Creds and 3 XP a kill (was 4 and 2).",
-        "New characters start with 5 stat points to place.",
-        "In town, the fight music only starts for a real fight (a Hostile, a Callout, the Strike Dummy), not for swinging at air.",
-        "The combat log shows the elemental part of a hit, and your own hits stand out in bright, bold text.",
-        "Every item tooltip says what a vendor pays for it.",
-        "Skills you have not learned yet show as ??? until you learn them (the level they open at is shown).",
-        "Aegis also raises Defense (up to +50 %); every class's Guard ward also raises Elemental Attack (up to +10 %).",
-        "Crit buffs add to your crit chance instead of multiplying it (Killer Instinct up to +25), with no cap.",
-        "Cadence combos: on the beat, one-hit and two-hit skills can't crit; a Redline three-hit on the beat crits with all three hits.",
-        "Shared Stances give Squad mates half their strength.",
-        "Stims can be used at any time, also during a charge; each kind has its own short cooldown.",
-        "The Cadence beat ring around you is gone: the beat now lives on the Mini Deck. Its arc can be switched off in Settings > Audio (Beat arc on the Mini Deck in a fight).",
-        "Max Everything (gm.maxall) now gives only the top gear set of each bracket the character can wear, not every set: at level 112 the Rare 75 and Rare 110 sets and the Epic 112 set, in its own faction, lineage and class line."
+        "You now get the players and monsters within 150 m of you; farther ones appear as you come closer.",
+        "Max Everything (gm.maxall) gives only the top gear set of each bracket the character can wear, not every set: at level 112 the Rare 75 and Rare 110 sets and the Epic 112 set, in its own faction, lineage and class line.",
+        "Server: the biggest speed-up yet, aimed at 200 players fighting in one place.",
+        "Server: every player's movement is packed once a turn for everyone, not once for each player who watches.",
+        "Server: orders meant for one player (their water, knockback and server orders) go only to that player.",
+        "Server: who is close to whom is worked out on every core of the server at once.",
+        "Server: melee swings and monster strikes find their targets straight away instead of searching every body.",
+        "Server: every melee swing is settled on every core at once, finding its target in one step instead of walking the whole list (it took half of each server turn in a moving 200-player fight).",
+        "Server: walking, jump flights and the record of recent hits run for every player at once on every core, with the same results as before.",
+        "Server: players pushing apart in a crowd find their close neighbours through a grid, worked out on every core at once.",
+        "Server: monster positions and player places are sent only when they change.",
+        "Server: shared Pack views look at a third of the players each turn, each still every 0.1 s.",
+        "Server: Autopilot saves its state only when something changed.",
+        "On your screen: capes, tails, long hair and beards swing in one fast batch for every character in view.",
+        "On your screen: effects reuse their pieces and read their colours once.",
+        "On your screen: character detail levels, doors, the minimap's Squad markers and Strike Dummies do less work every frame.",
+        "A Brambleback's landing burst reuses its leaves instead of making new ones every landing; it looks the same."
       ]
     },
     {
       "heading": "Fixed",
       "lines": [
-        "The Aegis shield now counts down hit by hit, on your screen and on everyone else's.",
-        "Logging out while the Deck was playing no longer keeps the music going into your next character.",
-        "Logging in no longer plays a level-up for every level from 1; only a real level gained shows the moment.",
-        "Damage numbers always float over the one who was hit; they no longer get stuck in the corner by your portrait.",
-        "Quitting the game while a sky event was showing could crash it on the way out; it now closes cleanly."
+        "Monsters appear again in every zone of the live server and can be targeted, fought and killed.",
+        "Monsters a GM spawns are visible again.",
+        "Monsters around you each keep their own spot round you: they step in to strike and step back, and no longer circle you or swap sides.",
+        "A monster joining the fight takes the free spot nearest to where it stands, so it never walks through you to get there.",
+        "Monsters no longer walk into your character while they wind up, swing or recover.",
+        "GM commands work on the live server again; they used to answer that no network session was running.",
+        "Autopilot works on the live server again.",
+        "When many players leave at once, the server spreads it over several turns instead of freezing for half a second; someone who rejoins straight away is let in at once."
       ]
     }
   ],
   "history": [
+    {
+      "label": "15 Nov 2026 · A better start, seasons & a new sky",
+      "items": [
+        {
+          "title": "A Better Start in Nova",
+          "body": "New characters start with 20 HP Stims, 20 Flux Stims, 2,500 Creds and 5 stat points to place. Level 1 Hostiles pay a little more, every weapon class has its own Instructor in the Training Yard, Stims work at any time, even mid-charge, and new percentage Stims are at the Apothecary."
+        },
+        {
+          "title": "Defense and Crits Reworked",
+          "body": "Defense cuts every hit by a share, can block a hit for 70 % less damage and resists crits. Crit buffs add to your crit chance with no cap, crit on gear comes from rings, and weapon Tuning raises Critical Damage. On the Cadence beat, a Redline three-hit crits with all three hits."
+        },
+        {
+          "title": "Seasons and a New Sky",
+          "body": "The world turns through Spring, Summer, Autumn and Winter, two real weeks each, with real snow that holds your footprints and trees that change colour. A new star map, shooting stars, nebulae, a second sun and eclipses fill the sky, and the World Map has a Calendar with a 7-day forecast."
+        },
+        {
+          "title": "Bigger Moments",
+          "body": "Levelling up raises a pillar of light in your faction's colour with a LEVEL banner, and your mount's evolutions get the milestone banner too. Callouts open with a letterbox, and loot on the ground now shows the real item instead of a crate: a ring is tiny, a claymore lies long."
+        },
+        {
+          "title": "Aegis, Guard and Squad Stances",
+          "body": "Aegis now also raises Defense, and its shield counts down live hit by hit. Every class's Guard ward also raises Elemental Attack. Shared Stances give Squad mates half their strength."
+        },
+        {
+          "title": "Sky Concord Comes Alive",
+          "body": "Sky Concord has townsfolk now: workers, strollers, joggers, shoppers, gossips, street performers and guards, each with a personality and a day plan. Fewer come out at night and they shelter from the rain. The vendors are new faces too: they look up as you pass and wave you over."
+        },
+        {
+          "title": "Your Mount Walks Beside You",
+          "body": "Press Y and your mount walks beside you, keeps giving its stats and has HP of its own (the new Mount Stim heals it). Set it to DPS and it fights with you, HEALER and it heals you, TANK and it pulls Hostiles off you (PvE only). Its stances grow with it, and kills it helps with grow it faster."
+        }
+      ]
+    },
     {
       "label": "12 Nov 2026 · A new engine for Nova",
       "items": [
