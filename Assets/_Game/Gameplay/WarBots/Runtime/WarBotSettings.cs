@@ -32,6 +32,8 @@ namespace KryticalNova.WarBots
         [Header("Finding a fight")]
         [Tooltip("A bot looks for enemies within this many metres.")]
         [Min(5f)] public float sightMeters = 60f;
+        [Tooltip("A target the bot is already fighting stays its target out to this many times Sight Meters (it does not drop a fleeing enemy at the edge).")]
+        [Min(1f)] public float keepTargetSightFactor = 1.5f;
         [Tooltip("An enemy with no enemy of its own side within this many metres counts as isolated.")]
         [Min(1f)] public float isolatedMeters = 12f;
         [Tooltip("Bonus (in metres of distance) for an isolated enemy; a lone wolf counts it twice.")]
@@ -74,6 +76,8 @@ namespace KryticalNova.WarBots
         [Tooltip("Seconds between two attack skills of one bot, at the shortest and the longest (rolled each time).")]
         [Min(0.5f)] public float skillGapMinSeconds = 3f;
         [Min(0.5f)] public float skillGapMaxSeconds = 6f;
+        [Tooltip("Seconds after coming in before a bot casts its first skill.")]
+        [Min(0f)] public float firstSkillAfterSeconds = 2f;
         [Tooltip("With no enemy in sight, a bot puts on a buff it does not have when one is ready. A support bot also does it in a fight, first.")]
         public bool buffBetweenFights = true;
 
@@ -89,6 +93,9 @@ namespace KryticalNova.WarBots
         [Tooltip("A bot answers a party invite after this many seconds (and at most this many more), as a person reading it.")]
         [Min(0f)] public float inviteAnswerMinSeconds = 1f;
         [Min(0f)] public float inviteAnswerMaxSeconds = 3.5f;
+        [Tooltip("A squad leader bot tries to invite free bots of its side again after this many seconds (shortest and longest, picked per try).")]
+        [Min(1f)] public float partyTryMinSeconds = 8f;
+        [Min(1f)] public float partyTryMaxSeconds = 14f;
         [Tooltip("A bot accepts an invite from a REAL player of its side unless its own party is already that player's or full.")]
         public bool acceptPlayerInvites = true;
         [Tooltip("Bots form parties of this size among themselves (0 = never); a real player's invite still wins.")]
@@ -103,6 +110,20 @@ namespace KryticalNova.WarBots
         public string[] attackWords = { "attack", "go", "charge", "push" };
         [Tooltip("A party that is outnumbered round its leader (by Lose Margin) regroups on the leader, whatever the order.")]
         public bool regroupWhenOutnumbered = true;
+
+        [Header("Moving")]
+        [Tooltip("A walk goal this close counts as reached (metres).")]
+        [Min(0.5f)] public float goalReachedMeters = 2f;
+        [Tooltip("A bot that walks but moves less than this many metres...")]
+        [Min(0.1f)] public float stuckMeters = 1f;
+        [Tooltip("...for this many seconds, not fighting, is stuck and is put back on its Rally Point.")]
+        [Min(1f)] public float stuckSeconds = 12f;
+        [Tooltip("Coming in: the first bot stands this far from the Rally Point's landing spot (metres)...")]
+        [Min(0f)] public float rallySpreadMinMeters = 1.5f;
+        [Tooltip("...each next ring of bots this much further out...")]
+        [Min(0f)] public float rallySpreadStepMeters = 0.9f;
+        [Tooltip("...in this many rings, then the rings start again (bots go round the spot at the golden angle, so none stand on another).")]
+        [Min(1)] public int rallySpreadRings = 6;
 
         [Header("Mounts")]
         [Tooltip("The share of bots that bring a mount (0-1). It rides the way to the field and gets off to fight.")]

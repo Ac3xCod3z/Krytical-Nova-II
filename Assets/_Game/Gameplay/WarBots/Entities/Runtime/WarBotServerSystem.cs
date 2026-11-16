@@ -92,6 +92,8 @@ namespace KryticalNova.WarBots.Entities
         readonly List<SkillDefinitionSO> m_Ready = new List<SkillDefinitionSO>(8);
         readonly HashSet<string> m_Names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         readonly List<Bot> m_Gone = new List<Bot>();
+        /// <summary>Degrees between two bots coming in round a Rally Point: the golden angle, so no two stand on one line (geometry, not a tunable).</summary>
+        const float GoldenAngle = 137.5f;
         uint m_Next;
         double m_Now;
         int m_SeenFrame = -1;
@@ -246,10 +248,11 @@ namespace KryticalNova.WarBots.Entities
             bot.GhostId = EntityManager.HasComponent<GhostInstance>(bot.Ghost) ? EntityManager.GetComponentData<GhostInstance>(bot.Ghost).ghostId : 0;
             Dress(bot, weaponClass, s);
             // into the Rally Point, spread out a little so a side does not stand in one spot
-            Vector3 at = rally + Quaternion.Euler(0f, index * 137.5f, 0f) * Vector3.forward * (1.5f + (index % 6) * 0.9f);
+            Vector3 at = rally + Quaternion.Euler(0f, index * GoldenAngle, 0f) * Vector3.forward
+                * (s.rallySpreadMinMeters + (index % Mathf.Max(1, s.rallySpreadRings)) * s.rallySpreadStepMeters);
             PlayerEntitiesSetup.Teleport(EntityManager, bot.Ghost, Mm(at), (int)(rallyYaw * 100f));
             bot.NextThink = m_Now + rng.NextDouble() * s.thinkSeconds;   // spread over the ticks
-            bot.NextSkillAt = m_Now + 2d;
+            bot.NextSkillAt = m_Now + s.firstSkillAfterSeconds;
             bot.StillSince = m_Now;
             bot.LastSpot = at;
             m_Bots.Add(bot);
@@ -464,8 +467,8 @@ namespace KryticalNova.WarBots.Entities
                 Profile = b.Profile,
                 TargetGhostId = combat.TargetGhostId,
                 TargetValid = combat.TargetGhostId != 0 && m_SeenIndex.TryGetValue(combat.TargetGhostId, out int ti) && m_Seen[ti].Alive && m_Seen[ti].Side != b.Side
-                              && WarBotRules.FlatDistance(me, m_Seen[ti].Position) <= s.sightMeters * 1.5f,
-                Walking = em.IsComponentEnabled<ServerOrderRequest>(b.Ghost) || (b.HasGoal && WarBotRules.FlatDistance(me, b.Goal) > 2f),
+                              && WarBotRules.FlatDistance(me, m_Seen[ti].Position) <= s.sightMeters * s.keepTargetSightFactor,
+                Walking = em.IsComponentEnabled<ServerOrderRequest>(b.Ghost) || (b.HasGoal && WarBotRules.FlatDistance(me, b.Goal) > s.goalReachedMeters),
                 Retreating = b.Retreating,
                 StimReady = TryReadyStim(b, s, out _),
                 BuffReady = TryReadyBuff(b, out _),
@@ -553,7 +556,7 @@ namespace KryticalNova.WarBots.Entities
 
         void MoveTo(Bot b, Vector3 goal, Vector3 me, WarBotSettings s)
         {
-            if (b.HasGoal && WarBotRules.FlatDistance(goal, b.Goal) < 2f && EntityManager.IsComponentEnabled<ServerOrderRequest>(b.Ghost)) return;
+            if (b.HasGoal && WarBotRules.FlatDistance(goal, b.Goal) < s.goalReachedMeters && EntityManager.IsComponentEnabled<ServerOrderRequest>(b.Ghost)) return;
             bool far = WarBotRules.FlatDistance(me, goal) > s.rideBeyondMeters;
             if (far && b.Mounts != null && b.Mounts.SelectedId != 0 && !b.Mounts.IsMounted && !EnemyNear(b, me, s)) b.Mounts.ServerToggleRide();
             PlayerEntitiesSetup.IssueOrder(EntityManager, b.Ghost, Mm(goal), runPaid: true, chargeRun: true);
@@ -587,15 +590,14 @@ namespace KryticalNova.WarBots.Entities
         /// <summary>Walking somewhere for a long time without getting anywhere and not fighting: stuck (put back on the Rally Point).</summary>
         bool Stuck(Bot b, Vector3 me, in CombatState combat)
         {
-            const float StuckMeters = 1f;
-            const double StuckSeconds = 12d;
-            if (WarBotRules.FlatDistance(me, b.LastSpot) > StuckMeters || !b.HasGoal || combat.TargetGhostId != 0)
+            WarBotSettings s = Config;
+            if (WarBotRules.FlatDistance(me, b.LastSpot) > s.stuckMeters || !b.HasGoal || combat.TargetGhostId != 0)
             {
                 b.LastSpot = me;
                 b.StillSince = m_Now;
                 return false;
             }
-            return m_Now - b.StillSince > StuckSeconds;
+            return m_Now - b.StillSince > s.stuckSeconds;
         }
 
         // ================================================================== kills, manners, the squad
@@ -665,7 +667,7 @@ namespace KryticalNova.WarBots.Entities
         void FormSquad(Bot b, Vector3 me, WarBotSettings s)
         {
             if (s.botPartySize < 2 || b.Party == null || m_Now < b.NextPartyTry) return;
-            b.NextPartyTry = m_Now + 8d + b.Rng.NextDouble() * 6d;
+            b.NextPartyTry = m_Now + s.partyTryMinSeconds + b.Rng.NextDouble() * Math.Max(0f, s.partyTryMaxSeconds - s.partyTryMinSeconds);
             bool leads = b.Party.InParty ? b.Party.ServerLeader == b.Party : b.Number % (uint)s.botPartySize == 0;
             if (!leads || b.Party.ServerSize >= s.botPartySize) return;
             foreach (Bot other in m_Bots)

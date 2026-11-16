@@ -23,6 +23,7 @@ MonoBehaviour:
   supportWeight: 2
   loneWolfWeight: 2
   sightMeters: 60
+  keepTargetSightFactor: 1.5
   isolatedMeters: 12
   isolatedBonusMeters: 15
   lowHealthBonusMeters: 25
@@ -45,12 +46,15 @@ MonoBehaviour:
   tankLeashMeters: 14
   skillGapMinSeconds: 3
   skillGapMaxSeconds: 6
+  firstSkillAfterSeconds: 2
   buffBetweenFights: 1
   beatErrorBestSeconds: 0.03
   beatErrorWorstSeconds: 0.25
   comboTryChance: 0.85
   inviteAnswerMinSeconds: 1
   inviteAnswerMaxSeconds: 3.5
+  partyTryMinSeconds: 8
+  partyTryMaxSeconds: 14
   acceptPlayerInvites: 1
   botPartySize: 3
   followMeters: 6
@@ -69,6 +73,12 @@ MonoBehaviour:
   - charge
   - push
   regroupWhenOutnumbered: 1
+  goalReachedMeters: 2
+  stuckMeters: 1
+  stuckSeconds: 12
+  rallySpreadMinMeters: 1.5
+  rallySpreadStepMeters: 0.9
+  rallySpreadRings: 6
   mountShare: 0.3
   rideBeyondMeters: 40
   chatGapSeconds: 25
