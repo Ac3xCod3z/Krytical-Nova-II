@@ -114,6 +114,7 @@ namespace KryticalNova.Crossfire.Entities.Tests
             Assert.AreEqual(0, rig.Clients[0].GetExistingSystemManaged<CrossfireVoteClientSystem>().OffersShown, "and nobody else's");
 
             Assert.IsTrue(entry.AnswerMerc(b, true), "yes");
+            Assert.AreEqual(0, rig.Get<PvpSwitch>(rig.Server, b).WarSide, "not a Merc yet: only once inside the war area (owner, 16 Nov 2026)");
             Settle(rig);
             Assert.IsTrue(entry.Sides.TryGetSide(b, out FactionId bSide) && bSide != FactionId.Hegemony, "fights for another side");
             Assert.IsTrue(CrossfireArea.TryRallyPoint(bSide, out CrossfireArea yard) && yard.Contains(new Vector3(rig.ServerPose(1).XMm, rig.ServerPose(1).YMm, rig.ServerPose(1).ZMm) * 0.001f),

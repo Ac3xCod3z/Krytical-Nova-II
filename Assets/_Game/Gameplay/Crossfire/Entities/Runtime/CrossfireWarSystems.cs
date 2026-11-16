@@ -58,6 +58,8 @@ namespace KryticalNova.Crossfire.Entities
             m_Entries.Forget(who);
             m_Arriving.Remove(who);
             if (m_Mercs.Remove(who)) ApplyWarSide(who, FactionId.None);   // a Merc who leaves is their home faction again at once
+            m_MercSide.Remove(who);
+            m_MercInside.Remove(who);
             Left++;
             if (tell && Settings != null) Tell(who, Settings.leftWarText);
         }
@@ -72,6 +74,21 @@ namespace KryticalNova.Crossfire.Entities
         readonly Dictionary<Entity, FactionId> m_Home = new Dictionary<Entity, FactionId>();
         readonly HashSet<Entity> m_Mercs = new HashSet<Entity>();
         readonly List<Entity> m_Lapsed = new List<Entity>();
+        /// <summary>
+        /// Owner, 16 Nov 2026: "they only become a Merc once they agree to be one AND once they enter the Crossfire map". The side a Merc
+        /// agreed to, and the Mercs who are inside the war area now (only they fight for it); leaving or the war's end takes it away.
+        /// </summary>
+        readonly Dictionary<Entity, FactionId> m_MercSide = new Dictionary<Entity, FactionId>();
+        readonly HashSet<Entity> m_MercInside = new HashSet<Entity>();
+        readonly List<Entity> m_ToSide = new List<Entity>();
+
+        /// <summary>A Merc who agreed is now inside the war area: from now they fight for their adopted side.</summary>
+        void EnterAsMerc(Entity who)
+        {
+            if (!m_MercSide.TryGetValue(who, out FactionId side) || !m_MercInside.Add(who)) return;
+            ApplyWarSide(who, side);
+        }
+
         /// <summary>Players who declined (or let run out) a Merc offer this war: never offered again in it (review 1, item 3).</summary>
         readonly HashSet<Entity> m_Declined = new HashSet<Entity>();
         public bool Declined(Entity who) => m_Declined.Contains(who);
@@ -318,8 +335,8 @@ namespace KryticalNova.Crossfire.Entities
             }
             if (join == CrossfireJoin.TookBotsPlace) m_BotsOut.Add(offer.side);
             m_Mercs.Add(who);
-            MercsTaken++;
-            ApplyWarSide(who, offer.side);
+            m_MercSide[who] = offer.side;
+            MercsTaken++;   // the war side itself waits until they are inside the war area (owner, 16 Nov 2026: EnterAsMerc)
             EntityManager em = EntityManager;
             if (CrossfireArea.TryRallyPoint(offer.side, out CrossfireArea yard) && em.Exists(who) && em.HasComponent<TeleportRequest>(who))
             {
@@ -525,6 +542,7 @@ namespace KryticalNova.Crossfire.Entities
             EntityManager em = EntityManager;
             m_Sides.ForgetWhere(e => !em.Exists(e));   // left the game: no place, no pay
             m_Mercs.RemoveWhere(e => !em.Exists(e));
+            m_MercInside.RemoveWhere(e => !em.Exists(e));
             m_Arriving.RemoveWhere(e => !em.Exists(e));
             ReadVoteAnswers();
             ReadMercAnswers();
@@ -624,6 +642,8 @@ namespace KryticalNova.Crossfire.Entities
         {
             foreach (Entity merc in m_Mercs) ApplyWarSide(merc, FactionId.None);   // every Merc is their home faction again
             m_Mercs.Clear();
+            m_MercSide.Clear();
+            m_MercInside.Clear();
             m_Offers.Clear();
             m_Declined.Clear();
             m_Home.Clear();
