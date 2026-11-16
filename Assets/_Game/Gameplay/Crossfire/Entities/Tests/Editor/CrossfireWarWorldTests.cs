@@ -199,11 +199,14 @@ namespace KryticalNova.Crossfire.Entities.Tests
                 Assert.IsFalse(entry.Vote(rig.ServerGhosts[0], true), "one vote each");
                 m_Now = Origin + 70;   // past the vote's 3 seconds, before the gates open
                 Settle(rig);
-                Assert.AreEqual(1, bots.Fills.Count, "only the side that voted yes is filled");
-                Assert.AreEqual(FactionId.Hegemony, bots.Fills[0].Faction);
-                Assert.AreEqual(2, bots.Fills[0].Count, "filled to the cap: 1 real + 2 bots");
-                Assert.AreEqual(10, bots.Fills[0].Bracket, "bracket X");
-                Assert.AreEqual(new Vector3(100, 0, 0), bots.Fills[0].RallyAt, "at the side's own Rally Point");
+                Assert.AreEqual(2, bots.Fills.Count, "Covenant (nobody real) at once, then the side that voted yes; Null said nothing");
+                Assert.AreEqual(FactionId.Covenant, bots.Fills[0].Faction, "a side with no real player is filled without a vote");
+                Assert.AreEqual(3, bots.Fills[0].Count);
+                WarBotRequest yes = bots.Fills[1];
+                Assert.AreEqual(FactionId.Hegemony, yes.Faction);
+                Assert.AreEqual(2, yes.Count, "filled to the cap: 1 real + 2 bots");
+                Assert.AreEqual(10, yes.Bracket, "bracket X");
+                Assert.AreEqual(new Vector3(100, 0, 0), yes.RallyAt, "at the side's own Rally Point");
                 Assert.AreEqual(2, bots.RealPlayersSeen, "the bots see every real player of the war");
                 Assert.IsTrue(entry.Told.Exists(t => t.who == rig.ServerGhosts[1] && t.text.Contains("voted no")), "Null was told it stays short");
 
@@ -294,6 +297,56 @@ namespace KryticalNova.Crossfire.Entities.Tests
                 Assert.AreEqual(CrossfirePhase.End, clock.Current.Now.Phase);
                 Assert.IsFalse(entry.LastPay.ContainsKey(rig.ServerGhosts[0]), "the leaver is not paid");
                 Assert.IsTrue(entry.LastPay.ContainsKey(rig.ServerGhosts[1]));
+            }
+        }
+
+        /// <summary>Owner, 16 Nov 2026: one real player starts a war; sides with nobody real are filled with War Bots, the real side votes.</summary>
+        [Test]
+        public void OneRealPlayer_StartsTheWar_TheEmptySidesAreFilled_TheRealSideVotes()
+        {
+            var bots = new FakeBots();
+            var (rig, clock, entry) = Start(new[] { FactionId.Hegemony });
+            WarBots.Fill = bots;
+            using (rig)
+            {
+                Port(rig, entry, 0, FactionId.Hegemony, true, "the one real player");
+                Settle(rig);
+                m_Now = Origin + 66;   // the Rally
+                Settle(rig);
+                Assert.AreEqual(CrossfirePhase.Muster, clock.Current.Now.Phase);
+                Assert.AreEqual(2, entry.SidesAutoFilled, "Null and Covenant, with nobody real, are filled at once");
+                Assert.AreEqual(33, bots.Count(FactionId.Null));
+                Assert.AreEqual(33, bots.Count(FactionId.Covenant));
+                Assert.AreEqual(1, entry.VotesSent, "Hegemony, the side with a real player, gets the vote");
+                Assert.AreEqual(0, bots.Count(FactionId.Hegemony), "and has no bots until it votes yes");
+                Assert.IsTrue(bots.Fills.TrueForAll(f => f.Bracket == 10), "bracket X");
+            }
+        }
+
+        /// <summary>Owner, 16 Nov 2026: a war left with no real player ends early and pays nobody (kills or not).</summary>
+        [Test]
+        public void AWarLeftWithNoRealPlayer_EndsEarly_AndPaysNobody()
+        {
+            var (rig, clock, entry) = Start(new[] { FactionId.Hegemony, FactionId.Null });
+            WarBots.Fill = null;
+            using (rig)
+            {
+                Port(rig, entry, 0, FactionId.Hegemony, true, "in");
+                Port(rig, entry, 1, FactionId.Null, true, "in");
+                Settle(rig);
+                m_Now = Origin + 80;   // the War
+                Settle(rig);
+                Assert.IsTrue(entry.RecordKill(rig.ServerGhosts[0], rig.ServerGhosts[1]), "a kill, so it is not the no-kills rule that holds the pay");
+                rig.Teleport(0, new int3(-60000, 0, -60000));
+                rig.Teleport(1, new int3(-55000, 0, -60000));
+                Settle(rig);
+                Assert.AreEqual(0, entry.Sides.Count, "everyone left");
+                Assert.AreEqual(CrossfirePhase.War, clock.Current.Now.Phase, "not yet: the grace time runs");
+                m_Now = Origin + 80 + m_Settings.endWithoutRealPlayersSeconds + 1;
+                Settle(rig);
+                Assert.AreEqual(1, entry.EndedEmpty);
+                Assert.AreEqual(CrossfirePhase.End, clock.Current.Now.Phase, "the war ended early");
+                Assert.AreEqual(0, entry.LastPay.Count, "nobody is paid");
             }
         }
 

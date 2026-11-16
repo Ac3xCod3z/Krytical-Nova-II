@@ -34,6 +34,7 @@ MonoBehaviour:
   tookBotsPlaceText: 'Crossfire: you take a War Bot''s place on your side.'
   voteSeconds: 20
   voteClosesBeforeGatesSeconds: 1
+  endWithoutRealPlayersSeconds: 15
   voteEyebrow: CROSSFIRE
   voteText: Your side has {real} of {cap} players. Fill it to {cap} with War Bots?
   votePassedText: 'Crossfire: your side voted yes. War Bots fill it to {cap}.'

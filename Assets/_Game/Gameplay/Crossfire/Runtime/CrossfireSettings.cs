@@ -60,6 +60,8 @@ namespace KryticalNova.Crossfire
         [Header("The War Bot vote of a short side (before the gates open)")]
         [Tooltip("Seconds a short side has to vote, from the Rally's start (it always closes a second before the gates open). Nobody answering is a no.")]
         [Min(1f)] public float voteSeconds = 20f;
+        [Tooltip("A war with real players that then has NONE for this many seconds (all left the war area or the game) ends at once and pays nobody (owner, 16 Nov 2026; the War Bots leave on their own then).")]
+        [Min(1f)] public float endWithoutRealPlayersSeconds = 15f;
         [Tooltip("The vote always closes at least this many seconds before the gates open, so the bots are in before the war.")]
         [Min(0f)] public float voteClosesBeforeGatesSeconds = 1f;
         [Tooltip("The small heading of the vote's accept / decline panel.")]

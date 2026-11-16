@@ -64,6 +64,12 @@ namespace KryticalNova.Crossfire.Entities
         readonly List<Entity> m_RealPlayers = new List<Entity>();
         System.Random m_Random = new System.Random();
         double m_VoteFor = double.NaN, m_VoteCloses, m_PaidFor = double.NaN;
+        // owner, 16 Nov 2026: the war that had real players, since when it has none, and a war ended early that pays nobody
+        double m_HadRealFor = double.NaN, m_EmptySince = double.NaN, m_NoPayFor = double.NaN;
+
+        /// <summary>Sides filled with War Bots because they had no real player to vote (tests); wars ended early with no real player (tests).</summary>
+        public int SidesAutoFilled { get; private set; }
+        public int EndedEmpty { get; private set; }
         bool m_VoteOpen;
         EntityQuery m_VoteAnswers, m_Connections;
 
@@ -345,6 +351,17 @@ namespace KryticalNova.Crossfire.Entities
         }
 
         /// <summary>The war's bracket, from its first real player: right while only one bracket (X) has a zone (one war at a time).</summary>
+        /// <summary>A side with no real player in a war that has one: War Bots fill it to the cap, no vote (owner, 16 Nov 2026).</summary>
+        void AutoFill(FactionId side, CrossfireSettings s)
+        {
+            if (!CrossfireArea.TryRallyPoint(side, out CrossfireArea yard)) return;   // a faction with no Rally Point here fights no war
+            var request = new WarBotRequest { Faction = side, Bracket = BracketOfWar(s), Count = s.capPerFaction - BotsOn(side) };
+            yard.Landing(out request.RallyAt, out request.RallyYaw);
+            m_RealPlayers.Clear();
+            foreach (KeyValuePair<Entity, FactionId> p in m_Sides.Players) m_RealPlayers.Add(p.Key);   // every real player of the war sets the bots' range
+            if (request.Count > 0 && Bots.Fill(request, m_RealPlayers) > 0) SidesAutoFilled++;
+        }
+
         int BracketOfWar(CrossfireSettings s)
         {
             foreach (KeyValuePair<Entity, FactionId> p in m_Sides.Players)
@@ -369,7 +386,23 @@ namespace KryticalNova.Crossfire.Entities
             CrossfirePhase phase = state.Now.Phase;
             double war = state.Now.WarStart;
 
-            // the vote opens with the Rally, for every short side
+            // a war with real players that is left with none ends now and pays nobody (owner, 16 Nov 2026)
+            if (m_Sides.Count > 0) { m_HadRealFor = war; m_EmptySince = double.NaN; }
+            else if (m_HadRealFor.Equals(war) && (phase == CrossfirePhase.Muster || phase == CrossfirePhase.War))
+            {
+                if (double.IsNaN(m_EmptySince)) m_EmptySince = now;
+                else if (now - m_EmptySince >= s.endWithoutRealPlayersSeconds)
+                {
+                    m_NoPayFor = war;
+                    m_EmptySince = double.NaN;
+                    EndedEmpty++;
+                    m_Clock.Run(CrossfireCommand.End);
+                    return;
+                }
+            }
+
+            // the Rally: ONE real player in any Rally Point starts the war (owner, 16 Nov 2026). Sides with real players vote on War Bots;
+            // sides with none are filled with them at once (nobody to ask), to the cap; real players and Mercs still take bots' places.
             if (phase == CrossfirePhase.Muster && !m_VoteFor.Equals(war))
             {
                 m_VoteFor = war;
@@ -380,6 +413,7 @@ namespace KryticalNova.Crossfire.Entities
                 m_VoteOpen = true;
                 foreach (FactionId side in CrossfireSides<Entity>.Factions)
                 {
+                    if (m_Sides.Count > 0 && Bots != null && m_Sides.Real(side) == 0) { AutoFill(side, s); continue; }
                     if (!CrossfireVote.Offered(m_Sides.Real(side), BotsOn(side), s.capPerFaction, Bots != null)) continue;
                     m_Votes[side] = (0, 0);
                     SendVote(side, s, war);
@@ -405,6 +439,7 @@ namespace KryticalNova.Crossfire.Entities
         {
             LastPay.Clear();
             LastGiven.Clear();
+            if (m_NoPayFor.Equals(m_PaidFor)) return;   // ended early with no real player left: nobody is paid
             // owner, 16 Nov 2026: a war with no kill on any side pays nothing to anyone (no farming by standing in a yard)
             int kills = 0;
             foreach (FactionId f in CrossfireSides<Entity>.Factions) kills += m_Sides.Kills(f);
