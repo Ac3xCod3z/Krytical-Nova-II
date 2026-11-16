@@ -297,6 +297,25 @@ namespace KryticalNova.Crossfire.Entities.Tests
             }
         }
 
+        /// <summary>Owner, 16 Nov 2026: a war that ends with no kill on any side pays nobody.</summary>
+        [Test]
+        public void AWarWithNoKills_PaysNobody()
+        {
+            var (rig, clock, entry) = Start(new[] { FactionId.Hegemony, FactionId.Null });
+            WarBots.Fill = null;
+            using (rig)
+            {
+                Port(rig, entry, 0, FactionId.Hegemony, true, "in");
+                Port(rig, entry, 1, FactionId.Null, true, "in");
+                Settle(rig);
+                m_Now = Origin + 136;   // the End, nobody killed anybody
+                Settle(rig);
+                Assert.AreEqual(CrossfirePhase.End, clock.Current.Now.Phase);
+                Assert.AreEqual(0, entry.LastPay.Count, "no EXP, no Creds for anyone");
+                Assert.AreEqual(2, entry.Told.FindAll(t => t.text == m_Settings.noKillsText).Count, "both told why");
+            }
+        }
+
         /// <summary>Review 1, item 4: a War Bot in a Rally Point is never admitted as a real player.</summary>
         [Test]
         public void AWarBot_IsNeverAdmittedAsARealPlayer()

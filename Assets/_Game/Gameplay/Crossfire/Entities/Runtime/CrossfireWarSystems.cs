@@ -404,6 +404,15 @@ namespace KryticalNova.Crossfire.Entities
         void Pay(CrossfireSettings s)
         {
             LastPay.Clear();
+            LastGiven.Clear();
+            // owner, 16 Nov 2026: a war with no kill on any side pays nothing to anyone (no farming by standing in a yard)
+            int kills = 0;
+            foreach (FactionId f in CrossfireSides<Entity>.Factions) kills += m_Sides.Kills(f);
+            if (kills == 0)
+            {
+                foreach (KeyValuePair<Entity, FactionId> p in m_Sides.Players) Tell(p.Key, s.noKillsText);
+                return;
+            }
             int bracket = BracketOfWar(s);
             string score = $"Hegemony {m_Sides.Kills(FactionId.Hegemony)}, Null {m_Sides.Kills(FactionId.Null)}, Covenant {m_Sides.Kills(FactionId.Covenant)}";
             foreach (KeyValuePair<Entity, FactionId> p in m_Sides.Players)
