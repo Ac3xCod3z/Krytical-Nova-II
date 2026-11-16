@@ -140,9 +140,56 @@ namespace KryticalNova.Crossfire.Entities
             m_Connections = GetEntityQuery(ComponentType.ReadOnly<NetworkId>(), ComponentType.ReadOnly<NetworkStreamInGame>());
             m_MercAnswers = GetEntityQuery(ComponentType.ReadOnly<CrossfireMercAnswerRpc>(), ComponentType.ReadOnly<ReceiveRpcCommandRequest>());
             CombatEntity.AnyKilled += OnAnyKilled;
+            m_RespawnNext = PlayerDeathMotor.ServerRespawnSpot;
+            m_RespawnHandler = RespawnInYard;
+            PlayerDeathMotor.ServerRespawnSpot = m_RespawnHandler;
         }
 
-        void DestroyWar() => CombatEntity.AnyKilled -= OnAnyKilled;
+        void DestroyWar()
+        {
+            CombatEntity.AnyKilled -= OnAnyKilled;
+            if (ReferenceEquals(PlayerDeathMotor.ServerRespawnSpot, m_RespawnHandler)) PlayerDeathMotor.ServerRespawnSpot = m_RespawnNext;
+            m_RespawnHandler = null;
+        }
+
+        PlayerDeathMotor.RespawnSpotHandler m_RespawnHandler, m_RespawnNext;
+        readonly Dictionary<FactionId, int> m_Respawns = new Dictionary<FactionId, int>();
+
+        /// <summary>Players and War Bots who got up in their own yard (tests).</summary>
+        public int RespawnsInYard { get; private set; }
+
+        /// <summary>The side a real player or a War Bot fights for in this war; false for anyone outside it.</summary>
+        bool WarSideOf(Entity ghost, out FactionId side)
+        {
+            if (m_Sides.TryGetSide(ghost, out side)) return true;
+            side = IsBot(ghost) ? Bots.SideOf(ghost) : FactionId.None;
+            return side != FactionId.None;
+        }
+
+        /// <summary>
+        /// Where a dead body gets up (owner, crossfire-plan "the dead come back in their own yard"): a player on a war side (a Merc: the side
+        /// they fight for) gets up on that side's Rally Point, inside the war area, so a death never costs their place or pay; a War Bot on its side's too. Any other body:
+        /// the next handler (another server world in tests), then the map's spawn points.
+        /// </summary>
+        bool RespawnInYard(GameObject body, out Vector3 position, out Quaternion rotation)
+        {
+            CrossfireSettings s = Settings;
+            if (s != null && TryGhostOf(body, out Entity ghost) && WarSideOf(ghost, out FactionId side)
+                && CrossfireArea.TryRallyPoint(side, out CrossfireArea yard))
+            {
+                m_Respawns.TryGetValue(side, out int n);
+                m_Respawns[side] = n + 1;
+                yard.RespawnSpot(n, s.respawnSpacing, s.respawnSpots, out position, out float yaw);
+                rotation = Quaternion.Euler(0f, yaw, 0f);
+                m_Arriving.Add(ghost);   // the teleport lands a tick later: never a leaver meanwhile
+                RespawnsInYard++;
+                return true;
+            }
+            if (m_RespawnNext != null) return m_RespawnNext(body, out position, out rotation);
+            position = default;
+            rotation = Quaternion.identity;
+            return false;
+        }
 
         CrossfireSettings Settings => m_Clock != null ? m_Clock.ActiveSettings : null;
         static IWarBotFill Bots => WarBots.Fill;
@@ -678,6 +725,7 @@ namespace KryticalNova.Crossfire.Entities
             foreach (Entity merc in m_Mercs) ApplyWarSide(merc, FactionId.None);   // every Merc is their home faction again
             m_Mercs.Clear();
             m_MercSide.Clear();
+            m_Respawns.Clear();
             m_MercInside.Clear();
             m_Offers.Clear();
             m_Declined.Clear();

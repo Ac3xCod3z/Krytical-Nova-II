@@ -57,6 +57,12 @@ namespace KryticalNova.Crossfire
         [Tooltip("Told to a real player who takes a War Bot's place on their side.")]
         [TextArea] public string tookBotsPlaceText = "Crossfire: you take a War Bot's place on your side.";
 
+        [Header("Respawn in the war (owner, 16 Nov 2026: the dead come back in their own yard)")]
+        [Tooltip("Metres between two of a side's dead who get up one after the other at their yard's respawn spot.")]
+        [Min(0f)] public float respawnSpacing = 1.2f;
+        [Tooltip("Spots of the respawn spread before it starts again at the centre (40 at 1.2 m: a disc of about 7.6 m).")]
+        [Min(1)] public int respawnSpots = 40;
+
         [Header("Mercs (owner, 16 Nov 2026): a full side's next player is offered a place on a short side")]
         [Tooltip("On: a real player refused by their full side is offered a Merc place on the shortest side (declining misses this war). Off: they are only refused.")]
         public bool offerMercs = true;

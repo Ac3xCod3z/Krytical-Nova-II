@@ -193,5 +193,18 @@ namespace KryticalNova.Crossfire
             string[] tens = { "", "X", "XX", "XXX" }, ones = { "", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX" };
             return bracket >= 40 ? bracket.ToString() : tens[bracket / 10] + ones[bracket % 10];
         }
+
+        /// <summary>
+        /// The offset (metres, flat) of the <paramref name="index"/>-th respawn from a yard's respawn spot: 0 is the spot itself, the rest a
+        /// sunflower spiral (each about <paramref name="spacing"/> metres from its neighbours), repeating every <paramref name="spots"/>.
+        /// </summary>
+        public static UnityEngine.Vector3 RespawnSpread(int index, float spacing, int spots)
+        {
+            if (spots < 1) spots = 1;
+            int n = ((index % spots) + spots) % spots;
+            if (n == 0) return UnityEngine.Vector3.zero;
+            double r = spacing * Math.Sqrt(n), a = n * 2.39996322972865332;   // the golden angle, radians
+            return new UnityEngine.Vector3((float)(r * Math.Cos(a)), 0f, (float)(r * Math.Sin(a)));
+        }
     }
 }

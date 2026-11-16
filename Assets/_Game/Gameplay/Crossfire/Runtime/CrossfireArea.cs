@@ -21,6 +21,8 @@ namespace KryticalNova.Crossfire
         public FactionId faction = FactionId.None;
         [Tooltip("A Muster Yard: where a player the Transit Row port sends lands, and the way they face (on the ground). Put it on the ground inside the box. Empty: the box's centre, facing as the box does.")]
         public Transform landing;
+        [Tooltip("A Muster Yard: where its side's dead get up during a war (the yard's shrine), on the ground inside the box. Empty: the landing.")]
+        public Transform respawn;
 
         static readonly List<CrossfireArea> s_All = new List<CrossfireArea>();
 
@@ -64,6 +66,18 @@ namespace KryticalNova.Crossfire
             Transform t = landing != null ? landing : transform;
             at = t.position;   // the centre is always inside the box, so the player counts as in the yard (a floor point would sit on its edge)
             yawDegrees = t.eulerAngles.y;
+        }
+
+        /// <summary>
+        /// Where the <paramref name="index"/>-th of this side's dead gets up (world, metres) and faces: the respawn spot (or the landing), each
+        /// next one a little apart on a ring so bodies do not stand in each other. Always inside the box, so the player is still in the war.
+        /// </summary>
+        public void RespawnSpot(int index, float spacing, int spots, out Vector3 at, out float yawDegrees)
+        {
+            Transform t = respawn != null ? respawn : (landing != null ? landing : transform);
+            at = t.position + CrossfireRules.RespawnSpread(index, spacing, spots);
+            yawDegrees = t.eulerAngles.y;
+            if (!Contains(at)) at = t.position;   // a spot near the box's edge: no spread rather than a spot outside the war
         }
 
         /// <summary>The Rally Point (Muster Yard) of <paramref name="faction"/> in the loaded maps; false when it has none.</summary>
