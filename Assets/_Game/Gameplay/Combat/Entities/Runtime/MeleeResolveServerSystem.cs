@@ -126,6 +126,7 @@ namespace KryticalNova.Combat.Entities
             EntityManager em = EntityManager;
             var collateral = new NativeList<int>(Allocator.Temp);
             bool poolBuilt = false;
+            m_FinderBuilt = false;   // perf round 4: the ghost id -> body map is made once per tick, on the first look-up
             foreach (GhostBodyEntry attacker in GhostBodyRegistry.Entries)
             {
                 if (!ReferenceEquals(attacker.World, World) || attacker.Body == null || !em.Exists(attacker.Ghost)
@@ -204,7 +205,90 @@ namespace KryticalNova.Combat.Entities
         /// <summary>Others struck by a swing at its target (tests).</summary>
         public int Collateral { get; private set; }
 
+        // ---- perf round 4 (moving 200 bots: this look-up was 25 ms of the server's frame) ----
+        // TryFind used to walk every player entry, then every target entry, with up to five EntityManager calls each, for every
+        // attacker on every tick (and again for each due swing). Now the same walk is made ONCE per tick into a map that keeps the
+        // FIRST entry for each ghost id (players before targets, registry order), which is the one the walk returned. A hit is
+        // checked again against the walk's own tests before it is used; a miss, or a hit that no longer passes (a body destroyed
+        // during the tick), is answered by the old walk itself, so every answer is the walk's.
+        /// <summary>The walk's answer for one ghost id: the body, and the registry entry it came from (to test it again).</summary>
+        struct Found
+        {
+            public Struck Struck;
+            public GhostBodyEntry Player;     // set for a player
+            public CombatTargetEntry Target;  // set for a non-player target
+        }
+
+        readonly System.Collections.Generic.Dictionary<int, Found> m_ByGhostId = new System.Collections.Generic.Dictionary<int, Found>();
+        bool m_FinderBuilt;
+        bool m_WalkOnly = HasArg("-knmelee-walk");
+
+        static bool HasArg(string arg)
+        {
+            foreach (string a in System.Environment.GetCommandLineArgs()) if (a == arg) return true;
+            return false;
+        }
+
+        /// <summary>Look-ups answered by the per-tick map, and by the old walk (tests, diagnostics).</summary>
+        public int FoundByMap { get; private set; }
+        public int FoundByWalk { get; private set; }
+        /// <summary>Editor and Development builds: map answers the walk disagreed with (must stay 0).</summary>
+        public int FinderMismatches { get; private set; }
+
+        void BuildFinder(EntityManager em)
+        {
+            m_ByGhostId.Clear();
+            foreach (GhostBodyEntry e in GhostBodyRegistry.Entries)
+                if (IsPlayerCandidate(em, e))
+                    m_ByGhostId.TryAdd(em.GetComponentData<GhostInstance>(e.Ghost).ghostId,
+                        new Found { Struck = new Struck { Body = e.Body, Ghost = e.Ghost, Proxy = HitProxy.Player }, Player = e });
+            foreach (CombatTargetEntry e in CombatTargetRegistry.Entries)
+                if (IsTargetCandidate(em, e))
+                    m_ByGhostId.TryAdd(em.GetComponentData<GhostInstance>(e.Ghost).ghostId,
+                        new Found { Struck = new Struck { Body = e.Body, Ghost = e.Ghost, Proxy = em.GetComponentData<CombatTarget>(e.Ghost).Proxy }, Target = e });
+            m_FinderBuilt = true;
+        }
+
+        // the walk's own tests, one entry at a time
+        bool IsPlayerCandidate(EntityManager em, GhostBodyEntry e) =>
+            ReferenceEquals(e.World, World) && e.Body != null && em.Exists(e.Ghost) && em.HasComponent<GhostInstance>(e.Ghost)
+            && em.HasComponent<PositionHistory>(e.Ghost);
+
+        bool IsTargetCandidate(EntityManager em, CombatTargetEntry e) =>
+            ReferenceEquals(e.World, World) && em.Exists(e.Ghost) && em.HasComponent<GhostInstance>(e.Ghost)
+            && em.HasComponent<PositionHistory>(e.Ghost) && em.HasComponent<CombatTarget>(e.Ghost);
+
+        /// <summary>The entry found when the map was made still passes the walk's tests, with the same ghost id.</summary>
+        bool StillMatches(EntityManager em, in Found f, int ghostId)
+        {
+            bool candidate = f.Player != null ? IsPlayerCandidate(em, f.Player) : f.Target != null && IsTargetCandidate(em, f.Target);
+            return candidate && em.GetComponentData<GhostInstance>(f.Struck.Ghost).ghostId == ghostId;
+        }
+
         bool TryFind(EntityManager em, int ghostId, out Struck found)
+        {
+            if (m_WalkOnly) { FoundByWalk++; return TryFindByWalk(em, ghostId, out found); }   // -knmelee-walk: the old way (before/after)
+            if (!m_FinderBuilt) BuildFinder(em);
+            if (m_ByGhostId.TryGetValue(ghostId, out Found f) && StillMatches(em, f, ghostId))
+            {
+                found = f.Struck;
+                FoundByMap++;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                // every test and every Development run checks the map against the walk it replaces
+                if (!TryFindByWalk(em, ghostId, out Struck walked) || walked.Ghost != found.Ghost || walked.Body != found.Body)
+                {
+                    FinderMismatches++;
+                    Debug.LogError($"[MeleeResolve] the ghost map found {found.Ghost} for ghost id {ghostId}, the walk {walked.Ghost}");
+                }
+#endif
+                return true;
+            }
+            FoundByWalk++;
+            return TryFindByWalk(em, ghostId, out found);
+        }
+
+        /// <summary>The old look-up, unchanged: every player entry, then every target entry.</summary>
+        bool TryFindByWalk(EntityManager em, int ghostId, out Struck found)
         {
             foreach (GhostBodyEntry e in GhostBodyRegistry.Entries)
                 if (ReferenceEquals(e.World, World) && e.Body != null && em.Exists(e.Ghost) && em.HasComponent<GhostInstance>(e.Ghost)
