@@ -151,6 +151,13 @@ this by itself (you see "publishing again in a fresh Unity" in the console); a b
 Editor window the scripts reload and you run the build again. The server's scene copy is decided by the build's own
 report (never the Editor's remembered subtarget), so a stuck Server subtarget cannot strip a game's scene.
 
+A stuck Server subtarget also breaks a **batch server build** in a shared checkout (16 Nov 2026, b18-19): after a server
+build that crashed or was killed, the next `ServerBuildBuilder.BuildEntityServerBatch` stopped with "Scripts have compiler
+errors" in Editor tests (`ClientViewTests`, `BodyIsMineWorldTests`: `PlayerBodyRequest` / `IPlayerBodyFactory` not found),
+because the Editor compiled as a server, where the presentation assemblies are left out. Fix: one batch run
+`-batchmode -quit -buildTarget Win64 -standaloneBuildSubtarget Player` on that checkout first, then build again; then
+`git checkout -- ProjectSettings/ProjectSettings.asset`. A build script that kills its own Unity must run that restore itself.
+
 ## 1a-3. The bundle audit: no map may ship with more switched off than its scene (31 Oct 2026)
 
 After the game is built and **before anything is staged or uploaded to TEST**, `BundleAuditGate` opens every built map bundle
@@ -391,3 +398,5 @@ good again.
 - 16 Nov 2026: before build 18: the server step no longer stops when the NGO `certificates` folder is gone; it uses the
   release server's own copy or the newest `Documents\KryticalNova-Backups\*\certificates` (Server Guide 13c). The news
   gate's headings are New / Changed / Fixed; a build with no new feature may leave New out.
+- 16 Nov 2026: section 1a-2: a crashed or killed server build leaves a shared checkout on Server, and the next batch
+  server build fails on Editor-test compile errors; one Player-subtarget batch run fixes it (perf-coder-9).
