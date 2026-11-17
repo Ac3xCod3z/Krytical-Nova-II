@@ -35,8 +35,9 @@ namespace KryticalNova.WarBots.Entities.Tests
         const string GhostSubScenePath = "Assets/_Game/Gameplay/Player/Entities/Scenes/PlayerGhostPrefabs.unity";   // the real one, as StrikeDummyTests
         const int MaxFightTicks = 5400;   // 3 minutes of game time at 30 Hz
         static readonly Vector3 Centre = new Vector3(900f, 0f, 900f);   // away from anything the scene has
-        static readonly Vector3 HegemonyRally = Centre + new Vector3(-14f, 0f, 0f);
-        static readonly Vector3 NullRally = Centre + new Vector3(14f, 0f, 0f);
+        // 100 m apart, beyond a bot's sight (60 m), as the Crucible's yards are: the bots must hunt each other down (Master, 17 Nov 2026)
+        static readonly Vector3 HegemonyRally = Centre + new Vector3(-50f, 0f, 0f);
+        static readonly Vector3 NullRally = Centre + new Vector3(50f, 0f, 0f);
 
         [UnityTest]
         public IEnumerator ThirtyTwoBotsASide_ComeInAtTheirRallyPoint_FightAndKill_AndAllLeaveAtTheWarsEnd()
@@ -51,7 +52,7 @@ namespace KryticalNova.WarBots.Entities.Tests
             KnTestWorld tw = null;
             WarBotServerSystem bots = null;
             var killsBy = new Dictionary<FactionId, int> { [FactionId.Hegemony] = 0, [FactionId.Null] = 0 };
-            int anyKilled = 0, deaths = 0;
+            int anyKilled = 0, deaths = 0, botsKilled = 0;
             System.Action<CombatEntity, KillingBlow> onKill = null;
             try
             {
@@ -144,6 +145,7 @@ namespace KryticalNova.WarBots.Entities.Tests
                     FactionId killer = SideOfBody(bots, tw.Server, blow.Attacker != null ? blow.Attacker.gameObject : null);
                     FactionId dead = SideOfBody(bots, tw.Server, victim != null ? victim.gameObject : null);
                     if (killer != FactionId.None && dead != FactionId.None && killer != dead) killsBy[killer]++;
+                    if (dead != FactionId.None) botsKilled++;   // a bot's death, as the game reports it (the loop stops before it sees the body down)
                 };
                 CombatEntity.AnyKilled += onKill;
                 var wasDead = new HashSet<Entity>();
@@ -186,6 +188,7 @@ namespace KryticalNova.WarBots.Entities.Tests
                     if (lost > 0f) hurt++;
                     lines.Append($" {side}:{away:0}m/t{target}/-{lost:P0}");
                 }
+                Debug.Log($"[WarBotsRealWar] the bots chose: {Join(bots.Plans)}; casts refused: {Join(bots.Refusals)}");
                 Debug.Log($"[WarBotsRealWar] per bot (side:metres from yard/target ghost/health lost): moved {moved}, targeting {targeting}, hurt {hurt};{lines}");
 
                 // no real player in the war (the client has no body): past the grace every bot goes home, through the game's leave
@@ -193,7 +196,7 @@ namespace KryticalNova.WarBots.Entities.Tests
                 int homeTicks = tw.TickUntil(() => bots.Live == 0, 120);
                 for (int i = 0; i < 10; i++) { tw.Tick(1); yield return null; }
                 Debug.Log($"[WarBotsRealWar] after the guard: live {bots.Live}, removed {bots.Removed}, went home alone {bots.WentHomeAlone} (in {homeTicks} ticks)");
-                Assert.Greater(deaths, 0, $"a bot died in {ticks} ticks (kill events {anyKilled})");
+                Assert.Greater(deaths + botsKilled, 0, $"a bot died in {ticks} ticks (kill events {anyKilled}, bots killed {botsKilled}, bodies seen down {deaths})");
                 Assert.Greater(score, 0, $"a kill counted for the killer's side, as Crossfire scores it (kill events {anyKilled}, bot deaths {deaths})");
                 Assert.AreEqual(1, bots.WentHomeAlone, "no real player left: the bots went home on their own");
                 Assert.AreEqual(0, bots.Live, "no bot is left");
@@ -230,6 +233,13 @@ namespace KryticalNova.WarBots.Entities.Tests
             if (!em.HasComponent<PlayerVitals>(ghost)) return false;
             PlayerVitals v = em.GetComponentData<PlayerVitals>(ghost);
             return v.MaxHealthMilli != 0 && v.HealthMilli <= 0;
+        }
+
+        static string Join(IReadOnlyDictionary<string, int> d)
+        {
+            var sb = new System.Text.StringBuilder();
+            foreach (KeyValuePair<string, int> kv in d) sb.Append(sb.Length > 0 ? ", " : "").Append(kv.Key).Append(' ').Append(kv.Value);
+            return sb.Length > 0 ? sb.ToString() : "none";
         }
 
         static FactionId SideOfBody(WarBotServerSystem bots, Unity.Entities.World server, GameObject body)

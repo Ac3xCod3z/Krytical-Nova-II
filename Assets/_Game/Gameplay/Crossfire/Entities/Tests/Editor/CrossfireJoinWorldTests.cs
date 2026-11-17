@@ -108,14 +108,15 @@ namespace KryticalNova.Crossfire.Entities.Tests
             {
                 Entity a = rig.ServerGhosts[0];
                 low = rig.ServerGhosts[2];
-                Settle(rig);   // the Gap
+                Settle(rig);
+                int before = entry.PromptsSent;   // the clock's own next war may already be calling here: only the GM's war is counted
                 Assert.IsTrue(clock.Run(CrossfireCommand.StartNow), "gm.crossfire start: straight into the Rally, the join window never runs");
                 Settle(rig);
                 Assert.AreEqual(CrossfirePhase.Muster, clock.Current.Now.Phase);
-                Assert.AreEqual(2, entry.PromptsSent, "the bracket's two players are asked in the Rally, not the level-5 one");
+                Assert.AreEqual(before + 2, entry.PromptsSent, "the bracket's two players are asked in the Rally, not the level-5 one");
                 m_Now += 1;
                 Settle(rig);
-                Assert.AreEqual(2, entry.PromptsSent, "once a war");
+                Assert.AreEqual(before + 2, entry.PromptsSent, "once a war");
                 Assert.IsTrue(entry.AnswerPrompt(a, true));
                 Settle(rig);
                 Assert.IsTrue(CrossfireArea.TryRallyPoint(FactionId.Hegemony, out CrossfireArea yard) && yard.Contains(Meters(rig.ServerPose(0))), "yes lands A on Hegemony's Rally Point");

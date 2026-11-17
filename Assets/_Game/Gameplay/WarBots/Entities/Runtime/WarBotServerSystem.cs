@@ -62,6 +62,7 @@ namespace KryticalNova.WarBots.Entities
             public Action<BodyChatLine> Heard;
             // the fight
             public double NextStimAt;
+            public double NoBuffUntil;
             public double NextThink, ReactAt, NextSkillAt, LastSaid = double.MinValue, LastEmote = double.MinValue, NextPartyTry;
             public WarBotAct PendingAct;
             public int PendingTarget;
@@ -404,6 +405,7 @@ namespace KryticalNova.WarBots.Entities
                 try { Think(b, s); }
                 catch (Exception e) { Debug.LogException(e); }
             }
+            LogNow(s);
         }
 
         /// <summary>Real players (not bots) with a body in the war area, or anywhere on a map with no areas.</summary>
@@ -488,7 +490,7 @@ namespace KryticalNova.WarBots.Entities
             if (!GatesOpen())
             {
                 // the Rally: the gates are shut, everyone waits in the yard (a bot puts its buffs on, as a player would)
-                if (s.buffBetweenFights && TryReadyBuff(b, out SkillDefinitionSO waitBuff)) Server()?.ServerCast(b.Body, waitBuff.skillId, 0, out _);
+                if (s.buffBetweenFights && TryReadyBuff(b, out SkillDefinitionSO waitBuff)) CastBuff(b, waitBuff, s);
                 return;
             }
 
@@ -513,6 +515,7 @@ namespace KryticalNova.WarBots.Entities
             FillLeader(b, ref view);
 
             WarBotPlan plan = WarBotRules.Decide(view, m_Seen, s, b.Rng.NextDouble());
+            Count(m_Plans, plan.Act == WarBotAct.Wait ? "wait" : plan.Act + (plan.Why != null ? " (" + plan.Why + ")" : ""));
             b.Target = combat.TargetGhostId;
             if (plan.Act != WarBotAct.Retreat && b.Retreating && health >= s.returnHealth) b.Retreating = false;
             if (plan.Act == WarBotAct.Wait) { b.PendingAct = WarBotAct.Wait; return; }
@@ -549,7 +552,7 @@ namespace KryticalNova.WarBots.Entities
                     CastNextSkill(b, plan.TargetGhostId, s);
                     break;
                 case WarBotAct.Buff:
-                    if (TryReadyBuff(b, out SkillDefinitionSO buff)) Server()?.ServerCast(b.Body, buff.skillId, 0, out _);
+                    if (TryReadyBuff(b, out SkillDefinitionSO buff)) CastBuff(b, buff, s);
                     b.PendingAct = WarBotAct.Wait;
                     break;
                 case WarBotAct.Stim:
@@ -585,7 +588,8 @@ namespace KryticalNova.WarBots.Entities
             IBeatClock clock = BeatClock.Current;
             if (tryCombo && b.Cadence != null && clock != null && clock.HasBeat && clock.TryBeatAt(clock.Now, out _, out double fromBeat, out _))
                 b.Cadence.ServerNotePressFromView(skill.skillId, clock.Now - fromBeat + WarBotRules.BeatError(s, b.Profile.Skill, b.Rng.NextDouble()));
-            if (Server()?.ServerCast(b.Body, skill.skillId, target, out _) == true) b.LastHits = Mathf.Max(1, skill.hitCount);
+            if (Server()?.ServerCast(b.Body, skill.skillId, target, out string refused) == true) b.LastHits = Mathf.Max(1, skill.hitCount);
+            else Count(m_Refusals, "attack: " + (refused ?? "no server"));
             b.NextSkillAt = m_Now + Mathf.Lerp(s.skillGapMinSeconds, s.skillGapMaxSeconds, (float)b.Rng.NextDouble());
         }
 
@@ -759,10 +763,45 @@ namespace KryticalNova.WarBots.Entities
             return m_Ready.Count > 0;
         }
 
+        /// <summary>A buff cast; one the game refuses is left alone for <see cref="WarBotSettings.buffRetrySeconds"/>, so the bot fights instead.</summary>
+        void CastBuff(Bot b, SkillDefinitionSO buff, WarBotSettings s)
+        {
+            if (Server()?.ServerCast(b.Body, buff.skillId, 0, out string refused) == true) return;
+            b.NoBuffUntil = m_Now + s.buffRetrySeconds;
+            Count(m_Refusals, "buff: " + (refused ?? "no server"));
+        }
+
+        // what the bots chose and why the game refused their casts, counted for the server log (and tests)
+        readonly Dictionary<string, int> m_Plans = new Dictionary<string, int>(), m_Refusals = new Dictionary<string, int>();
+        double m_NextLog;
+        /// <summary>The plans the bots chose since the last log line (tests read it).</summary>
+        public IReadOnlyDictionary<string, int> Plans => m_Plans;
+        /// <summary>The casts the game refused since the last log line, by reason (tests read it).</summary>
+        public IReadOnlyDictionary<string, int> Refusals => m_Refusals;
+
+        static void Count(Dictionary<string, int> into, string key) { into.TryGetValue(key, out int n); into[key] = n + 1; }
+
+        static string Line(Dictionary<string, int> d)
+        {
+            if (d.Count == 0) return "none";
+            var sb = new System.Text.StringBuilder();
+            foreach (KeyValuePair<string, int> kv in d) sb.Append(sb.Length > 0 ? ", " : "").Append(kv.Key).Append(' ').Append(kv.Value);
+            return sb.ToString();
+        }
+
+        void LogNow(WarBotSettings s)
+        {
+            if (s.logEverySeconds <= 0f || m_Now < m_NextLog) return;
+            m_NextLog = m_Now + s.logEverySeconds;
+            Debug.Log($"[WarBots] {m_Bots.Count} bots, gates {(GatesOpen() ? "open" : "shut")}, {m_Seen.Count} seen; chose: {Line(m_Plans)}; refused: {Line(m_Refusals)}");
+            m_Plans.Clear();
+            m_Refusals.Clear();
+        }
+
         bool TryReadyBuff(Bot b, out SkillDefinitionSO buff)
         {
             buff = null;
-            if (b.Skills == null || b.Buffs == null || b.Skills.AvailableSkills == null) return false;
+            if (b.Skills == null || b.Buffs == null || b.Skills.AvailableSkills == null || m_Now < b.NoBuffUntil) return false;
             foreach (SkillDefinitionSO k in b.Skills.AvailableSkills)
             {
                 if (k == null || k.IsAttack || k.duration <= 0f || !b.Skills.IsLearned(k) || b.Skills.IsLocked(k) || b.Skills.IsOnCooldown(k)) continue;

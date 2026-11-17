@@ -80,6 +80,10 @@ namespace KryticalNova.WarBots
         [Min(0f)] public float firstSkillAfterSeconds = 2f;
         [Tooltip("With no enemy in sight, a bot puts on a buff it does not have when one is ready. A support bot also does it in a fight, first.")]
         public bool buffBetweenFights = true;
+        [Tooltip("Seconds a bot leaves a buff alone after the game refused to cast it (no Flux, a cooldown it cannot see...), so it never stands buffing forever instead of fighting.")]
+        [Min(0.5f)] public float buffRetrySeconds = 8f;
+        [Tooltip("Seconds between two lines in the server log that count what the War Bots chose and why casts were refused (0: never).")]
+        [Min(0f)] public float logEverySeconds = 10f;
 
         [Header("Cadence (the combo system: 1-hit, 2-hit, 3-hit skill, each on the beat)")]
         [Tooltip("How far from the beat (seconds, either way) the best bot presses; the window is the game's own (CadenceSettings).")]
