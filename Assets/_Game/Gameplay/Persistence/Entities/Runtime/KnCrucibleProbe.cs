@@ -319,25 +319,42 @@ namespace KryticalNova.Persistence.Entities
                 Log($"WAR the Tester at {serverPosition():F1} before the war");
                 Gm("gm.crossfire status");
                 Gm("gm.crossfire start");
-                // walk the clock to the join window (the prompts), then to the War; at most 6 steps
+                // a GM's war skips the join window (no join prompt): the Tester joins at the Marshal while the Muster takes players
+                // (KryticalNova.Crossfire.CrossfireJoinLink.Requester, reached by name: this Editor probe takes no reference to Crossfire),
+                // votes yes for War Bots in the yard, and the Muster runs on to the War by itself (the gates open on the clock)
+                yield return new WaitForSeconds(2f);
+                var link = Type.GetType("KryticalNova.Crossfire.CrossfireJoinLink, KryticalNova.Crossfire");
+                var requester = link?.GetField("Requester")?.GetValue(null) as Action;
+                Log(requester != null ? "WAR asking to join at the Marshal" : "WAR FAIL: no CrossfireJoinLink.Requester (no client join system?)");
+                requester?.Invoke();
                 string status = "";
-                for (int step = 0; step < 6; step++)
+                float m0 = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - m0 < 90f)
                 {
-                    float t0 = Time.realtimeSinceStartup;
-                    while (Time.realtimeSinceStartup - t0 < 6f) { yes.Tick(); yield return null; }
-                    status = Gm("gm.crossfire status");
-                    if (status.Contains("War,")) break;
-                    Gm("gm.crossfire skip");
+                    yes.Tick();
+                    yield return null;
+                    if (Time.realtimeSinceStartup - m0 > 6f && root.InverseTransformPoint(serverPosition()).sqrMagnitude < 250f * 250f && !s_ShotOn)
+                    {
+                        // in the yard: film the Hegemony gate from the rim from now on (the leaves slide when the War starts)
+                        s_ShotPos = root.TransformPoint(new Vector3(96f, 14f, -14f));
+                        s_ShotRot = Quaternion.LookRotation(root.TransformPoint(new Vector3(135f, 0f, 0f)) - s_ShotPos);
+                        s_ShotOn = true;
+                        Log($"WAR the Tester is in the Crucible at local {root.InverseTransformPoint(serverPosition()):F1}; SEGMENT wargate start frame {Time.frameCount}");
+                    }
+                    if (Time.frameCount % 120 == 0) { status = Gm("gm.crossfire status"); if (status.Contains("War,")) break; }
                 }
                 Vector3 inWar = root.InverseTransformPoint(serverPosition());
                 Log($"WAR phase: {status}; prompts shown {yes.Shown}; the Tester stands at local {inWar:F1}");
                 bool atCrucible = Mathf.Abs(inWar.x) < 200f && Mathf.Abs(inWar.z) < 200f;
                 if (!atCrucible) Log("WAR FAIL: the Tester is not in the Crucible (join prompt not taken?)");
                 // the gate from the rim, high, looking into the Hegemony yard: the leaves slide and the side streams out
-                s_ShotPos = root.TransformPoint(new Vector3(96f, 14f, -14f));
-                s_ShotRot = Quaternion.LookRotation(root.TransformPoint(new Vector3(135f, 0f, 0f)) - s_ShotPos);
-                s_ShotOn = true;
-                Log($"SEGMENT wargate start frame {Time.frameCount}");
+                if (!s_ShotOn)
+                {
+                    s_ShotPos = root.TransformPoint(new Vector3(96f, 14f, -14f));
+                    s_ShotRot = Quaternion.LookRotation(root.TransformPoint(new Vector3(135f, 0f, 0f)) - s_ShotPos);
+                    s_ShotOn = true;
+                    Log($"SEGMENT wargate start frame {Time.frameCount}");
+                }
                 float g0 = Time.realtimeSinceStartup;
                 while (Time.realtimeSinceStartup - g0 < 12f) { yes.Tick(); yield return null; }
                 Log($"SEGMENT wargate end frame {Time.frameCount}");
@@ -362,7 +379,7 @@ namespace KryticalNova.Persistence.Entities
                 }
                 Log($"SEGMENT wardeath end frame {Time.frameCount}");
                 Vector3 after = root.InverseTransformPoint(serverPosition());
-                Transform shrine = root.GetComponentsInChildren<Transform>(true).Where(t => t.name.IndexOf("shrine", StringComparison.OrdinalIgnoreCase) >= 0)
+                Transform shrine = root.GetComponentsInChildren<Transform>(true).Where(t => t.name.StartsWith("MARK_RespawnStand", StringComparison.OrdinalIgnoreCase) || t.name.StartsWith("MARK_RespawnShrine", StringComparison.OrdinalIgnoreCase) || (t.name.IndexOf("shrine", StringComparison.OrdinalIgnoreCase) >= 0 && !t.name.StartsWith("UCX_")))
                     .OrderBy(t => (root.InverseTransformPoint(t.position) - after).sqrMagnitude).FirstOrDefault();
                 Log($"WAR death: before {before:F1}, after {after:F1}; the nearest shrine marker is " +
                     (shrine != null ? $"'{shrine.name}' at {root.InverseTransformPoint(shrine.position):F1} ({Vector3.Distance(root.InverseTransformPoint(shrine.position), after):F1} m away)" : "none"));
