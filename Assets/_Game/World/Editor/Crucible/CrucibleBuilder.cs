@@ -266,6 +266,8 @@ namespace KryticalNova.EditorTools.Crucible
             var flags = sky ? 0 : StaticEditorFlags.ContributeGI | StaticEditorFlags.OccluderStatic | StaticEditorFlags.OccludeeStatic |
                                  StaticEditorFlags.ReflectionProbeStatic;
             foreach (Transform t in go.GetComponentsInChildren<Transform>(true)) GameObjectUtility.SetStaticEditorFlags(t.gameObject, flags);
+            // GI from the probes, never lightmaps (LightingSetup's rule; light run 13: lightmapping 2,384 pieces ran the PC out of memory)
+            foreach (MeshRenderer r in go.GetComponentsInChildren<MeshRenderer>(true)) r.receiveGI = ReceiveGI.LightProbes;
             if (sky)
                 foreach (Renderer r in go.GetComponentsInChildren<Renderer>(true))
                 {
