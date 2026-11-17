@@ -61,9 +61,13 @@ Shader "KN/Crucible Sky Dome"
 
             half4 frag(Varyings i) : SV_Target
             {
-                half3 sky = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv).rgb * _Exposure;
                 float t = _Time.y;
                 float3 d = normalize(i.positionWS - _WorldSpaceCameraPos);
+                // the painting is an equirect seen from the heart: its UV comes from the view direction, as a skybox's does
+                // (Play proofs 17 Nov 2026: the dome mesh's own UVs drew one flat colour, no aurora and no stars), so it sits
+                // at infinity and needs no mesh UVs; mip 0, so the wrap at the back makes no seam line
+                i.uv = TRANSFORM_TEX(float2(atan2(d.x, d.z) * 0.15915494 + 0.5, asin(clamp(d.y, -1.0, 1.0)) * 0.31830989 + 0.5), _MainTex);
+                half3 sky = SAMPLE_TEXTURE2D_LOD(_MainTex, sampler_MainTex, i.uv, 0).rgb * _Exposure;
 
                 // live aurora: only the saturated green / violet curtains in the band are pushed, by drifting vertical streaks
                 half band = smoothstep(_AuroraBand.x, _AuroraBand.x + 0.05, i.uv.y) * (1.0 - smoothstep(_AuroraBand.y - 0.08, _AuroraBand.y, i.uv.y));
