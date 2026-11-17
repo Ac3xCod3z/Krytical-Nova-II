@@ -92,8 +92,11 @@ Run on the approved blend: `lava_paths.py` (system Python) then `unity_data_pass
   1 m flat lip at the head; stairs and their side walls cut out of the Wallstride faces (like SurfaceGraphBuilder's ConcordStairFootprints).
 - **GATES_0NN.json**: each faction leaf its own object, origin at the bottom centre of its closed place, slide axis/open position, a parented
   kinematic collider; they open when Crossfire starts.
-- **WALLSTRIDE_0NN.json**: clean flat wall faces (4 m+), playable side only, stairs cut out. **Blockers** (`Blockers_For_Unity`): invisible boxes
-  from every outer wall top to 40 m, plus the sealed gate.
+- **WALLSTRIDE_0NN.json**: clean flat wall faces (4 m+), playable side only, stairs cut out. **Blockers** (`Blockers_For_Unity`, owner:
+  nobody jumps out anywhere): invisible boxes from every outer wall top to 40 m, each run 2 m past both ends so corners overlap, one over
+  every corner tower, one over the sealed gate. Check `Colliders_0NN.jpg` (blockers drawn on top): the red line must close round the whole
+  outer square, the sealed yard and every yard back with no gap.
+- Haze is intended only on the main cracks (16 m cells with 4 m+ of lava); the thin outer cracks just glow (performance). Say so in the FX list.
 - **Sky**: no skybox - an unlit aurora **sky dome R 500 m**, far peaks (330-410 m, 95-190 m tall, no lava seams on them) and near crags as
   low-poly rock with the relief maps, a far outer floor ring in the concept's ground style. Camera far clip >= 600 m.
 - **STATS / OPTIMISATION-REPORT**: tris per collection, objects, materials, draw estimate, texture memory (8K vs 2K), file sizes; decimation
