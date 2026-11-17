@@ -57,10 +57,12 @@ namespace KryticalNova.EditorTools.Crucible
         static int Route(string name, Vector3 from, Vector3 to, int solid, StringBuilder log)
         {
             var path = new NavMeshPath();
-            if (!NavMesh.SamplePosition(from, out NavMeshHit a, 3f, NavMesh.AllAreas) || !NavMesh.SamplePosition(to, out NavMeshHit b, 3f, NavMesh.AllAreas)
-                || !NavMesh.CalculatePath(a.position, b.position, NavMesh.AllAreas, path) || path.status != NavMeshPathStatus.PathComplete)
+            bool sa = NavMesh.SamplePosition(from, out NavMeshHit a, 3f, NavMesh.AllAreas), sb = NavMesh.SamplePosition(to, out NavMeshHit b, 3f, NavMesh.AllAreas);
+            if (!sa || !sb) { log.AppendLine($"  FAIL {name}: no NavMesh within 3 m of the {(sa ? "end" : "start")} ({(sa ? to : from)})"); return 1; }
+            if (!NavMesh.CalculatePath(a.position, b.position, NavMesh.AllAreas, path) || path.status != NavMeshPathStatus.PathComplete)
             {
-                log.AppendLine($"  FAIL {name}: no complete NavMesh path ({path.status})");
+                Vector3 last = path.corners.Length > 0 ? path.corners[path.corners.Length - 1] : a.position;
+                log.AppendLine($"  FAIL {name}: no complete NavMesh path ({path.status}), stops at {last}");
                 return 1;
             }
             int walls = 0, high = 0, noGround = 0;

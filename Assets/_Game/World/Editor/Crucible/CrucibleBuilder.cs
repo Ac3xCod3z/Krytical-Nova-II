@@ -72,6 +72,7 @@ namespace KryticalNova.EditorTools.Crucible
             {
                 Transform art = Child(root.transform, "Art");
                 var placed = new Dictionary<string, GameObject>();
+                ChooseCustomMeshFix(data, meshes, log);
                 PlaceArt(data, art, mats, meshes, placed, log);
                 PlaceColliders(data, Child(root.transform, "Colliders"), meshes, placed, log);
                 PlaceBlockers(data, Child(root.transform, "Blockers"), log);
@@ -167,6 +168,53 @@ namespace KryticalNova.EditorTools.Crucible
             }
             log.AppendLine($"Art: {synty} Synty placements, {custom} custom/layout pieces, {missing} missing, {matMisses} with a material not found.");
             if (missingNames.Count > 0) log.AppendLine("  missing: " + string.Join(", ", missingNames.Take(20)));
+        }
+
+
+        /// <summary>
+        /// Which turn (and mirror) takes the FBX's imported vertices into the converted frame: every candidate is scored against each
+        /// custom piece's Blender world box (centre and size); the best wins. Runs 4-5 proved the importer's frame is not the textbook
+        /// one, so it is measured, not assumed. A mirrored winner cannot be placed with a plain transform and is reported as FAIL.
+        /// </summary>
+        static void ChooseCustomMeshFix(CrucibleData data, Dictionary<string, Mesh> meshes, StringBuilder log)
+        {
+            var candidates = new System.Collections.Generic.List<(string name, Matrix4x4 m)>();
+            foreach (var r in new[] { (-90f, 0f), (90f, 0f), (-90f, 180f), (90f, 180f), (0f, 0f), (0f, 180f) })
+            {
+                Matrix4x4 rot = Matrix4x4.Rotate(Quaternion.Euler(r.Item1, r.Item2, 0f));
+                candidates.Add(($"rot({r.Item1},{r.Item2},0)", rot));
+                candidates.Add(($"rot({r.Item1},{r.Item2},0)+mirrorX", rot * Matrix4x4.Scale(new Vector3(-1f, 1f, 1f))));
+            }
+            double best = double.MaxValue; string bestName = null; Matrix4x4 bestM = Matrix4x4.identity;
+            foreach (var c in candidates)
+            {
+                double err = 0; int n = 0;
+                foreach (JObject o in data.Objects)
+                {
+                    string kind = (string)o["kind"], name = (string)o["name"];
+                    if ((kind != "custom" && kind != "layout") || name.StartsWith("UCX_") || !data.Centres.TryGetValue(name, out float[] ce)) continue;
+                    if (!meshes.TryGetValue((string)o["mesh"], out Mesh mesh) && !meshes.TryGetValue(StripSuffix((string)o["mesh"]), out mesh)) continue;
+                    if (!data.TryUnityMatrix(name, Vector3.zero, out Matrix4x4 u)) continue;
+                    Bounds wb = WorldBounds(u * c.m, mesh.bounds);
+                    Vector3 wantC = CrucibleData.ToUnity(new Vector3(ce[0], ce[1], ce[2]));
+                    Vector3 wantS = CrucibleData.SizeToUnity(CrucibleData.V(o["size_m"]));
+                    err += (wb.center - wantC).magnitude + (wb.size - wantS).magnitude;
+                    n++;
+                }
+                if (n > 0 && err < best) { best = err; bestName = c.name; bestM = c.m; }
+            }
+            CrucibleData.CustomMeshFix = bestM;
+            bool mirrored = bestM.determinant < 0f;
+            log.AppendLine($"Custom mesh frame: {bestName} (mean error {best / Mathf.Max(1, data.Objects.Count(x => (string)x["kind"] == "custom")):F3} m){(mirrored ? " FAIL: mirrored" : "")}.");
+        }
+
+        static Bounds WorldBounds(Matrix4x4 m, Bounds local)
+        {
+            var b = new Bounds(m.MultiplyPoint3x4(local.center), Vector3.zero);
+            Vector3 e = local.extents;
+            for (int i = 0; i < 8; i++)
+                b.Encapsulate(m.MultiplyPoint3x4(local.center + new Vector3((i & 1) == 0 ? -e.x : e.x, (i & 2) == 0 ? -e.y : e.y, (i & 4) == 0 ? -e.z : e.z)));
+            return b;
         }
 
         static GameObject SyntyPrefab(string pack, string prefab, Dictionary<string, GameObject> cache)
@@ -630,6 +678,11 @@ namespace KryticalNova.EditorTools.Crucible
                 foreach (Renderer r in rs) b.Encapsulate(r.bounds);
                 Vector3 want = CrucibleData.SizeToUnity(CrucibleData.V(o["size_m"]));
                 Vector3 d = b.size - want;
+                if (data.Centres.TryGetValue((string)o["name"], out float[] ce))
+                {
+                    Vector3 off = b.center - CrucibleData.ToUnity(new Vector3(ce[0], ce[1], ce[2]));
+                    if (off.magnitude > 0.05f * want.magnitude + 0.1f) d += off * 10f;   // a flipped or shifted piece fails like a wrong size
+                }
                 float tol = 0.05f * want.magnitude + 0.05f;
                 checkedCount++;
                 if (d.magnitude > tol)

@@ -23,6 +23,8 @@ namespace KryticalNova.EditorTools.Crucible
         public JArray Objects, Materials, Boxes, ConvexHulls, GroundMeshes, Blockers, Flights, Gates, WallFaces, Lights, LavaPaths, HazeBoxes;
         public JArray EmberPoints, SmokePoints, StairSideWalls, WallFacesCutByStairs;
         public Dictionary<string, float[]> Matrices = new Dictionary<string, float[]>();
+        /// <summary>World box centres from Blender (Blender axes), for the placement check.</summary>
+        public Dictionary<string, float[]> Centres = new Dictionary<string, float[]>();
 
         public static CrucibleData Load()
         {
@@ -33,6 +35,8 @@ namespace KryticalNova.EditorTools.Crucible
             d.Materials = (JArray)Read("MATERIALS_022b.json")["materials"];
             foreach (var kv in (JObject)Read("MATRICES_022b.json")["matrices"])
                 d.Matrices[kv.Key] = kv.Value.ToObject<float[]>();
+            if (File.Exists(Path.Combine(DataFolder, "CENTRES_022b.json")))
+                foreach (var kv in (JObject)Read("CENTRES_022b.json")["centres"]) d.Centres[kv.Key] = kv.Value.ToObject<float[]>();
             JObject col = Read("COLLIDERS_022.json");
             d.Boxes = (JArray)col["boxes"]; d.ConvexHulls = (JArray)col["convex_hulls"];
             d.GroundMeshes = (JArray)col["ground_mesh_colliders"]; d.Blockers = (JArray)col["blockers"];
@@ -58,7 +62,7 @@ namespace KryticalNova.EditorTools.Crucible
         /// this turn (-90 degrees about X) takes them to Blender (-x, z, -y), the frame the matrices are converted into (run 4 proof:
         /// floors and stairs came in standing on end).
         /// </summary>
-        public static readonly Matrix4x4 CustomMeshFix = Matrix4x4.Rotate(Quaternion.Euler(-90f, 0f, 0f));
+        public static Matrix4x4 CustomMeshFix = Matrix4x4.Rotate(Quaternion.Euler(-90f, 0f, 0f));
 
         public static Vector3 ToUnity(Vector3 b) => new Vector3(-b.x, b.z, -b.y);
         public static Vector3 ToUnity(JToken t) => ToUnity(V(t));
