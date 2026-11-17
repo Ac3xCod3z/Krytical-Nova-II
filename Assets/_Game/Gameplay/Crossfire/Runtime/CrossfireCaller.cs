@@ -16,6 +16,18 @@ namespace KryticalNova.Crossfire
     /// </summary>
     public struct CrossfireCaller
     {
+        /// <summary>What the caller says now: nothing, the call (with whole minutes left), a countdown number, or the gates-closed line.</summary>
+        public enum LineKind : byte { None = 0, Call = 1, Count = 2, Closed = 3 }
+
+        /// <summary>One moment to announce, the same for the whole server; each player reads it for their own bracket (<see cref="Text"/>).</summary>
+        public struct Line
+        {
+            public LineKind Kind;
+            /// <summary>The call: seconds the minutes are named from; the countdown: its number.</summary>
+            public double Seconds;
+            public bool IsCountdown => Kind == LineKind.Count;
+        }
+
         /// <summary>A Call seen this long after its start still counts as starting on its minute mark (the server looks a few times a second).</summary>
         public const double StartSlackSeconds = 1.0;
 
@@ -23,16 +35,14 @@ namespace KryticalNova.Crossfire
         int m_LastMark, m_LastCount;
         bool m_Started;
 
-        /// <summary>The line to announce now, or null. <paramref name="gatesOpenAt"/> is when this war's gates open (Muster's end).</summary>
-        public string Next(in CrossfireState s, double now, double gatesOpenAt, CrossfireSettings settings) =>
-            Next(s, now, gatesOpenAt, settings, out _);
-
-        /// <summary>As above; <paramref name="countdown"/> is true when the line is one of the last seconds (10 .. 1).</summary>
-        public string Next(in CrossfireState s, double now, double gatesOpenAt, CrossfireSettings settings, out bool countdown)
+        /// <summary>
+        /// The line every player is told now (one per server, so each player's minutes and numbers are the same), or None. The words are
+        /// <see cref="Text"/>: each player's own bracket (owner, 16 Nov 2026).
+        /// </summary>
+        public Line NextLine(in CrossfireState s, double now, double gatesOpenAt, CrossfireSettings settings)
         {
-            countdown = false;
             if (!m_Started) { m_Started = true; m_CalledFor = m_OpenedFor = m_ClosedFor = double.NaN; }
-            if (!s.Known || settings == null) return null;
+            if (!s.Known || settings == null) return default;
             double war = s.Now.WarStart;
             switch (s.Now.Phase)
             {
@@ -40,16 +50,15 @@ namespace KryticalNova.Crossfire
                 case CrossfirePhase.Muster:
                     if (!m_CalledFor.Equals(war)) { m_CalledFor = war; m_LastMark = int.MinValue; m_LastCount = int.MinValue; }
                     double left = gatesOpenAt - now;
-                    if (left <= 0) return null;
+                    if (left <= 0) return default;
                     float lastSeconds = System.Math.Max(0f, settings.finalCountdownSeconds);
                     if (left <= lastSeconds)
                     {
                         // the last seconds: 10 .. 1, one line each
                         int n = System.Math.Max(1, (int)System.Math.Ceiling(left - 1e-6));
-                        if (n == m_LastCount) return null;
+                        if (n == m_LastCount) return default;
                         m_LastCount = n;
-                        countdown = true;
-                        return Fill(settings.countdownText, n, s);
+                        return new Line { Kind = LineKind.Count, Seconds = n };
                     }
                     // one pop-up per interval mark: "War starts in N minutes", said as the mark is reached, so N is exact (never seconds).
                     double interval = System.Math.Max(1f, settings.callRepeatSeconds);
@@ -61,16 +70,36 @@ namespace KryticalNova.Crossfire
                         bool onMark = mark * interval - left <= StartSlackSeconds;
                         if (!onMark) mark = System.Math.Max(1, (int)System.Math.Floor(left / interval + 1e-6));
                     }
-                    else if (mark >= m_LastMark) return null;
+                    else if (mark >= m_LastMark) return default;
                     m_LastMark = mark;
-                    return Fill(settings.callText, mark * interval, s);
+                    return new Line { Kind = LineKind.Call, Seconds = mark * interval };
                 case CrossfirePhase.War:
                     m_OpenedFor = war;
-                    return null;
+                    return default;
                 default:   // End or Gap: the gates are shut again
-                    if (double.IsNaN(m_OpenedFor) || m_ClosedFor.Equals(m_OpenedFor)) return null;
+                    if (double.IsNaN(m_OpenedFor) || m_ClosedFor.Equals(m_OpenedFor)) return default;
                     m_ClosedFor = m_OpenedFor;
-                    return Fill(settings.gatesClosedText, 0, s);
+                    return new Line { Kind = LineKind.Closed };
+            }
+        }
+
+        /// <summary>
+        /// What a player of <paramref name="bracket"/> reads for <paramref name="line"/>, or null when they are not told it (owner,
+        /// 16 Nov 2026): below the war's level nothing; the call goes to every bracket, each its own (and a bracket with no zone yet is
+        /// told so); the countdown and the gates-closed line go only to brackets with a zone, the only ones whose gates open.
+        /// </summary>
+        public static string Text(in Line line, CrossfireSettings settings, int bracket, in CrossfireState s)
+        {
+            if (settings == null || bracket <= 0 || line.Kind == LineKind.None) return null;
+            bool zone = settings.HasZone(bracket);
+            switch (line.Kind)
+            {
+                case LineKind.Call:
+                    string where = zone ? settings.whereText : settings.noZoneText;
+                    string call = (settings.callText ?? string.Empty).Replace("{where}", where ?? string.Empty);
+                    return Fill(Fill(call, settings, bracket), line.Seconds, s).Trim();   // the bracket's {level} first, then the time
+                case LineKind.Count: return zone ? Fill(settings.countdownText, line.Seconds, s) : null;
+                default: return zone ? Fill(settings.gatesClosedText, 0, s) : null;
             }
         }
 
@@ -78,6 +107,14 @@ namespace KryticalNova.Crossfire
         public static string Fill(string text, double seconds, in CrossfireState s) =>
             (text ?? string.Empty).Replace("{time}", InWords(seconds)).Replace("{n}", ((int)System.Math.Ceiling(seconds)).ToString())
                 .Replace("{level}", s.MinLevel.ToString());
+
+        /// <summary>A bracket's words: {bracket} its numeral, {levels} its levels, {level} its lowest level.</summary>
+        public static string Fill(string text, CrossfireSettings settings, int bracket)
+        {
+            string levels = settings.LevelsOf(bracket);
+            int low = settings.minLevel + (bracket - 1) * settings.bracketSize;
+            return (text ?? string.Empty).Replace("{bracket}", CrossfireRules.Roman(bracket)).Replace("{levels}", levels).Replace("{level}", low.ToString());
+        }
 
         /// <summary>"10 minutes", "1 minute": the whole minutes in it (never rounded up, never seconds; at least 1).</summary>
         public static string InWords(double seconds)

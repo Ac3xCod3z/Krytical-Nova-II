@@ -18,6 +18,8 @@ namespace KryticalNova.Wallet
         Refund = 7,
         /// <summary>A brand-new character's starting Creds (build 17, item 2.4; EconomySettings.startingCreds).</summary>
         StarterKit = 8,
+        /// <summary>Crossfire's pay at a war's end (owner, 16 Nov 2026; CrossfireSettings).</summary>
+        Crossfire = 9,
     }
 
     /// <summary>Where Creds leave a wallet to. Append only.</summary>

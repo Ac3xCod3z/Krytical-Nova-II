@@ -39,6 +39,8 @@ namespace KryticalNova.UI
         private PlayerDuel shownTarget;
         // The Showdown: the black bars of a Callout (see ShowdownLetterbox).
         private Hud.ShowdownLetterbox letterbox;
+        // Crossfire's kill counter (owner, 16 Nov 2026), at the top of the screen in a war.
+        private Hud.CrossfireScoreView crossfireScore;
         private float nextTargetRefresh;
         private float requestStarted;
         private float requestEnds;
@@ -75,6 +77,8 @@ namespace KryticalNova.UI
             SetVisible(result, false);
             letterbox?.Dispose();
             letterbox = new Hud.ShowdownLetterbox(root);
+            crossfireScore?.Dispose();
+            crossfireScore = new Hud.CrossfireScoreView(root);
             ClientPresentationRegistry.RegisterDuel(this);
         }
 
@@ -83,11 +87,14 @@ namespace KryticalNova.UI
             ClientPresentationRegistry.UnregisterDuel(this);
             letterbox?.Dispose();
             letterbox = null;
+            crossfireScore?.Dispose();
+            crossfireScore = null;
         }
 
         private void Update()
         {
             letterbox?.Tick();
+            crossfireScore?.Tick();
             if (request == null) return;
             float now = Time.unscaledTime;
 
