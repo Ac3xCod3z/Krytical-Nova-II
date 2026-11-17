@@ -83,6 +83,23 @@ namespace KryticalNova.WarBots.Entities.Tests
                 made.Add(settings);
                 settings.noRealPlayerSeconds = 100000f;
                 bots.Settings = settings;
+                // the gates open: the server world's own Crossfire clock is put in the War with a GM's start + skip on a still clock (it ran
+                // on its own fixed cycle here, so the bots waited shut in their yards: EditMode at ae71eb0b0, 0 kills in 5,400 ticks)
+                var clock = tw.Server.GetExistingSystemManaged<CrossfireClockServerSystem>();
+                Assert.IsNotNull(clock, "the server world runs Crossfire's clock");
+                var war = Object.Instantiate(KryticalNova.Crossfire.CrossfireSettings.Instance);
+                made.Add(war);
+                war.anchorToNightfall = false;
+                war.warMinutes = 60f;
+                clock.Settings = war;
+                clock.Clock = () => 5000.0;
+                clock.Interval = 0f;
+                for (int i = 0; i < 5; i++) { tw.Tick(1); yield return null; }
+                Assert.IsTrue(clock.Run(CrossfireCommand.StartNow), "GM start: the Rally");
+                for (int i = 0; i < 5; i++) { tw.Tick(1); yield return null; }
+                Assert.IsTrue(clock.Run(CrossfireCommand.Skip), "GM skip: the War, gates open");
+                for (int i = 0; i < 5; i++) { tw.Tick(1); yield return null; }
+                Assert.AreEqual(KryticalNova.Crossfire.CrossfirePhase.War, clock.Current.Now.Phase, "the War: the gates are open");
 
                 // the vote passed on both sides: Crossfire asks for 32 each, at its side's Rally Point, bracket X
                 int hegemony = bots.Fill(new WarBotRequest { Faction = FactionId.Hegemony, Bracket = 10, Count = PerSide, RallyAt = HegemonyRally, RallyYaw = 90f },
