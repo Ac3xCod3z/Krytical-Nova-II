@@ -2,15 +2,71 @@
   "build": 19,
   "items": [
     {
-      "title": "Known Issue: Can't Get In",
-      "body": "If nobody can get into the server after a lot of players drop at once (a crash or a network cut), restart the server. A fix is coming."
+      "title": "The Crucible Opens",
+      "body": "A new war zone for levels 100 to 112, lit by the moon, live fires and glowing lava. Each faction musters in its own walled Rally Point yard, the gates stay sealed until the war starts, and then all three sides pour into the battleground in the middle."
+    },
+    {
+      "title": "Crossfire: Answer the Call",
+      "body": "Every player from level 10 is called to Crossfire for their own level bracket. When the join window opens you're asked if you want in: say yes and you land on your faction's Rally Point. Missed it? Join at the Marshal while the war is still on."
+    },
+    {
+      "title": "33 a Side, War Bots Fill In",
+      "body": "Each side holds 33 fighters. A short side can vote to fill the gaps with War Bots, and a side with no players gets them anyway. Bots march out and fight like players but earn and drop nothing. A real player always takes a bot's place."
+    },
+    {
+      "title": "Fight as a Merc",
+      "body": "Your side is full? You can be offered a place on the shortest side as a Merc. You fight for them for that one war and are paid what they earn. Your faction and gear never change, and you're back on your own side when it ends."
+    },
+    {
+      "title": "Win the War, Get Paid",
+      "body": "Crossfire is a team deathmatch: the side with the most kills wins. Everyone who stays to the end earns character, pet and mount EXP and Creds: the most for a win, less for a tie or a loss. A rare kill can even drop a piece of gear."
+    },
+    {
+      "title": "No More Server Crashes",
+      "body": "The server no longer stops by itself after 20 to 40 minutes of play. In build 18 it went down about every half hour and threw everyone out; now it keeps running for as long as you play."
+    },
+    {
+      "title": "Back In After a Drop",
+      "body": "If your game crashes or your connection cuts out, you can get straight back in, and so can everyone else. Before, a lot of players dropping at once could lock everybody out until the server was restarted."
     }
   ],
   "patchNotes": [
     {
-      "heading": "Known issues",
+      "heading": "New",
       "lines": [
-        "If nobody can get into the server after a lot of players drop at once (a crash or a network cut), restart the server. A fix is coming."
+        "The Crucible: a new Crossfire war zone for levels 100 to 112, with a walled Rally Point yard for each faction around a central battleground. It is lit by the moon, 10 live fires, the shrine and heart lights and glowing lava. Each yard's gate stays shut until the war starts, then opens.",
+        "Crossfire calls every player from level 10 for their own bracket (I is levels 10 to 19, up to X for levels 100 to 112). Only bracket X has a war zone so far; the other brackets are told their zone is coming.",
+        "When the join window opens, every player of a bracket with a zone is asked once whether to join. Yes puts you on your faction's Rally Point; no still lets you join later at the Marshal (a new JOIN CROSSFIRE button) or through the Transit Row port.",
+        "Late joins are open until the last 5 minutes of the war. A late fighter is paid for the share of the war they fought.",
+        "Each side holds 33 fighters, real players and War Bots together. A real player always takes a War Bot's place.",
+        "War Bots: fighters the server runs itself. A side that is short can vote to fill up with them while the join window is open (no answer counts as no). A side with no real players is filled with bots automatically. Bots march out of their yard and fight like players.",
+        "Mercs: when your side is full, you can be offered a place on the shortest side for one war. Yes: you fight and are paid for that side once you're inside the war area. No: you miss that war. Your saved faction and gear never change.",
+        "Crossfire is a team deathmatch: each side's kills show at the top of the screen and the most kills wins; ties can happen.",
+        "Pay at the end, for bracket X: a win gives 10 % of your level step in EXP and 50,000 Creds, a tie 6 % and 30,000, a loss 4 % and 20,000. Your pet and mount get EXP too. Lower brackets get a share of the Creds.",
+        "Anything already at its maximum level is paid in extra Creds instead of EXP.",
+        "One kill of a real player in 2,000 drops a piece of gear a monster of the killer's level could drop. War Bots never earn or drop anything.",
+        "Nobody is paid if the war ends with no kills on any side, and a player who leaves the war area before the end loses their place and their pay. The war ends early if every real player has left.",
+        "If you die in a war, you get up on the stands by your own yard's respawn shrine, facing the gate, never in town, so you keep your place and your pay.",
+        "The war area reaches 40 m above the walls, so jumping or Wallstriding high never takes you out of the war.",
+        "A results card at the end shows the score and what you earned."
+      ]
+    },
+    {
+      "heading": "Fixed",
+      "lines": [
+        "The server no longer crashes after 20 to 40 minutes. In build 18 it went down about every half hour, with or without players on.",
+        "After players drop all at once (a game crash, a power cut, a lost connection), everyone can still join. Before, nobody could get in again until the server was restarted.",
+        "Closed a way someone outside the game could lock every player out of the server."
+      ]
+    },
+    {
+      "heading": "Changed",
+      "lines": [
+        "A war a GM starts now also asks its bracket once whether to join, like a war that starts on its own.",
+        "The server no longer carries the sky, weather, plants, music or drawing parts of the game. Your game still shows and plays them all exactly as before, and the server has more room for players.",
+        "Cadence, the bonus for pressing a skill on the beat of the fight music, keeps the same shared beat as before; the server now keeps that beat on its own clock.",
+        "Sky Concord's buildings are now kept with the rest of the game's files, so every build ships the whole city.",
+        "Players and monsters within 150 m of you still reach your screen as in build 18."
       ]
     }
   ],
