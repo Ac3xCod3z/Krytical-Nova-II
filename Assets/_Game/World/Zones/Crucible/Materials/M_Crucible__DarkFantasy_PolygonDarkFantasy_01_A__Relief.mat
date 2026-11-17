@@ -136,7 +136,7 @@ Material:
     - _DstBlend: 0
     - _DstBlendAlpha: 0
     - _Enable_Ambient_Occlusion: 0
-    - _Enable_Base_Texture: 0
+    - _Enable_Base_Texture: 1
     - _Enable_Emission: 0
     - _Enable_Emission_Texture: 0
     - _Enable_Normal_Texture: 0

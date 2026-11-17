@@ -175,7 +175,7 @@ Material:
     - _AO_Tiling: {r: 1, g: 1, b: 0, a: 0}
     - _Base_Offset: {r: 0, g: 0, b: 0, a: 0}
     - _Base_Tiling: {r: 1, g: 1, b: 0, a: 0}
-    - _Color_Tint: {r: 0.2, g: 0.18, b: 0.27, a: 1}
+    - _Color_Tint: {r: 0.48452914, g: 0.4613561, b: 0.5563933, a: 1}
     - _Emission_Color_Tint: {r: 0, g: 0, b: 0, a: 1}
     - _Emission_Offset: {r: 0, g: 0, b: 0, a: 0}
     - _Emission_Tiling: {r: 1, g: 1, b: 0, a: 0}

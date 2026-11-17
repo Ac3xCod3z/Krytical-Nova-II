@@ -17,8 +17,8 @@ namespace KryticalNova.EditorTools.Crucible
     {
         const string ShaderPath = "Assets/Synty/PolygonGeneric/Shaders/PolygonShader.shadergraph";
         const string SkyShader = "KN/Crucible Sky Dome";
-        /// <summary>Blender emission strength to Unity HDR intensity (stops): Fable's floors use 5-7, his strips EV 3.</summary>
-        const float EmissionStopsPerStrength = 0.6f;
+        /// <summary>Blender emission strength to the Unity HDR multiplier (both linear; run 8: an exponential map made the outer lava plain red).</summary>
+        const float EmissionScale = 1f;
 
         static readonly Dictionary<string, string> PackFolder = new Dictionary<string, string>
         {
@@ -147,7 +147,7 @@ namespace KryticalNova.EditorTools.Crucible
                 Texture2D e = emit != null ? Tex(emit) : null;
                 if (e == null) e = mat.GetTexture("_Emission_Texture") as Texture2D;
                 Color c = m["emission_colour"] != null ? CrucibleData.Colour(m["emission_colour"]) : Color.white;
-                float intensity = Mathf.Pow(2f, es * EmissionStopsPerStrength);
+                float intensity = es * EmissionScale;   // Blender emission strength is a plain multiplier
                 if (e != null) { mat.SetTexture("_Emission_Texture", e); mat.SetFloat("_Enable_Emission_Texture", 1f); }
                 else mat.SetFloat("_Enable_Emission_Texture", 0f);
                 mat.SetColor("_Emission_Color_Tint", c * intensity);

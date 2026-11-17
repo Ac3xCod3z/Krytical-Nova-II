@@ -79,7 +79,7 @@ Material:
     - _Smoothness: 0.14999998
     - _Triplanar_Intensity: 0.5
     m_Colors:
-    - _Color_Tint: {r: 1.55, g: 1.1, b: 0.66, a: 1}
+    - _Color_Tint: {r: 1.2204343, g: 1.0442749, b: 0.8322835, a: 1}
     - _Emission_Color_Tint: {r: 0, g: 0, b: 0, a: 1}
     - _Triplanar_Normal_Tiling_Bottom: {r: 1, g: 1, b: 0, a: 0}
     - _Triplanar_Normal_Tiling_Side: {r: 1, g: 1, b: 0, a: 0}

@@ -13,6 +13,9 @@ namespace KryticalNova.EditorTools.Crucible
         public const string FloorGroup = "Crucible Floors 4K";
         const string Folder = CrucibleData.TextureFolder + "/";
 
+        /// <summary>Bump when an import rule changes, so Unity re-imports what was already imported (2: readable custom meshes).</summary>
+        public override uint GetVersion() => 2;
+
         void OnPreprocessTexture()
         {
             if (!assetPath.StartsWith(Folder)) return;

@@ -86,6 +86,8 @@ namespace KryticalNova.EditorTools.Crucible
                 for (float s = Step; s <= seg; s += Step)
                 {
                     Vector3 p = Vector3.Lerp(p0, p1, s / seg);
+                    // a straight line between far corners floats over stairs: stand on the NavMesh under this point first
+                    if (NavMesh.SamplePosition(p, out NavMeshHit onMesh, 4f, NavMesh.AllAreas)) p = onMesh.position;
                     float y = Ground(p, solid, out bool hit);
                     if (!hit) { if (noGround++ == 0) firstNoGround = p; continue; }
                     if (Mathf.Abs(y - prevY) > MaxStep) high++;

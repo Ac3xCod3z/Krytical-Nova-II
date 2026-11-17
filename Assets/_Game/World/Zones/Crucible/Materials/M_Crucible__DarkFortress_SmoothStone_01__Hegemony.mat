@@ -57,7 +57,7 @@ Material:
     - _Enable_Triplanar_Texture: 0
     - _Smoothness: 0.14999998
     m_Colors:
-    - _Color_Tint: {r: 1.35, g: 1.377, b: 1.494, a: 1}
+    - _Color_Tint: {r: 1.1461531, g: 1.1565164, b: 1.2001908, a: 1}
     - _Emission_Color_Tint: {r: 0, g: 0, b: 0, a: 1}
     - _Triplanar_Tiling_Side: {r: 4, g: 4, b: 0, a: 0}
   m_BuildTextureStacks: []

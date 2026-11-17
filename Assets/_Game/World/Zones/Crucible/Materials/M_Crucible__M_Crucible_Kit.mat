@@ -40,7 +40,7 @@ Material:
   m_ValidKeywords:
   - _OVERLAY_UV_CHANNEL_UV0
   m_InvalidKeywords: []
-  m_LightmapFlags: 2
+  m_LightmapFlags: 4
   m_EnableInstancingVariants: 1
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
@@ -148,7 +148,7 @@ Material:
     - _Enable_Triplanar_Normals: 0
     - _Enable_Triplanar_Texture: 0
     - _Generate_From_Base_Normals: 0
-    - _Metallic: 0
+    - _Metallic: 0.6
     - _Normal_Intensity: 1
     - _OVERLAY_UV_CHANNEL: 0
     - _Overlay_Intensity: 1
@@ -157,7 +157,7 @@ Material:
     - _ReceiveShadows: 1
     - _Side_Metallic: 0
     - _Side_Smoothness: 0
-    - _Smoothness: 0.14999998
+    - _Smoothness: 0.39999998
     - _Snow_Level: 0
     - _Snow_Metallic: 0.1
     - _Snow_Smoothness: 0.5
@@ -188,8 +188,8 @@ Material:
     - _AO_Tiling: {r: 1, g: 1, b: 0, a: 0}
     - _Base_Offset: {r: 0, g: 0, b: 0, a: 0}
     - _Base_Tiling: {r: 1, g: 1, b: 0, a: 0}
-    - _Color_Tint: {r: 1, g: 1, b: 1, a: 1}
-    - _Emission_Color_Tint: {r: 5.278032, g: 5.278032, b: 5.278032, a: 5.278032}
+    - _Color_Tint: {r: 0.24780047, g: 0.24780047, b: 0.27169973, a: 1}
+    - _Emission_Color_Tint: {r: 0, g: 0, b: 0, a: 1}
     - _Emission_Offset: {r: 0, g: 0, b: 0, a: 0}
     - _Emission_Tiling: {r: 1, g: 1, b: 0, a: 0}
     - _Normal_Offset: {r: 0, g: 0, b: 0, a: 0}
