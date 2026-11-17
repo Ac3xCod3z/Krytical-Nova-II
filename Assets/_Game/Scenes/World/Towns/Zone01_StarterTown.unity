@@ -294238,6 +294238,67 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 0.5, z: 4}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!1001 &670989211
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 6422306750104936195, guid: 2cbf79a48fbe84047a1a38142b4715ae, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6422306750104936195, guid: 2cbf79a48fbe84047a1a38142b4715ae, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6422306750104936195, guid: 2cbf79a48fbe84047a1a38142b4715ae, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 3000
+      objectReference: {fileID: 0}
+    - target: {fileID: 6422306750104936195, guid: 2cbf79a48fbe84047a1a38142b4715ae, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6422306750104936195, guid: 2cbf79a48fbe84047a1a38142b4715ae, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6422306750104936195, guid: 2cbf79a48fbe84047a1a38142b4715ae, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6422306750104936195, guid: 2cbf79a48fbe84047a1a38142b4715ae, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6422306750104936195, guid: 2cbf79a48fbe84047a1a38142b4715ae, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6422306750104936195, guid: 2cbf79a48fbe84047a1a38142b4715ae, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6422306750104936195, guid: 2cbf79a48fbe84047a1a38142b4715ae, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6949107473033095767, guid: 2cbf79a48fbe84047a1a38142b4715ae, type: 3}
+      propertyPath: m_Name
+      value: Crucible
+      objectReference: {fileID: 0}
+    - target: {fileID: 7024334367007675611, guid: 2cbf79a48fbe84047a1a38142b4715ae, type: 3}
+      propertyPath: m_NavMeshData
+      value: 
+      objectReference: {fileID: 23800000, guid: 507ceeb1f35814a42ab663dd5f506949, type: 2}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 2cbf79a48fbe84047a1a38142b4715ae, type: 3}
 --- !u!1001 &671344836
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -945319,67 +945380,6 @@ LODGroup:
     - renderer: {fileID: 1968826405}
   m_Enabled: 1
   m_GlobalIlluminationLOD: 0
---- !u!1001 &1968828991
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 6422306750104936195, guid: 2cbf79a48fbe84047a1a38142b4715ae, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6422306750104936195, guid: 2cbf79a48fbe84047a1a38142b4715ae, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6422306750104936195, guid: 2cbf79a48fbe84047a1a38142b4715ae, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 3000
-      objectReference: {fileID: 0}
-    - target: {fileID: 6422306750104936195, guid: 2cbf79a48fbe84047a1a38142b4715ae, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6422306750104936195, guid: 2cbf79a48fbe84047a1a38142b4715ae, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6422306750104936195, guid: 2cbf79a48fbe84047a1a38142b4715ae, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6422306750104936195, guid: 2cbf79a48fbe84047a1a38142b4715ae, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6422306750104936195, guid: 2cbf79a48fbe84047a1a38142b4715ae, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6422306750104936195, guid: 2cbf79a48fbe84047a1a38142b4715ae, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6422306750104936195, guid: 2cbf79a48fbe84047a1a38142b4715ae, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6949107473033095767, guid: 2cbf79a48fbe84047a1a38142b4715ae, type: 3}
-      propertyPath: m_Name
-      value: Crucible
-      objectReference: {fileID: 0}
-    - target: {fileID: 7024334367007675611, guid: 2cbf79a48fbe84047a1a38142b4715ae, type: 3}
-      propertyPath: m_NavMeshData
-      value: 
-      objectReference: {fileID: 23800000, guid: 507ceeb1f35814a42ab663dd5f506949, type: 2}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 2cbf79a48fbe84047a1a38142b4715ae, type: 3}
 --- !u!1001 &1968904771
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1042684,4 +1042684,4 @@ SceneRoots:
   - {fileID: 617329175}
   - {fileID: 702122045}
   - {fileID: 1405346246}
-  - {fileID: 1968828991}
+  - {fileID: 670989211}
