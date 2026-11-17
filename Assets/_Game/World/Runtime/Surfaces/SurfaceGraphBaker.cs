@@ -49,6 +49,12 @@ namespace KryticalNova.World.Surfaces
             public bool DropUnreachable;
             public int Layers;
             public NavMeshQueryFilter Filter;
+            /// <summary>
+            /// Boxes no wall node is made in (world to unit-box matrices: a point p is inside when every axis of
+            /// <c>m.MultiplyPoint3x4(p)</c> is within -0.5..0.5): stair flights and their side walls, so a wall-run never starts on a
+            /// stair's side (owner's Crucible list, 3b, 16 Nov 2026). Empty: none.
+            /// </summary>
+            public Matrix4x4[] Excluded;
 
             public static Options Default => new Options
             {
@@ -57,6 +63,17 @@ namespace KryticalNova.World.Surfaces
                 Layers = Physics.DefaultRaycastLayers,
                 Filter = new NavMeshQueryFilter { agentTypeID = 0, areaMask = NavMesh.AllAreas },
             };
+        }
+
+        private static bool InExcluded(Vector3 p, Matrix4x4[] boxes)
+        {
+            if (boxes == null) return false;
+            foreach (Matrix4x4 m in boxes)
+            {
+                Vector3 l = m.MultiplyPoint3x4(p);
+                if (Mathf.Abs(l.x) <= 0.5f && Mathf.Abs(l.y) <= 0.5f && Mathf.Abs(l.z) <= 0.5f) return true;
+            }
+            return false;
         }
 
         private const float CornerLinkFactor = 1.7f;
@@ -100,6 +117,7 @@ namespace KryticalNova.World.Surfaces
             void Offer(Vector3 surface, Vector3 n, float scale, Bounds region)
             {
                 if (!region.Contains(surface)) return;
+                if (InExcluded(surface, o.Excluded)) return;
                 float angle = Vector3.Angle(n, Vector3.up);
                 if (angle < o.MinAngle || angle > o.MaxAngle) return;
                 result.Samples++;

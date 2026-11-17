@@ -1317,22 +1317,44 @@ namespace KryticalNova.Persistence.Entities
         void Cast(Entity connection, string skillId, int targetGhostId)
         {
             if (!BodyOf(connection, CallKind.Combat, out GameObject body)) return;
-            var skills = body.GetComponent<PlayerCombatSkills>();
+            if (!TryCastOn(body, skillId, targetGhostId, out short rank, out string reason, out bool known))
+            {
+                if (!known) return;
+                Reply(connection, new RequestReplyRpc { Kind = RequestReplyRpc.SkillRefused, SkillId = new FixedString64Bytes(skillId), Text = Fit(reason) });
+                return;
+            }
+            Reply(connection, new RequestReplyRpc { Kind = RequestReplyRpc.SkillCast, SkillId = new FixedString64Bytes(skillId), Rank = rank });
+        }
+
+        /// <summary>
+        /// War Bots (owner, 16 Nov 2026): a cast for a player the server runs itself, with no connection to answer. The same server cast
+        /// as a client's request (range, Flux, cooldown, the hits, the weapon drawn, the cast shown to every other client); false with the
+        /// reason when it is refused.
+        /// </summary>
+        public bool ServerCast(GameObject body, string skillId, int targetGhostId, out string reason) =>
+            TryCastOn(body, skillId, targetGhostId, out _, out reason, out _);
+
+        bool TryCastOn(GameObject body, string skillId, int targetGhostId, out short rank, out string reason, out bool known)
+        {
+            rank = 0;
+            reason = null;
+            var skills = body != null ? body.GetComponent<PlayerCombatSkills>() : null;
             SkillDefinitionSO skill = skills != null ? skills.GetSkill(skillId) : null;
-            if (skill == null) return;
+            known = skill != null;
+            if (!known) return false;
             // M4.5a: an attack is cast by NGO's own server cast on this body at the target's server body (range, Flux, cooldown and the
             // hits through ResolveHit decided here); an attack whose target is gone casts at nothing and is refused by CanCast
             Transform target = skill.IsAttack && !skill.IsAreaAttack ? ServerBodyOf(targetGhostId) : null;
-            if (skills.ServerTryCast(skill, target, out string reason))
+            if (!skills.ServerTryCast(skill, target, out reason))
             {
-                Used++;
-                if (skill.IsAttack) DrawOn(connection);   // NGO PlayerSkillAttacks draws the weapon for an attack skill
-                RecordCast(body, skillId, (short)skills.GetRank(skill), skill.IsAttack ? targetGhostId : 0);
-                Reply(connection, new RequestReplyRpc { Kind = RequestReplyRpc.SkillCast, SkillId = new FixedString64Bytes(skillId), Rank = (short)skills.GetRank(skill) });
-                return;
+                Refused++;
+                return false;
             }
-            Refused++;
-            Reply(connection, new RequestReplyRpc { Kind = RequestReplyRpc.SkillRefused, SkillId = new FixedString64Bytes(skillId), Text = Fit(reason) });
+            Used++;
+            rank = (short)skills.GetRank(skill);
+            if (skill.IsAttack) DrawOnBody(body);   // NGO PlayerSkillAttacks draws the weapon for an attack skill
+            RecordCast(body, skillId, rank, skill.IsAttack ? targetGhostId : 0);
+            return true;
         }
 
         // M4 step 7: an Autoward volley (NGO CastWardsServerRpc -> ServerCastWards -> WardCastClientRpc, NotifyCastFailedClientRpc)
@@ -1407,6 +1429,20 @@ namespace KryticalNova.Persistence.Entities
             var s = em.GetComponentData<KryticalNova.Player.Entities.CombatState>(entry.Ghost);
             KryticalNova.Player.Entities.MeleeRules.Draw(ref s, SystemAPI.GetSingleton<NetworkTime>().ServerTick);
             em.SetComponentData(entry.Ghost, s);
+        }
+
+        /// <summary>The ghost of this server body draws its weapon now (as <see cref="DrawOn"/>, found by the body: a War Bot has no connection).</summary>
+        void DrawOnBody(GameObject body)
+        {
+            EntityManager em = EntityManager;
+            foreach (GhostBodyEntry e in GhostBodyRegistry.Entries)
+            {
+                if (!ReferenceEquals(e.World, World) || e.Body != body || !em.Exists(e.Ghost) || !em.HasComponent<KryticalNova.Player.Entities.CombatState>(e.Ghost)) continue;
+                var s = em.GetComponentData<KryticalNova.Player.Entities.CombatState>(e.Ghost);
+                KryticalNova.Player.Entities.MeleeRules.Draw(ref s, SystemAPI.GetSingleton<NetworkTime>().ServerTick);
+                em.SetComponentData(e.Ghost, s);
+                return;
+            }
         }
 
         Transform ServerBodyOf(int ghostId)

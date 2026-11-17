@@ -1,0 +1,17 @@
+{
+    "name": "KryticalNova.WarBots",
+    "rootNamespace": "KryticalNova.WarBots",
+    "references": [
+        "KryticalNova.Runtime",
+        "KryticalNova.Factions"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

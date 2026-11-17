@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: M_Crucible__M_Crucible_SkyDome_Aurora
+  m_Shader: {fileID: 4800000, guid: 4f23f060694d6984db84bf8c8fee057e, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 1
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _MainTex:
+        m_Texture: {fileID: 2800000, guid: c21e54e4749b2a148a8a9d6d39c210e1, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AuroraBoost: 0.7
+    - _AuroraSpeed: 0.06
+    - _Exposure: 1
+    - _MoonBrightness: 1.2
+    - _MoonEarthshine: 0.12
+    - _StarBrightness: 1.4
+    - _StarDensity: 0.35
+    m_Colors:
+    - _AuroraBand: {r: 0.52, g: 0.85, b: 0, a: 0}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

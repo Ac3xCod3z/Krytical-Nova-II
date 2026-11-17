@@ -50,7 +50,9 @@ namespace KryticalNova.Persistence.Entities
             ConfigurePlanner(body);
 
             if (!RecipeText.TryDecode(context.RecipeText, out CharacterRecipe recipe)) return BadCharacterText;
-            bool requireProof = ServerPolicy.RequireProof(false);
+            // A War Bot (owner, 16 Nov 2026) is a player the server runs itself: its key can only be minted on the server
+            // (PlayerKeys.MintServerBot), it has no account, no character id and no save, and nothing it does is ever written.
+            bool requireProof = ServerPolicy.RequireProof(false) && !PlayerKeys.IsServerBot(context.Key);
             if (requireProof && !SaveKeys.IsId(context.Account)) return NeedsSignInText;
             // A bot of the 2-client gate gets its own character on a test-lane server (plan 43.1); everyone else keeps the id sent.
             string characterId = TestLaneBotCharacters.Ensure(context.Account, context.CharacterId, context.Name, recipe, out string botRefusal);

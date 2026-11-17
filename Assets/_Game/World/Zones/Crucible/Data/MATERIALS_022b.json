@@ -1,0 +1,2025 @@
+{
+ "source": "Crucible_022b_Data.blend",
+ "materials": [
+  {
+   "name": "DarkFantasy/PolygonDarkFantasy_01_A",
+   "synty_material": "PolygonDarkFantasy_01_A",
+   "synty_pack": "PolygonDarkFantasy",
+   "base_tex": "PolygonDarkFantasy_01_A.png",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "DarkFantasy/PolygonDarkFantasy_01_A__Arena__Relief",
+   "variant_of": "DarkFantasy/PolygonDarkFantasy_01_A",
+   "variant": "Arena",
+   "synty_material": "PolygonDarkFantasy_01_A",
+   "synty_pack": "PolygonDarkFantasy",
+   "base_tex": "PolygonDarkFantasy_01_A.png",
+   "tint": [
+    0.5,
+    0.45,
+    0.66
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "Rock_Cliff_Texture_01_Normal_2K.png",
+   "projection": "BOX",
+   "bump_strength": 0.45,
+   "box_scale": 0.25,
+   "mode": "box",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "DarkFantasy/PolygonDarkFantasy_01_A__Relief",
+   "synty_material": "PolygonDarkFantasy_01_A",
+   "synty_pack": "PolygonDarkFantasy",
+   "base_tex": "PolygonDarkFantasy_01_A.png",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "Rock_Cliff_Texture_01_Normal_2K.png",
+   "projection": "BOX",
+   "bump_strength": 0.45,
+   "box_scale": 0.25,
+   "mode": "box",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "DarkFortress/Basic_Wind_01_A",
+   "synty_material": "Basic_Wind_01_A",
+   "synty_pack": "PolygonDarkFortress",
+   "base_tex": "PolygonDarkFortress_Texture_01_A.png",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "DarkFortress/Brick_Large_01",
+   "synty_material": "Brick_Large_01",
+   "synty_pack": "PolygonDarkFortress",
+   "base_tex": "Brick_Large_Texture_01.png",
+   "tint": [
+    1.05,
+    0.95,
+    1.3
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "Brick_Large_Texture_01_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "DarkFortress/Brick_Large_01__Arena",
+   "variant_of": "DarkFortress/Brick_Large_01",
+   "variant": "Arena",
+   "synty_material": "Brick_Large_01",
+   "synty_pack": "PolygonDarkFortress",
+   "base_tex": "Brick_Large_Texture_01.png",
+   "tint": [
+    0.6,
+    0.54,
+    0.75
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "Brick_Large_Texture_01_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "DarkFortress/Brick_Large_01__Covenant",
+   "variant_of": "DarkFortress/Brick_Large_01",
+   "variant": "Covenant",
+   "synty_material": "Brick_Large_01",
+   "synty_pack": "PolygonDarkFortress",
+   "base_tex": "Brick_Large_Texture_01.png",
+   "tint": [
+    1.55,
+    1.1,
+    0.66
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "Brick_Large_Texture_01_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "DarkFortress/Brick_Large_01__Hegemony",
+   "variant_of": "DarkFortress/Brick_Large_01",
+   "variant": "Hegemony",
+   "synty_material": "Brick_Large_01",
+   "synty_pack": "PolygonDarkFortress",
+   "base_tex": "Brick_Large_Texture_01.png",
+   "tint": [
+    1.5,
+    1.53,
+    1.66
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "Brick_Large_Texture_01_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "DarkFortress/Brick_Large_01__Menhir",
+   "variant_of": "DarkFortress/Brick_Large_01",
+   "variant": "Menhir",
+   "synty_material": "Brick_Large_01",
+   "synty_pack": "PolygonDarkFortress",
+   "base_tex": "Brick_Large_Texture_01.png",
+   "tint": [
+    0.66,
+    0.58,
+    0.84
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "Brick_Large_Texture_01_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "DarkFortress/Brick_Large_01__Null",
+   "variant_of": "DarkFortress/Brick_Large_01",
+   "variant": "Null",
+   "synty_material": "Brick_Large_01",
+   "synty_pack": "PolygonDarkFortress",
+   "base_tex": "Brick_Large_Texture_01.png",
+   "tint": [
+    0.31,
+    0.29,
+    0.34
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "Brick_Large_Texture_01_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "DarkFortress/Brick_Large_01__Rim",
+   "variant_of": "DarkFortress/Brick_Large_01",
+   "variant": "Rim",
+   "synty_material": "Brick_Large_01",
+   "synty_pack": "PolygonDarkFortress",
+   "base_tex": "Brick_Large_Texture_01.png",
+   "tint": [
+    0.6,
+    0.52,
+    0.74
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "Brick_Large_Texture_01_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "DarkFortress/Brick_Large_01__Stair",
+   "variant_of": "DarkFortress/Brick_Large_01",
+   "variant": "Stair",
+   "synty_material": "Brick_Large_01",
+   "synty_pack": "PolygonDarkFortress",
+   "base_tex": "Brick_Large_Texture_01.png",
+   "tint": [
+    1.25,
+    1.12,
+    1.5
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "Brick_Large_Texture_01_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "DarkFortress/Brick_Large_01__StairLight",
+   "variant_of": "DarkFortress/Brick_Large_01",
+   "variant": "StairLight",
+   "synty_material": "Brick_Large_01",
+   "synty_pack": "PolygonDarkFortress",
+   "base_tex": "Brick_Large_Texture_01.png",
+   "tint": [
+    1.7,
+    1.6,
+    1.95
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "Brick_Large_Texture_01_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "DarkFortress/Brick_Medium_01",
+   "synty_material": "Brick_Medium_01",
+   "synty_pack": "PolygonDarkFortress",
+   "base_tex": "Brick_Medium_Texture_01.png",
+   "tint": [
+    1.05,
+    0.95,
+    1.3
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "Brick_Medium_Texture_01_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "DarkFortress/Brick_Medium_01__Arena",
+   "variant_of": "DarkFortress/Brick_Medium_01",
+   "variant": "Arena",
+   "synty_material": "Brick_Medium_01",
+   "synty_pack": "PolygonDarkFortress",
+   "base_tex": "Brick_Medium_Texture_01.png",
+   "tint": [
+    0.6,
+    0.54,
+    0.75
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "Brick_Medium_Texture_01_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "DarkFortress/Brick_Medium_01__Covenant",
+   "variant_of": "DarkFortress/Brick_Medium_01",
+   "variant": "Covenant",
+   "synty_material": "Brick_Medium_01",
+   "synty_pack": "PolygonDarkFortress",
+   "base_tex": "Brick_Medium_Texture_01.png",
+   "tint": [
+    1.55,
+    1.1,
+    0.66
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "Brick_Medium_Texture_01_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "DarkFortress/Brick_Medium_01__Hegemony",
+   "variant_of": "DarkFortress/Brick_Medium_01",
+   "variant": "Hegemony",
+   "synty_material": "Brick_Medium_01",
+   "synty_pack": "PolygonDarkFortress",
+   "base_tex": "Brick_Medium_Texture_01.png",
+   "tint": [
+    1.5,
+    1.53,
+    1.66
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "Brick_Medium_Texture_01_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "DarkFortress/Brick_Medium_01__Null",
+   "variant_of": "DarkFortress/Brick_Medium_01",
+   "variant": "Null",
+   "synty_material": "Brick_Medium_01",
+   "synty_pack": "PolygonDarkFortress",
+   "base_tex": "Brick_Medium_Texture_01.png",
+   "tint": [
+    0.31,
+    0.29,
+    0.34
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "Brick_Medium_Texture_01_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "DarkFortress/Chains_01",
+   "synty_material": "Chains_01",
+   "synty_pack": "PolygonDarkFortress",
+   "base_tex": "Chains_01.tga",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "DarkFortress/PolygonDarkFortress_Mat_01_A",
+   "synty_material": "PolygonDarkFortress_Mat_01_A",
+   "synty_pack": "PolygonDarkFortress",
+   "base_tex": "PolygonDarkFortress_Texture_01_A.png",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 3.0,
+   "emission_tex": "PolygonDarkFortress_Emissive_01_A.png",
+   "alpha": 1.0,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "DarkFortress/PolygonDarkFortress_Mat_01_A__Arena",
+   "variant_of": "DarkFortress/PolygonDarkFortress_Mat_01_A",
+   "variant": "Arena",
+   "synty_material": "PolygonDarkFortress_Mat_01_A",
+   "synty_pack": "PolygonDarkFortress",
+   "base_tex": "PolygonDarkFortress_Texture_01_A.png",
+   "tint": [
+    0.74,
+    0.66,
+    0.92
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 3.0,
+   "emission_tex": "PolygonDarkFortress_Emissive_01_A.png",
+   "alpha": 1.0,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "DarkFortress/PolygonDarkFortress_Mat_01_A__Covenant",
+   "variant_of": "DarkFortress/PolygonDarkFortress_Mat_01_A",
+   "variant": "Covenant",
+   "synty_material": "PolygonDarkFortress_Mat_01_A",
+   "synty_pack": "PolygonDarkFortress",
+   "base_tex": "PolygonDarkFortress_Texture_01_A.png",
+   "tint": [
+    1.55,
+    1.1,
+    0.66
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 3.0,
+   "emission_tex": "PolygonDarkFortress_Emissive_01_A.png",
+   "alpha": 1.0,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "DarkFortress/PolygonDarkFortress_Mat_01_A__Hegemony",
+   "variant_of": "DarkFortress/PolygonDarkFortress_Mat_01_A",
+   "variant": "Hegemony",
+   "synty_material": "PolygonDarkFortress_Mat_01_A",
+   "synty_pack": "PolygonDarkFortress",
+   "base_tex": "PolygonDarkFortress_Texture_01_A.png",
+   "tint": [
+    1.5,
+    1.53,
+    1.66
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 3.0,
+   "emission_tex": "PolygonDarkFortress_Emissive_01_A.png",
+   "alpha": 1.0,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "DarkFortress/PolygonDarkFortress_Mat_01_A__Null",
+   "variant_of": "DarkFortress/PolygonDarkFortress_Mat_01_A",
+   "variant": "Null",
+   "synty_material": "PolygonDarkFortress_Mat_01_A",
+   "synty_pack": "PolygonDarkFortress",
+   "base_tex": "PolygonDarkFortress_Texture_01_A.png",
+   "tint": [
+    0.31,
+    0.29,
+    0.34
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 3.0,
+   "emission_tex": "PolygonDarkFortress_Emissive_01_A.png",
+   "alpha": 1.0,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "DarkFortress/SmoothStone_01__Covenant",
+   "variant_of": "DarkFortress/SmoothStone_01",
+   "variant": "Covenant",
+   "synty_material": "SmoothStone_01",
+   "synty_pack": "PolygonDarkFortress",
+   "base_tex": "SmoothStone_Texture_01.png",
+   "tint": [
+    1.395,
+    0.99,
+    0.594
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "SmoothStone_Texture_01_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "DarkFortress/SmoothStone_01__Hegemony",
+   "variant_of": "DarkFortress/SmoothStone_01",
+   "variant": "Hegemony",
+   "synty_material": "SmoothStone_01",
+   "synty_pack": "PolygonDarkFortress",
+   "base_tex": "SmoothStone_Texture_01.png",
+   "tint": [
+    1.35,
+    1.377,
+    1.494
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "SmoothStone_Texture_01_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "DarkFortress/SmoothStone_01__Null",
+   "variant_of": "DarkFortress/SmoothStone_01",
+   "variant": "Null",
+   "synty_material": "SmoothStone_01",
+   "synty_pack": "PolygonDarkFortress",
+   "base_tex": "SmoothStone_Texture_01.png",
+   "tint": [
+    0.279,
+    0.261,
+    0.306
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "SmoothStone_Texture_01_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "DarkFortress/SmoothStone_Dark_01__Arena",
+   "variant_of": "DarkFortress/SmoothStone_Dark_01",
+   "variant": "Arena",
+   "synty_material": "SmoothStone_Dark_01",
+   "synty_pack": "PolygonDarkFortress",
+   "base_tex": "SmoothStone_Dark_Texture_01.png",
+   "tint": [
+    0.6,
+    0.54,
+    0.75
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "SmoothStone_Dark_Texture_01_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "DarkFortress/SmoothStone_Dark_01__Covenant",
+   "variant_of": "DarkFortress/SmoothStone_Dark_01",
+   "variant": "Covenant",
+   "synty_material": "SmoothStone_Dark_01",
+   "synty_pack": "PolygonDarkFortress",
+   "base_tex": "SmoothStone_Dark_Texture_01.png",
+   "tint": [
+    1.55,
+    1.1,
+    0.66
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "SmoothStone_Dark_Texture_01_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "DarkFortress/SmoothStone_Dark_01__Hegemony",
+   "variant_of": "DarkFortress/SmoothStone_Dark_01",
+   "variant": "Hegemony",
+   "synty_material": "SmoothStone_Dark_01",
+   "synty_pack": "PolygonDarkFortress",
+   "base_tex": "SmoothStone_Dark_Texture_01.png",
+   "tint": [
+    1.5,
+    1.53,
+    1.66
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "SmoothStone_Dark_Texture_01_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "DarkFortress/SmoothStone_Dark_01__Null",
+   "variant_of": "DarkFortress/SmoothStone_Dark_01",
+   "variant": "Null",
+   "synty_material": "SmoothStone_Dark_01",
+   "synty_pack": "PolygonDarkFortress",
+   "base_tex": "SmoothStone_Dark_Texture_01.png",
+   "tint": [
+    0.31,
+    0.29,
+    0.34
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "SmoothStone_Dark_Texture_01_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "FantasyKingdom/Castle_Wall_01__Covenant",
+   "variant_of": "FantasyKingdom/Castle_Wall_01",
+   "variant": "Covenant",
+   "synty_material": "Castle_Wall_01",
+   "synty_pack": "PolygonFantasyKingdom",
+   "base_tex": "Wall_Brick_01.png",
+   "tint": [
+    1.55,
+    1.1,
+    0.66
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "Wall_Brick_01_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "FantasyKingdom/Castle_Wall_01__Hegemony",
+   "variant_of": "FantasyKingdom/Castle_Wall_01",
+   "variant": "Hegemony",
+   "synty_material": "Castle_Wall_01",
+   "synty_pack": "PolygonFantasyKingdom",
+   "base_tex": "Wall_Brick_01.png",
+   "tint": [
+    1.5,
+    1.53,
+    1.66
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "Wall_Brick_01_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "FantasyKingdom/Castle_Wall_01__Null",
+   "variant_of": "FantasyKingdom/Castle_Wall_01",
+   "variant": "Null",
+   "synty_material": "Castle_Wall_01",
+   "synty_pack": "PolygonFantasyKingdom",
+   "base_tex": "Wall_Brick_01.png",
+   "tint": [
+    0.31,
+    0.29,
+    0.34
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "Wall_Brick_01_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "Knights/PolyKnights_01__Covenant",
+   "variant_of": "Knights/PolyKnights_01",
+   "variant": "Covenant",
+   "synty_material": "PolyKnights_01",
+   "synty_pack": "PolygonKnights",
+   "base_tex": "PolygonKnights_01.png",
+   "tint": [
+    1.5,
+    1.05,
+    0.6
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "Knights/PolyKnights_01__Hegemony",
+   "variant_of": "Knights/PolyKnights_01",
+   "variant": "Hegemony",
+   "synty_material": "PolyKnights_01",
+   "synty_pack": "PolygonKnights",
+   "base_tex": "PolygonKnights_01.png",
+   "tint": [
+    1.25,
+    1.27,
+    1.35
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "Knights/PolyKnights_01__Null",
+   "variant_of": "Knights/PolyKnights_01",
+   "variant": "Null",
+   "synty_material": "PolyKnights_01",
+   "synty_pack": "PolygonKnights",
+   "base_tex": "PolygonKnights_01.png",
+   "tint": [
+    0.42,
+    0.38,
+    0.44
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_Accent_Covenant",
+   "base_colour": [
+    0.85,
+    0.55,
+    0.1
+   ],
+   "roughness": 0.38,
+   "metallic": 0.75,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "mode": "flat",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_Accent_Hegemony",
+   "base_colour": [
+    0.8,
+    0.5,
+    0.08
+   ],
+   "roughness": 0.38,
+   "metallic": 0.75,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "mode": "flat",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_Accent_Null",
+   "base_colour": [
+    0.55,
+    0.08,
+    0.06
+   ],
+   "roughness": 0.38,
+   "metallic": 0.75,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "mode": "flat",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_ArenaFloor",
+   "crucible_floor": "T_Floor_Arena_Quarter.jpg",
+   "base_tex": "T_Floor_Arena_Quarter.jpg",
+   "roughness": 0.5,
+   "metallic": 0.0,
+   "emission_strength": 5.0,
+   "emission_tex": "T_Floor_Arena_Quarter_Emit.jpg",
+   "alpha": 1.0,
+   "normal_tex": "T_Floor_Arena_Quarter_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_Banner_Covenant",
+   "base_tex": "T_Banner_Covenant.png",
+   "roughness": 0.9,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_Banner_Hegemony",
+   "base_tex": "T_Banner_Hegemony.png",
+   "roughness": 0.9,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_Banner_Null",
+   "base_tex": "T_Banner_Null.png",
+   "roughness": 0.9,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_CanopyCloth_Covenant",
+   "base_colour": [
+    0.8,
+    0.5,
+    0.09
+   ],
+   "roughness": 0.9,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "mode": "flat",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_CanopyCloth_Null",
+   "base_colour": [
+    0.42,
+    0.035,
+    0.03
+   ],
+   "roughness": 0.9,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "mode": "flat",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_CoverStone_Face",
+   "base_colour": [
+    0.05,
+    0.043,
+    0.08
+   ],
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "Rock_Cliff_Texture_01_Normal_2K.png",
+   "projection": "BOX",
+   "bump_strength": 0.45,
+   "box_scale": 0.3333,
+   "mode": "box",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_CoverStone_Top",
+   "base_colour": [
+    0.12,
+    0.1,
+    0.18
+   ],
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "Rock_Cliff_Texture_01_Normal_2K.png",
+   "projection": "BOX",
+   "bump_strength": 0.45,
+   "box_scale": 0.3333,
+   "mode": "box",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_Crate_Hegemony",
+   "base_colour": [
+    0.075,
+    0.08,
+    0.1
+   ],
+   "roughness": 0.7,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "mode": "flat",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_Dais",
+   "crucible_floor": "T_Floor_Dais.jpg",
+   "base_tex": "T_Floor_Dais.jpg",
+   "roughness": 0.5,
+   "metallic": 0.0,
+   "emission_strength": 7.0,
+   "emission_tex": "T_Floor_Dais_Emit.jpg",
+   "alpha": 1.0,
+   "normal_tex": "T_Floor_Dais_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_Glow_Hegemony",
+   "base_colour": [
+    0.36,
+    0.62,
+    1.0
+   ],
+   "roughness": 0.8,
+   "metallic": 0.0,
+   "emission_strength": 9.0,
+   "emission_colour": [
+    0.36,
+    0.62,
+    1.0
+   ],
+   "alpha": 1.0,
+   "mode": "flat",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_Glow_Null",
+   "base_colour": [
+    1.0,
+    0.1,
+    0.06
+   ],
+   "roughness": 0.8,
+   "metallic": 0.0,
+   "emission_strength": 10.0,
+   "emission_colour": [
+    1.0,
+    0.1,
+    0.06
+   ],
+   "alpha": 1.0,
+   "mode": "flat",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_Iron_Covenant",
+   "base_colour": [
+    0.1,
+    0.08,
+    0.07
+   ],
+   "roughness": 0.5,
+   "metallic": 0.6,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "mode": "flat",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_Iron_Hegemony",
+   "base_colour": [
+    0.07,
+    0.075,
+    0.09
+   ],
+   "roughness": 0.5,
+   "metallic": 0.6,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "mode": "flat",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_Iron_Neutral",
+   "base_colour": [
+    0.05,
+    0.05,
+    0.06
+   ],
+   "roughness": 0.5,
+   "metallic": 0.6,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "mode": "flat",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_Iron_Null",
+   "base_colour": [
+    0.05,
+    0.05,
+    0.06
+   ],
+   "roughness": 0.5,
+   "metallic": 0.6,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "mode": "flat",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_Kit",
+   "base_tex": "",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 4.0,
+   "emission_tex": "",
+   "alpha": 1.0,
+   "mode": "flat",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_OuterGround_LavaCracked",
+   "base_tex": "T_Crucible_OuterRock.png",
+   "tint": [
+    0.8,
+    0.7,
+    0.95
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.6,
+   "metallic": 0.0,
+   "emission_strength": 6.0,
+   "emission_tex": "T_Crucible_OuterRock_Emit.png",
+   "alpha": 1.0,
+   "normal_tex": "T_Crucible_OuterRock_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_Paving_Covenant",
+   "crucible_floor": "T_Crucible_Paving.jpg",
+   "base_tex": "T_Crucible_Paving.jpg",
+   "tint": [
+    0.74,
+    0.58,
+    0.46
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.6,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "T_Crucible_Paving_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_Paving_Hegemony",
+   "crucible_floor": "T_Crucible_Paving.jpg",
+   "base_tex": "T_Crucible_Paving.jpg",
+   "tint": [
+    0.8,
+    0.82,
+    0.93
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.6,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "T_Crucible_Paving_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_Paving_Null",
+   "crucible_floor": "T_Crucible_Paving.jpg",
+   "base_tex": "T_Crucible_Paving.jpg",
+   "tint": [
+    0.44,
+    0.34,
+    0.39
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.6,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "T_Crucible_Paving_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_Paving_Sealed",
+   "crucible_floor": "T_Crucible_Paving.jpg",
+   "base_tex": "T_Crucible_Paving.jpg",
+   "tint": [
+    0.4,
+    0.35,
+    0.5
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.6,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "T_Crucible_Paving_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_Paving_StairLight",
+   "crucible_floor": "T_Crucible_Paving.jpg",
+   "base_tex": "T_Crucible_Paving.jpg",
+   "tint": [
+    0.98,
+    0.94,
+    1.06
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.6,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "T_Crucible_Paving_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_Paving_Tier",
+   "crucible_floor": "T_Crucible_Paving.jpg",
+   "base_tex": "T_Crucible_Paving.jpg",
+   "tint": [
+    0.6,
+    0.52,
+    0.76
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.6,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "T_Crucible_Paving_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_Paving_Tower",
+   "crucible_floor": "T_Crucible_Paving.jpg",
+   "base_tex": "T_Crucible_Paving.jpg",
+   "tint": [
+    0.5,
+    0.44,
+    0.62
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.6,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "T_Crucible_Paving_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_RimFloor",
+   "crucible_floor": "T_Floor_Rim_Quarter.jpg",
+   "base_tex": "T_Floor_Rim_Quarter.jpg",
+   "roughness": 0.65,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "T_Floor_Rim_Quarter_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_Rock_Neutral__Relief",
+   "base_colour": [
+    0.035,
+    0.03,
+    0.055
+   ],
+   "roughness": 0.9,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "Rock_Cliff_Texture_01_Normal_2K.png",
+   "projection": "BOX",
+   "bump_strength": 0.45,
+   "box_scale": 0.0833,
+   "mode": "box",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_ShrineCrystal_Covenant",
+   "base_colour": [
+    1.0,
+    0.62,
+    0.12
+   ],
+   "roughness": 0.25,
+   "metallic": 0.0,
+   "emission_strength": 1.7,
+   "emission_colour": [
+    1.0,
+    0.62,
+    0.12
+   ],
+   "alpha": 1.0,
+   "mode": "flat",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_ShrineCrystal_Hegemony",
+   "base_colour": [
+    0.36,
+    0.62,
+    1.0
+   ],
+   "roughness": 0.25,
+   "metallic": 0.0,
+   "emission_strength": 1.25,
+   "emission_colour": [
+    0.36,
+    0.62,
+    1.0
+   ],
+   "alpha": 1.0,
+   "mode": "flat",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_ShrineCrystal_Null",
+   "base_colour": [
+    1.0,
+    0.1,
+    0.06
+   ],
+   "roughness": 0.25,
+   "metallic": 0.0,
+   "emission_strength": 1.5,
+   "emission_colour": [
+    1.0,
+    0.1,
+    0.06
+   ],
+   "alpha": 1.0,
+   "mode": "flat",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_SkyDome_Aurora",
+   "mode": "unlit",
+   "emission_tex": "Crucible_Sky.png",
+   "emission_strength": 1.0
+  },
+  {
+   "name": "M_Crucible_StairCheek_Side",
+   "base_colour": [
+    0.2,
+    0.18,
+    0.27
+   ],
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "Rock_Cliff_Texture_01_Normal_2K.png",
+   "projection": "BOX",
+   "bump_strength": 0.45,
+   "box_scale": 0.3333,
+   "mode": "box",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_StairCheek_Top",
+   "base_colour": [
+    0.36,
+    0.33,
+    0.46
+   ],
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "Rock_Cliff_Texture_01_Normal_2K.png",
+   "projection": "BOX",
+   "bump_strength": 0.45,
+   "box_scale": 0.3333,
+   "mode": "box",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_TierBlock_Edge",
+   "base_colour": [
+    0.16,
+    0.135,
+    0.25
+   ],
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "Rock_Cliff_Texture_01_Normal_2K.png",
+   "projection": "BOX",
+   "bump_strength": 0.45,
+   "box_scale": 0.3333,
+   "mode": "box",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_TierBlock_Face",
+   "base_colour": [
+    0.042,
+    0.036,
+    0.07
+   ],
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "Rock_Cliff_Texture_01_Normal_2K.png",
+   "projection": "BOX",
+   "bump_strength": 0.45,
+   "box_scale": 0.3333,
+   "mode": "box",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_TierBlock_Joint",
+   "base_colour": [
+    0.008,
+    0.007,
+    0.014
+   ],
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "Rock_Cliff_Texture_01_Normal_2K.png",
+   "projection": "BOX",
+   "bump_strength": 0.45,
+   "box_scale": 0.3333,
+   "mode": "box",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_TierBlock_Top",
+   "base_colour": [
+    0.085,
+    0.072,
+    0.135
+   ],
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "Rock_Cliff_Texture_01_Normal_2K.png",
+   "projection": "BOX",
+   "bump_strength": 0.45,
+   "box_scale": 0.3333,
+   "mode": "box",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_Wood_Covenant",
+   "base_tex": "T_Crucible_Planks.png",
+   "tint": [
+    1.425,
+    1.045,
+    0.76
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.75,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_Wood_Hegemony",
+   "base_tex": "T_Crucible_Planks.png",
+   "tint": [
+    1.178,
+    1.102,
+    1.102
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.75,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_Wood_Null",
+   "base_tex": "T_Crucible_Planks.png",
+   "tint": [
+    0.646,
+    0.532,
+    0.532
+   ],
+   "tint_blend": "MULTIPLY",
+   "roughness": 0.75,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_YardFloor_Covenant",
+   "crucible_floor": "T_Floor_Yard_Covenant.jpg",
+   "base_tex": "T_Floor_Yard_Covenant.jpg",
+   "roughness": 0.42,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "T_Floor_Yard_Covenant_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_YardFloor_Hegemony",
+   "crucible_floor": "T_Floor_Yard_Hegemony.jpg",
+   "base_tex": "T_Floor_Yard_Hegemony.jpg",
+   "roughness": 0.42,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "T_Floor_Yard_Hegemony_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_Crucible_YardFloor_Null",
+   "crucible_floor": "T_Floor_Yard_Null.jpg",
+   "base_tex": "T_Floor_Yard_Null.jpg",
+   "roughness": 0.42,
+   "metallic": 0.0,
+   "emission_strength": 0.0,
+   "emission_colour": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "alpha": 1.0,
+   "normal_tex": "T_Floor_Yard_Null_Normal_2K.png",
+   "projection": "FLAT",
+   "bump_strength": 0.35,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_PreviewFlame_Covenant",
+   "base_colour": [
+    1.0,
+    0.42,
+    0.04
+   ],
+   "roughness": 0.5,
+   "metallic": 0.0,
+   "emission_strength": 3.2,
+   "emission_colour": [
+    1.0,
+    0.42,
+    0.04
+   ],
+   "alpha": 1.0,
+   "mode": "flat",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_PreviewFlame_Null",
+   "base_colour": [
+    1.0,
+    0.08,
+    0.02
+   ],
+   "roughness": 0.5,
+   "metallic": 0.0,
+   "emission_strength": 3.2,
+   "emission_colour": [
+    1.0,
+    0.08,
+    0.02
+   ],
+   "alpha": 1.0,
+   "mode": "flat",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_PreviewFlame_Purple",
+   "base_colour": [
+    0.55,
+    0.12,
+    1.0
+   ],
+   "roughness": 0.5,
+   "metallic": 0.0,
+   "emission_strength": 3.2,
+   "emission_colour": [
+    0.55,
+    0.12,
+    1.0
+   ],
+   "alpha": 1.0,
+   "mode": "flat",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "M_ScaleFigure_PREVIEW",
+   "base_colour": [
+    0.95,
+    0.55,
+    0.1
+   ],
+   "roughness": 0.5,
+   "metallic": 0.0,
+   "emission_strength": 0.6,
+   "emission_colour": [
+    0.95,
+    0.5,
+    0.08
+   ],
+   "alpha": 1.0,
+   "mode": "flat",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "SciFiCity/PolygonScifi_01_A__Glow",
+   "variant_of": "SciFiCity/PolygonScifi_01_A",
+   "variant": "Glow",
+   "synty_material": "PolygonScifi_01_A",
+   "synty_pack": "PolygonSciFiCity",
+   "base_tex": "PolygonScifi_01_A.png",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 1.6,
+   "emission_tex": "PolygonScifi_01_A.png",
+   "alpha": 1.0,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "SciFiSpace/PolygonScifiSpace_01_A__CovenantGlow",
+   "variant_of": "SciFiSpace/PolygonScifiSpace_01_A",
+   "variant": "CovenantGlow",
+   "synty_material": "PolygonScifiSpace_01_A",
+   "synty_pack": "PolygonSciFiSpace",
+   "base_tex": "PolygonSciFiSpace_Texture_01_A.png",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 7.0,
+   "emission_colour": [
+    1.0,
+    0.62,
+    0.12
+   ],
+   "alpha": 1.0,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "SciFiSpace/PolygonScifiSpace_01_A__HegemonyGlow",
+   "variant_of": "SciFiSpace/PolygonScifiSpace_01_A",
+   "variant": "HegemonyGlow",
+   "synty_material": "PolygonScifiSpace_01_A",
+   "synty_pack": "PolygonSciFiSpace",
+   "base_tex": "PolygonSciFiSpace_Texture_01_A.png",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 7.0,
+   "emission_colour": [
+    0.36,
+    0.62,
+    1.0
+   ],
+   "alpha": 1.0,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "SciFiSpace/PolygonScifiSpace_01_A__NullGlow",
+   "variant_of": "SciFiSpace/PolygonScifiSpace_01_A",
+   "variant": "NullGlow",
+   "synty_material": "PolygonScifiSpace_01_A",
+   "synty_pack": "PolygonSciFiSpace",
+   "base_tex": "PolygonSciFiSpace_Texture_01_A.png",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 7.0,
+   "emission_colour": [
+    1.0,
+    0.1,
+    0.06
+   ],
+   "alpha": 1.0,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  },
+  {
+   "name": "SciFiWorlds/PolygonScifiWorlds_01_A",
+   "synty_material": "PolygonScifiWorlds_01_A",
+   "synty_pack": "PolygonSciFiWorlds",
+   "base_tex": "PolygonScifiWorlds_01_A.png",
+   "roughness": 0.85,
+   "metallic": 0.0,
+   "emission_strength": 3.0,
+   "emission_tex": "PolygonScifiWorlds_01_Emissive.png",
+   "alpha": 1.0,
+   "mode": "uv",
+   "blend_method": "DITHERED"
+  }
+ ]
+}

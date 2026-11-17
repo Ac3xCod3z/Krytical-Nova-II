@@ -15,12 +15,12 @@ MonoBehaviour:
   anchorToNightfall: 1
   nightfallHour: 20
   cycleMinutes: 60
-  callMinutes: 10
+  callMinutes: 15
   callRepeatSeconds: 60
-  joinWindowMinutes: 3
+  joinWindowMinutes: 5
   musterSeconds: 60
   warMinutes: 15
-  endSeconds: 20
+  endSeconds: 30
   minLevel: 10
   bracketSize: 10
   bracketCount: 10

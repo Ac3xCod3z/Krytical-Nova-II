@@ -9,6 +9,8 @@
         "KryticalNova.CharacterCreation",
         "KryticalNova.Combat",
         "KryticalNova.Crafting",
+        "KryticalNova.Crossfire",
+        "KryticalNova.Crossfire.Presentation",
         "KryticalNova.Economy",
         "KryticalNova.Factions",
         "KryticalNova.Forge",

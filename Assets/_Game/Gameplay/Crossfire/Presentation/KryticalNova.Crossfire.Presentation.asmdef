@@ -1,0 +1,19 @@
+{
+    "name": "KryticalNova.Crossfire.Presentation",
+    "rootNamespace": "KryticalNova.Crossfire",
+    "references": [
+        "KryticalNova.Runtime",
+        "KryticalNova.Crossfire"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "!UNITY_SERVER"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

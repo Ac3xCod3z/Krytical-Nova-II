@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using KryticalNova.Player;
@@ -61,7 +62,7 @@ namespace KryticalNova.EditorTools
             o.JoinReach = s.graphJoinReach;
             o.MinColliderHeight = s.minWallHeight;
             // Every solid thing but the players and their own parts.
-            o.Layers = Physics.DefaultRaycastLayers & ~LayerMask.GetMask("Player");
+            o.Layers = Physics.DefaultRaycastLayers & ~LayerMask.GetMask("Player", "Blocker");   // blockers are never walls (owner, 17 Nov 2026)
             return o;
         }
 
@@ -110,8 +111,21 @@ namespace KryticalNova.EditorTools
             Bounds region = ZoneRegion();
             o.Core = TownCore();
             o.DropUnreachable = true;
+            var regions = new List<Bounds> { region };
+            // The Crucible (owner's stop-gap, 16 Nov 2026: a self-contained map far out in Zone01) is a region of its own; its stair
+            // flights and their side walls make no wall nodes, and its blockers and stair ramps are hidden while baking.
+            var hidden = new List<GameObject>();
+            if (Crucible.CrucibleBuilder.SurfaceGraphParts(out Bounds crucible, out Matrix4x4[] excluded, hidden))
+            {
+                regions.Add(crucible);
+                o.Excluded = excluded;
+            }
+            foreach (GameObject h in hidden) h.SetActive(false);
+            Physics.SyncTransforms();
             var watch = System.Diagnostics.Stopwatch.StartNew();
-            SurfaceGraphBaker.Result r = SurfaceGraphBaker.Bake(new[] { region }, o);
+            SurfaceGraphBaker.Result r;
+            try { r = SurfaceGraphBaker.Bake(regions, o); }
+            finally { foreach (GameObject h in hidden) h.SetActive(true); Physics.SyncTransforms(); }
             watch.Stop();
 
             Directory.CreateDirectory(GraphFolder);

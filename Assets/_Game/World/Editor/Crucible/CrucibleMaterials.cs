@@ -1,0 +1,260 @@
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using Newtonsoft.Json.Linq;
+using UnityEditor;
+using UnityEngine;
+
+namespace KryticalNova.EditorTools.Crucible
+{
+    /// <summary>
+    /// The Crucible's materials, one per Blender material (MATERIALS_022b.json), all on Synty's PolygonShader so they batch with the
+    /// packs (SRP Batcher, GPU instancing on). A Synty-based one starts as a copy of its pack material (texture, atlas, alpha clip kept)
+    /// and gets Fable's tint, relief normal and emission; a Crucible one is made fresh. Box-projected stone ("box") uses the shader's
+    /// triplanar normals at Fable's mapping scale; height maps are not used (PolygonShader has no height input, so they never enter git).
+    /// </summary>
+    public static class CrucibleMaterials
+    {
+        const string ShaderPath = "Assets/Synty/PolygonGeneric/Shaders/PolygonShader.shadergraph";
+        const string SkyShader = "KN/Crucible Sky Dome";
+        /// <summary>Blender emission strength to the Unity HDR multiplier (both linear; run 8: an exponential map made the outer lava plain red).</summary>
+        const float EmissionScale = 1f;
+
+        static readonly Dictionary<string, string> PackFolder = new Dictionary<string, string>
+        {
+            { "DarkFortress", "PolygonDarkFortress" }, { "DarkFantasy", "PolygonDarkFantasy" }, { "Knights", "PolygonKnights" },
+            { "FantasyKingdom", "PolygonFantasyKingdom" }, { "SciFiCity", "PolygonSciFiCity" }, { "SciFiSpace", "PolygonSciFiSpace" },
+            { "SciFiWorlds", "PolygonSciFiWorlds" },
+        };
+
+        public static string AssetName(string blenderName) => "M_Crucible__" + blenderName.Replace('/', '_');
+
+        /// <summary>Makes or refreshes every material; returns them by Blender name.</summary>
+        public static Dictionary<string, Material> Build(CrucibleData data, System.Text.StringBuilder log)
+        {
+            var shader = AssetDatabase.LoadAssetAtPath<Shader>(ShaderPath);
+            if (shader == null) throw new System.Exception("PolygonShader not found at " + ShaderPath);
+            if (!AssetDatabase.IsValidFolder(CrucibleData.MaterialFolder)) AssetDatabase.CreateFolder(CrucibleData.Folder, "Materials");
+            var result = new Dictionary<string, Material>();
+            int fromPack = 0, fresh = 0, missingTex = 0;
+            if (!data.Materials.Any(x => (string)x["name"] == SealShardMaterial))
+                data.Materials.Add(new JObject
+                {
+                    ["name"] = SealShardMaterial, ["mode"] = "box", ["base_colour"] = new JArray(0.012f, 0.01f, 0.018f),
+                    ["roughness"] = 0.35f, ["metallic"] = 0.2f, ["normal_tex"] = "Rock_Cliff_Texture_01_Normal_2K.png", ["box_scale"] = 0.333f,
+                    ["bump_strength"] = 0.45f, ["emission_strength"] = 0.35f, ["emission_colour"] = new JArray(0.5f, 0.3f, 1.0f),
+                });
+            s_Missing.Clear();
+            foreach (JObject raw in data.Materials)
+            {
+                JObject m = Override(raw);
+                string name = (string)m["name"];
+                string path = $"{CrucibleData.MaterialFolder}/{AssetName(name)}.mat";
+                Material source = FindPackMaterial((string)m["synty_pack"] ?? PackOf(name), (string)m["synty_material"]);
+                Material mat;
+                if ((string)m["mode"] == "unlit")
+                {
+                    mat = new Material(Shader.Find(SkyShader));
+                    mat.SetTexture("_MainTex", Tex((string)m["emission_tex"]));
+                }
+                else
+                {
+                    mat = source != null ? new Material(source) : new Material(shader);
+                    if (source != null) fromPack++; else fresh++;
+                    // a pack material on another Synty graph (Generic_Basic / Generic_Standard / Basic_Wind): carry its maps over first
+                    Texture baseMap = source != null ? First(source, "_Base_Texture", "_Albedo_Map", "_Main_Texture", "_MainTex", "_BaseMap") : null;
+                    Texture emitMap = source != null ? First(source, "_Emission_Texture", "_Emission_Map", "_EmissionMap") : null;
+                    if (mat.shader != shader)
+                    {
+                        mat.shader = shader;
+                        if (baseMap != null) mat.SetTexture("_Base_Texture", baseMap);
+                        if (emitMap != null) mat.SetTexture("_Emission_Texture", emitMap);
+                    }
+                    Fill(mat, m, source, ref missingTex);
+                }
+                mat.name = AssetName(name);
+                mat.enableInstancing = true;
+                var existing = AssetDatabase.LoadAssetAtPath<Material>(path);
+                if (existing != null) { existing.shader = mat.shader; existing.CopyPropertiesFromMaterial(mat); existing.enableInstancing = true; EditorUtility.SetDirty(existing); mat = existing; }
+                else AssetDatabase.CreateAsset(mat, path);
+                result[name] = mat;
+            }
+            AssetDatabase.SaveAssets();
+            log.AppendLine($"Materials: {result.Count} ({fromPack} from Synty pack materials, {fresh} fresh), textures not found: {missingTex}{(s_Missing.Count > 0 ? " (" + string.Join(", ", s_Missing) + ")" : "")}.");
+            return result;
+        }
+
+        static void Fill(Material mat, JObject m, Material source, ref int missingTex)
+        {
+            string mode = (string)m["mode"];
+            // base colour: a pack texture (kept from the copy) or a Crucible texture, times Fable's tint; or a flat colour
+            // Fable's colours are linear (Blender); a material colour is set in sRGB, so every colour goes through .gamma
+            bool hasBase = !string.IsNullOrEmpty((string)m["base_tex"]) && (string)m["base_tex"] != "" || (source != null && mat.GetTexture("_Base_Texture") != null);
+            // an image node with no file in Blender comes out as an empty name
+            bool emptyImages = (m["base_tex"] != null && (string)m["base_tex"] == "") || (m["emission_tex"] != null && (string)m["emission_tex"] == "");
+            if (emptyImages)
+            {
+                // a Blender material whose images have no file (M_Crucible_Kit on the sealed north leaf): dark iron, no glow
+                m = (JObject)m.DeepClone();
+                m["base_colour"] = new JArray(0.05f, 0.05f, 0.06f); m["emission_strength"] = 0f; m["roughness"] = 0.6f; m["metallic"] = 0.6f;
+            }
+            if (mode == "flat" || (mode == "box" && !hasBase) || emptyImages)
+            {
+                mat.SetFloat("_Enable_Base_Texture", 0f);
+                mat.SetFloat("_Enable_Triplanar_Texture", 0f);
+                mat.SetColor("_Color_Tint", CrucibleData.Colour(m["base_colour"]).gamma);
+                mat.SetColor("_Color", CrucibleData.Colour(m["base_colour"]).gamma);
+            }
+            else
+            {
+                string baseTex = (string)m["base_tex"];
+                if (mat.GetTexture("_Base_Texture") == null)
+                {
+                    Texture2D t = Tex(baseTex);
+                    if (t == null) missingTex++;
+                    mat.SetTexture("_Base_Texture", t);
+                }
+                mat.SetFloat("_Enable_Base_Texture", 1f);
+                mat.SetFloat("_Enable_Triplanar_Texture", 0f);
+                Color tint = m["tint"] != null ? CrucibleData.Colour(m["tint"]).gamma : Color.white;
+                mat.SetColor("_Color_Tint", tint);
+            }
+            mat.SetFloat("_Smoothness", 1f - (float?)m["roughness"] ?? 0.2f);
+            mat.SetFloat("_Metallic", (float?)m["metallic"] ?? 0f);
+
+            // relief normal: UV-mapped on its own channel, or triplanar for box-projected stone
+            string normal = (string)m["normal_tex"];
+            Texture2D n = normal != null ? NormalTex(normal) : null;
+            if (normal != null && n == null) missingTex++;
+            float strength = Mathf.Clamp((float?)m["bump_strength"] ?? 0.35f, 0.1f, 1f) / 0.35f;
+            if (n != null && mode == "box")   // box-projected relief, with or without the pack's own base texture
+            {
+                float tiling = (float?)m["box_scale"] ?? 0.333f;
+                mat.SetFloat("_Enable_Normal_Texture", 0f);
+                mat.SetFloat("_Enable_Triplanar_Normals", 1f);
+                foreach (string side in new[] { "Top", "Side", "Bottom" })
+                {
+                    mat.SetTexture("_Triplanar_Normal_Texture_" + side, n);
+                    mat.SetVector("_Triplanar_Normal_Tiling_" + side, new Vector4(tiling, tiling, 0f, 0f));
+                    mat.SetFloat("_Triplanar_Normal_Intensity_" + side, strength);
+                }
+            }
+            else if (n != null)
+            {
+                mat.SetTexture("_Normal_Texture", n);
+                mat.SetFloat("_Enable_Normal_Texture", 1f);
+                mat.SetFloat("_Normal_Intensity", strength);
+                mat.SetFloat("_Enable_Triplanar_Normals", 0f);
+            }
+
+            // emission: Fable's strength as HDR stops on the emission texture (or colour)
+            float es = emptyImages ? 0f : (float?)m["emission_strength"] ?? 0f;
+            string emit = (string)m["emission_tex"];
+            if (es > 0.01f)
+            {
+                Texture2D e = emit != null ? Tex(emit) : null;
+                if (e == null) e = mat.GetTexture("_Emission_Texture") as Texture2D;
+                Color c = m["emission_colour"] != null ? CrucibleData.Colour(m["emission_colour"]) : Color.white;
+                float intensity = es * EmissionScale;   // Blender emission strength is a plain multiplier
+                if (e != null) { mat.SetTexture("_Emission_Texture", e); mat.SetFloat("_Enable_Emission_Texture", 1f); }
+                else mat.SetFloat("_Enable_Emission_Texture", 0f);
+                mat.SetColor("_Emission_Color_Tint", c * intensity);
+                mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.BakedEmissive;
+            }
+            else
+            {
+                mat.SetFloat("_Enable_Emission_Texture", 0f);
+                mat.SetColor("_Emission_Color_Tint", Color.black);
+            }
+        }
+
+
+        /// <summary>The seal shards' own material (Master, 17 Nov 2026: black shards, faint cold-violet shimmer as Fable's SealChains FX).</summary>
+        public const string SealShardMaterial = "M_Crucible_SealShard";
+
+        /// <summary>
+        /// Master's notes on run 12 (17 Nov 2026), on top of Fable's data: the StairLight steps read as lit stone, not lights (tint at
+        /// most 0.9, no boost); the sci-fi crates' green emissive map is off (not in FX_022); the seal shards get their own near-black,
+        /// faint violet material (added as an extra entry by <see cref="Build"/>).
+        /// </summary>
+        static JObject Override(JObject raw)
+        {
+            string name = (string)raw["name"];
+            if (name.Contains("StairLight") && raw["tint"] is JArray t)
+            {
+                var m = (JObject)raw.DeepClone();
+                float max = Mathf.Max((float)t[0], Mathf.Max((float)t[1], (float)t[2]));
+                m["tint"] = new JArray((float)t[0] / max * 0.9f, (float)t[1] / max * 0.9f, (float)t[2] / max * 0.9f);
+                return m;
+            }
+            if (name == "SciFiWorlds/PolygonScifiWorlds_01_A")
+            {
+                var m = (JObject)raw.DeepClone();
+                m["emission_strength"] = 0f;
+                return m;
+            }
+            return raw;
+        }
+
+        static Texture First(Material m, params string[] names)
+        {
+            foreach (string n in names)
+                if (m.HasProperty(n) && m.GetTexture(n) != null) return m.GetTexture(n);
+            return null;
+        }
+
+        static string PackOf(string blenderName)
+        {
+            int slash = blenderName.IndexOf('/');
+            return slash > 0 && PackFolder.TryGetValue(blenderName.Substring(0, slash), out string p) ? p : null;
+        }
+
+        static readonly Dictionary<string, Material> s_PackCache = new Dictionary<string, Material>();
+
+        static Material FindPackMaterial(string pack, string material)
+        {
+            if (string.IsNullOrEmpty(pack) || string.IsNullOrEmpty(material)) return null;
+            string key = pack + "/" + material;
+            if (s_PackCache.TryGetValue(key, out Material cached)) return cached;
+            Material found = null;
+            foreach (string guid in AssetDatabase.FindAssets(material + " t:Material", new[] { "Assets/Synty/" + pack }))
+            {
+                string p = AssetDatabase.GUIDToAssetPath(guid);
+                if (Path.GetFileNameWithoutExtension(p) != material) continue;
+                found = AssetDatabase.LoadAssetAtPath<Material>(p);
+                if (!p.Contains("/Alts/")) break;   // the pack's main copy over an alternate one
+            }
+            s_PackCache[key] = found;
+            return found;
+        }
+
+        /// <summary>A Crucible texture by Blender file name (a 2K normal of a floor is its 4K copy here).</summary>
+        static readonly HashSet<string> s_Missing = new HashSet<string>();
+
+        static Texture2D Tex(string file)
+        {
+            if (string.IsNullOrEmpty(file)) return null;
+            Texture2D found = TexOrNull(file);
+            if (found == null) s_Missing.Add(file);
+            return found;
+        }
+
+        static Texture2D TexOrNull(string file)
+        {
+            string stem = Path.GetFileNameWithoutExtension(file);
+            foreach (string ext in new[] { ".png", ".jpg", ".tga" })
+            {
+                var t = AssetDatabase.LoadAssetAtPath<Texture2D>($"{CrucibleData.TextureFolder}/{stem}{ext}");
+                if (t != null) return t;
+            }
+            return null;
+        }
+
+        static Texture2D NormalTex(string file)
+        {
+            Texture2D t = TexOrNull(file) ?? TexOrNull(Path.GetFileNameWithoutExtension(file).Replace("_Normal_2K", "_Normal_4K"));
+            if (t == null) s_Missing.Add(file);
+            return t;
+        }
+    }
+}
