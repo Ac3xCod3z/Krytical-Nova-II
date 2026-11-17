@@ -139,6 +139,18 @@ namespace KryticalNova.Player
         /// <summary>Raised where the death is decided, once the player is back on a spawn point with full health.</summary>
         public event Action Respawned;
 
+        /// <summary>
+        /// Server: picks where a dead player's body gets up instead of the map's spawn points (a war's own side yard: Crossfire, owner
+        /// 16 Nov 2026). Answers false for a body it does not place; the map's points are used then.
+        /// </summary>
+        public delegate bool RespawnSpotHandler(GameObject body, out Vector3 position, out Quaternion rotation);
+
+        /// <summary>The handler a higher system puts here (one way: Player never knows who fills it); null = the map's spawn points.</summary>
+        public static RespawnSpotHandler ServerRespawnSpot;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetRespawnSpot() => ServerRespawnSpot = null;
+
         public bool IsDead => phase != Phase.None;
         // a view of the entity netcode only shows (M4 6b): it never moves the root, turns the body or decides a respawn
         private bool HasAuthority => (!IsSpawned || IsServer) && !View;
@@ -783,7 +795,10 @@ namespace KryticalNova.Player
         private void ServerBodyRevive(bool atSpawnPoint)
         {
             BodyRoleTag tag = BodyRoleTag.Of(this);
-            if (atSpawnPoint && tag != null && tag.Mover != null)
+            if (atSpawnPoint && tag != null && tag.Mover != null && ServerRespawnSpot != null
+                && ServerRespawnSpot(gameObject, out Vector3 spot, out Quaternion facing))
+                tag.Mover.Teleport(spot, facing);   // a war side's dead get up in their own yard (Crossfire), never in town
+            else if (atSpawnPoint && tag != null && tag.Mover != null)
             {
                 var occupied = new List<Vector3>();
                 foreach (BodyRoleTag other in BodyRoleTag.ServerBodies)

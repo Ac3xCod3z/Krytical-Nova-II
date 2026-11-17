@@ -59,6 +59,7 @@ namespace KryticalNova.Crossfire.Entities
             m_Port = new PortHandler { System = this, Next = ZonePortal.TransferHandler };
             ZonePortal.TransferHandler = m_Port;
             CreateWar();
+            CreateJoins();
         }
 
         protected override void OnDestroy()
@@ -92,7 +93,7 @@ namespace KryticalNova.Crossfire.Entities
             m_Clock ??= World.GetExistingSystemManaged<CrossfireClockServerSystem>();
             if (m_Clock == null) return false;
             CrossfireSettings settings = m_Clock.ActiveSettings;
-            CrossfirePortAnswer answer = CrossfirePort.Decide(settings, m_Clock.Current, portalId, level, faction, out CrossfireArea yard);
+            CrossfirePortAnswer answer = CrossfirePort.Decide(settings, m_Clock.Current, portalId, level, faction, m_Clock.Now, out CrossfireArea yard);
             LastPortAnswer = answer;
             if (answer == CrossfirePortAnswer.NotThisPort || answer == CrossfirePortAnswer.NotCalled) return false;
             string message = CrossfirePort.Message(settings, answer, level);
@@ -110,11 +111,8 @@ namespace KryticalNova.Crossfire.Entities
                 result = new ZoneTransferResult(false, answer == CrossfirePortAnswer.Land ? settings.portNoRallyText : message);
                 return true;
             }
-            yard.Landing(out Vector3 at, out float yaw);
-            var mm = new int3((int)math.round(at.x * 1000f), (int)math.round(at.y * 1000f), (int)math.round(at.z * 1000f));
-            int yawCdeg = (int)math.round(Mathf.Repeat(yaw, 360f) * 100f) % 36000;
-            PlayerEntitiesSetup.Teleport(em, ghost, mm, yawCdeg);
-            m_Arriving.Add(ghost);
+            if (!SendToRally(ghost, yard)) return false;
+            if (!m_JoinWay.ContainsKey(ghost)) m_JoinWay[ghost] = CrossfireJoinWay.Port;
             Ported++;
             result = new ZoneTransferResult(true, message);
             return true;
@@ -129,25 +127,32 @@ namespace KryticalNova.Crossfire.Entities
             CrossfireState state = m_Clock.Current;
             if (!state.Known) return;
             EntityManager em = EntityManager;
+            EndWarIfOver(state, em);
             if (CrossfireArea.All.Count > 0)
             {
-                bool joinOpen = state.JoinOpen(m_Clock.Now);
+                // the yards take players in the join window and the settle, and a running War until its late-join cutoff (owner, 16 Nov 2026)
+                bool joinOpen = state.TakesPlayers(m_Clock.Now, LateCutoffSeconds);
                 LastJoinOpen = joinOpen;
                 Looks++;
-                foreach (var (pose, entity) in SystemAPI.Query<RefRO<PlayerPose>>().WithAll<PlayerGhostTag>().WithEntityAccess())
+                m_InLook = true;   // Admit's offers are queued until the look is done (no structural change while it iterates)
+                try
                 {
-                    Vector3 at = Meters(pose.ValueRO);
-                    var spot = new CrossfireSpot { Mm = new Vector3Int(pose.ValueRO.XMm, pose.ValueRO.YMm, pose.ValueRO.ZMm), YawCdeg = pose.ValueRO.YawCdeg };
-                    bool inArea = CrossfireArea.AnyContains(at, false), inYard = inArea && CrossfireArea.AnyContains(at, true);
-                    // a newcomer to a Rally Point while it takes players in: their side takes them, or (full) puts them back
-                    if (IsBot(entity)) continue;   // War Bots are never admitted, paid or sent back as real players (review 1, item 4)
-                    if (!inArea && m_Sides.TryGetSide(entity, out _) && !m_Arriving.Contains(entity)) m_Leaving.Add(entity);   // left the war (item 2)
-                    if (inArea) m_Arriving.Remove(entity);
-                    if (inArea && m_Mercs.Contains(entity) && !m_MercInside.Contains(entity)) m_ToSide.Add(entity);   // a Merc only once inside the war area
-                    if (inYard && joinOpen && !m_Entries.TryEntry(entity, out _) && m_Entries.TryOutside(entity, out CrossfireSpot from) && !Admit(entity, from))
-                        continue;
-                    m_Entries.Observe(entity, spot, inArea, inYard, joinOpen);
+                    foreach (var (pose, entity) in SystemAPI.Query<RefRO<PlayerPose>>().WithAll<PlayerGhostTag>().WithEntityAccess())
+                    {
+                        Vector3 at = Meters(pose.ValueRO);
+                        var spot = new CrossfireSpot { Mm = new Vector3Int(pose.ValueRO.XMm, pose.ValueRO.YMm, pose.ValueRO.ZMm), YawCdeg = pose.ValueRO.YawCdeg };
+                        bool inArea = CrossfireArea.AnyContains(at, false), inYard = inArea && CrossfireArea.AnyContains(at, true);
+                        // a newcomer to a Rally Point while it takes players in: their side takes them, or (full) puts them back
+                        if (IsBot(entity)) continue;   // War Bots are never admitted, paid or sent back as real players (review 1, item 4)
+                        if (!inArea && m_Sides.TryGetSide(entity, out _) && !m_Arriving.Contains(entity)) m_Leaving.Add(entity);   // left the war (item 2)
+                        if (inArea) m_Arriving.Remove(entity);
+                        if (inArea && m_Mercs.Contains(entity) && !m_MercInside.Contains(entity)) m_ToSide.Add(entity);   // a Merc only once inside the war area
+                        if (inYard && joinOpen && !m_Entries.TryEntry(entity, out _) && m_Entries.TryOutside(entity, out CrossfireSpot from) && !Admit(entity, from))
+                            continue;
+                        m_Entries.Observe(entity, spot, inArea, inYard, joinOpen);
+                    }
                 }
+                finally { SendQueued(); }
                 foreach (Entity who in m_ToSide) EnterAsMerc(who);
                 m_ToSide.Clear();
                 foreach (Entity who in m_Leaving) LeaveWar(who, true);
@@ -155,8 +160,16 @@ namespace KryticalNova.Crossfire.Entities
                 SendRefusedBack();
                 m_Entries.ForgetWhere(e => !em.Exists(e) || !em.HasComponent<PlayerPose>(e));
             }
-            // the war is over: back to the Gap (the End ran out, or a GM called it off), or out of the End into another war a GM started
             RunWar(state, m_Clock.Now);
+        }
+
+        /// <summary>
+        /// The war is over: back to the Gap (the End ran out, or a GM called it off), or out of the End into another war a GM started.
+        /// Runs FIRST in a tick, before anything of the new war: ending the old war after the new one's vote and join prompts were opened
+        /// in the same tick shut that vote for good and sent every prompt twice (EditMode, 16 Nov 2026).
+        /// </summary>
+        void EndWarIfOver(in CrossfireState state, EntityManager em)
+        {
             CrossfirePhase phase = state.Now.Phase;
             bool over = phase != m_LastPhase && m_LastPhase != CrossfirePhase.Gap
                 && (phase == CrossfirePhase.Gap || m_LastPhase == CrossfirePhase.End);

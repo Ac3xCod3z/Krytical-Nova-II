@@ -41,6 +41,7 @@ namespace KryticalNova.UI
         private Hud.ShowdownLetterbox letterbox;
         // Crossfire's kill counter (owner, 16 Nov 2026), at the top of the screen in a war.
         private Hud.CrossfireScoreView crossfireScore;
+        private Hud.CrossfireResultsView crossfireResults;
         private float nextTargetRefresh;
         private float requestStarted;
         private float requestEnds;
@@ -79,6 +80,8 @@ namespace KryticalNova.UI
             letterbox = new Hud.ShowdownLetterbox(root);
             crossfireScore?.Dispose();
             crossfireScore = new Hud.CrossfireScoreView(root);
+            crossfireResults?.Dispose();
+            crossfireResults = new Hud.CrossfireResultsView(root);
             ClientPresentationRegistry.RegisterDuel(this);
         }
 
@@ -89,12 +92,15 @@ namespace KryticalNova.UI
             letterbox = null;
             crossfireScore?.Dispose();
             crossfireScore = null;
+            crossfireResults?.Dispose();
+            crossfireResults = null;
         }
 
         private void Update()
         {
             letterbox?.Tick();
             crossfireScore?.Tick();
+            crossfireResults?.Tick();
             if (request == null) return;
             float now = Time.unscaledTime;
 

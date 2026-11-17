@@ -169,8 +169,26 @@ namespace KryticalNova.Crossfire
             return pay;
         }
 
+        /// <summary>A late joiner's pay (owner: diminished; <see cref="CrossfireRules.PayShare"/>): every part times <paramref name="share"/> (0 to 1).</summary>
+        public static CrossfirePay Scaled(in CrossfirePay pay, float share)
+        {
+            float k = Math.Max(0f, Math.Min(1f, share));
+            if (k >= 1f) return pay;
+            return new CrossfirePay
+            {
+                CharacterExp = (int)Math.Round(pay.CharacterExp * (double)k),
+                PetPercent = pay.PetPercent * k,
+                MountPercent = pay.MountPercent * k,
+                Creds = (long)Math.Round(pay.Creds * (double)k),
+            };
+        }
+
         /// <summary>A kill drops: only a real player killing a real player (never with a War Bot on either side), with <see cref="CrossfireSettings.killDropChance"/>; <paramref name="roll"/> in [0, 1).</summary>
         public static bool KillDrops(CrossfireSettings s, bool killerIsBot, bool victimIsBot, double roll) =>
-            s != null && !killerIsBot && !victimIsBot && roll < s.killDropChance;
+            KillDrops(s, killerIsBot, victimIsBot, roll, 1f);
+
+        /// <summary><see cref="KillDrops(CrossfireSettings, bool, bool, double)"/> for a killer who earns <paramref name="share"/> of the war's pay (a late joiner's drop chance is diminished too).</summary>
+        public static bool KillDrops(CrossfireSettings s, bool killerIsBot, bool victimIsBot, double roll, float share) =>
+            s != null && !killerIsBot && !victimIsBot && roll < s.killDropChance * Math.Max(0f, Math.Min(1f, share));
     }
 }

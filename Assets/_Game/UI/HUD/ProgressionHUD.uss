@@ -597,6 +597,24 @@
 .crossfire-score--null { color: rgb(200, 120, 255); }
 .crossfire-score--covenant { color: rgb(255, 196, 96); }
 
+/* Crossfire's results screen (owner, 16 Nov 2026: 30 s after the war, the scores and the payout, then back where you joined from). */
+.crossfire-results {
+    position: absolute; left: 0; right: 0; top: 22%;
+    align-items: center;
+}
+.crossfire-results-title {
+    font-size: 96px; letter-spacing: 6px; -unity-font-style: bold; color: rgb(240, 236, 255);
+    text-shadow: 5px 5px 0 rgb(10, 8, 20);
+    -unity-text-outline-width: 3px; -unity-text-outline-color: rgb(10, 8, 20);
+}
+.crossfire-results--won .crossfire-results-title { color: rgb(255, 214, 90); }
+.crossfire-results--lost .crossfire-results-title { color: rgb(255, 110, 96); }
+.crossfire-results-score, .crossfire-results-pay {
+    margin-top: 10px; font-size: 30px; -unity-font-style: bold; letter-spacing: 2px; color: rgb(240, 236, 255);
+    text-shadow: 3px 3px 0 rgb(10, 8, 20);
+    -unity-text-outline-width: 2px; -unity-text-outline-color: rgb(10, 8, 20);
+}
+
 /* The Cadence combo (owner, 23 Oct 2026): "COMBO ×n" lettered like the comic words of a fight, at the right of the
    screen, with the time left for the next step as a bar that runs down from right to left. Hotter with every step. */
 .combo { position: absolute; right: 6%; top: 13%; align-items: flex-end; rotate: -6deg; transform-origin: right center; }
