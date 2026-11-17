@@ -122,11 +122,11 @@ namespace KryticalNova.EditorTools
         /// </summary>
         private static bool CarriesClientOnlyType(MonoBehaviour mb)
         {
-            long[] ids = UnityEditor.SerializationUtility.GetManagedReferenceIds(mb);
+            long[] ids = UnityEngine.Serialization.ManagedReferenceUtility.GetManagedReferenceIds(mb);
             if (ids == null) return false;
             foreach (long id in ids)
             {
-                object value = UnityEditor.SerializationUtility.GetManagedReference(mb, id);
+                object value = UnityEngine.Serialization.ManagedReferenceUtility.GetManagedReference(mb, id);
                 if (value != null && ServerExcludedAssemblies.Contains(value.GetType().Assembly.GetName().Name)) return true;
             }
             return false;
