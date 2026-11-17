@@ -16,7 +16,7 @@ Material:
   - _OVERLAY_UV_CHANNEL_UV0
   m_InvalidKeywords:
   - _NORMALMAP
-  m_LightmapFlags: 2
+  m_LightmapFlags: 4
   m_EnableInstancingVariants: 1
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
@@ -134,7 +134,7 @@ Material:
     - _Enable_Ambient_Occlusion: 0
     - _Enable_Base_Texture: 1
     - _Enable_Emission: 1
-    - _Enable_Emission_Texture: 1
+    - _Enable_Emission_Texture: 0
     - _Enable_Normal_Texture: 0
     - _Enable_Overlay_Texture: 0
     - _Enable_Snow: 0
@@ -197,7 +197,7 @@ Material:
     - _Color_Tint: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0.6102941, g: 0.96774846, b: 1, a: 1}
     - _Emission_Color: {r: 0.6102941, g: 0.96774846, b: 1, a: 1}
-    - _Emission_Color_Tint: {r: 3, g: 3, b: 3, a: 3}
+    - _Emission_Color_Tint: {r: 0, g: 0, b: 0, a: 1}
     - _Emission_Offset: {r: 0, g: 0, b: 0, a: 0}
     - _Emission_Tiling: {r: 1, g: 1, b: 0, a: 0}
     - _Normal_Offset: {r: 0, g: 0, b: 0, a: 0}
