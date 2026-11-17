@@ -223,7 +223,7 @@ Material:
     - _Color_Tint: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0.5283019, g: 0.50537556, b: 0.50537556, a: 1}
     - _Emission_Color: {r: 0.5283019, g: 0.50537556, b: 0.50537556, a: 1}
-    - _Emission_Color_Tint: {r: 18.379177, g: 1.8379177, b: 1.1027507, a: 18.379177}
+    - _Emission_Color_Tint: {r: 7, g: 0.7, b: 0.42, a: 7}
     - _Emission_Offset: {r: 0, g: 0, b: 0, a: 0}
     - _Emission_Tiling: {r: 1, g: 1, b: 0, a: 0}
     - _Normal_Offset: {r: 0, g: 0, b: 0, a: 0}

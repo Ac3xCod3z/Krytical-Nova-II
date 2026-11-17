@@ -189,7 +189,7 @@ Material:
     - _Base_Offset: {r: 0, g: 0, b: 0, a: 0}
     - _Base_Tiling: {r: 1, g: 1, b: 0, a: 0}
     - _Color_Tint: {r: 1, g: 0.34919015, b: 0.27169973, a: 1}
-    - _Emission_Color_Tint: {r: 1.866066, g: 0.1866066, b: 0.11196396, a: 1.866066}
+    - _Emission_Color_Tint: {r: 1.5, g: 0.15, b: 0.089999996, a: 1.5}
     - _Emission_Offset: {r: 0, g: 0, b: 0, a: 0}
     - _Emission_Tiling: {r: 1, g: 1, b: 0, a: 0}
     - _Normal_Offset: {r: 0, g: 0, b: 0, a: 0}

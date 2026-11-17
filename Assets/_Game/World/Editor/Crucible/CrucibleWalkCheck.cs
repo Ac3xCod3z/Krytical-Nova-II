@@ -17,6 +17,7 @@ namespace KryticalNova.EditorTools.Crucible
     /// </summary>
     public static class CrucibleWalkCheck
     {
+        static readonly System.Collections.Generic.HashSet<string> s_Backfaces = new System.Collections.Generic.HashSet<string>();
         const float Step = 0.25f, Radius = 0.3f, Height = 1.8f, MaxStep = 0.45f, MaxDrop = 0.6f;
 
         public static void RunBatch() { string r = Run(); Debug.Log(r); EditorApplication.Exit(r.Contains("FAIL") ? 1 : 0); }
@@ -57,6 +58,7 @@ namespace KryticalNova.EditorTools.Crucible
                 Vector3 dir = (b - a); dir.y = 0f; dir.Normalize();
                 failures += Route("stair " + (string)f["name"], a - dir * 1.5f, b + dir * 1.5f, solid, log);
             }
+            if (s_Backfaces.Count > 0) log.AppendLine("  ground found only from below (flipped faces): " + string.Join(", ", s_Backfaces));
             log.AppendLine(failures == 0 ? "Walk check: PASS" : $"Walk check: FAIL ({failures} routes)");
             File.WriteAllText("Library/KryticalNova.CrucibleWalk.txt", log.ToString());
             return log.ToString();
@@ -77,6 +79,7 @@ namespace KryticalNova.EditorTools.Crucible
             Vector3 firstNoGround = Vector3.zero, firstWall = Vector3.zero;
             float length = 0f;
             Vector3 prev = path.corners[0];
+            float walkY = path.corners[0].y;
             float prevY = Ground(prev, solid, out _);
             for (int c = 1; c < path.corners.Length; c++)
             {
@@ -86,8 +89,10 @@ namespace KryticalNova.EditorTools.Crucible
                 for (float s = Step; s <= seg; s += Step)
                 {
                     Vector3 p = Vector3.Lerp(p0, p1, s / seg);
-                    // a straight line between far corners floats over stairs: stand on the NavMesh under this point first
-                    if (NavMesh.SamplePosition(p, out NavMeshHit onMesh, 4f, NavMesh.AllAreas)) p = onMesh.position;
+                    // follow the walked surface like a body: the NavMesh within 1 m of the last step's height (a straight line between far
+                    // corners floats over stairs; a wide search jumps onto stair cheeks)
+                    p.y = walkY;
+                    if (NavMesh.SamplePosition(p, out NavMeshHit onMesh, 1f, NavMesh.AllAreas)) { p = onMesh.position; walkY = p.y; }
                     float y = Ground(p, solid, out bool hit);
                     if (!hit) { if (noGround++ == 0) firstNoGround = p; continue; }
                     if (Mathf.Abs(y - prevY) > MaxStep) high++;
@@ -105,6 +110,15 @@ namespace KryticalNova.EditorTools.Crucible
         static float Ground(Vector3 p, int solid, out bool hit)
         {
             hit = Physics.Raycast(p + Vector3.up * 1.2f, Vector3.down, out RaycastHit h, 1.2f + MaxDrop, solid, QueryTriggerInteraction.Ignore);
+            if (!hit)
+            {
+                // diagnosis: is the ground there but facing down (a flipped mesh)?
+                bool was = Physics.queriesHitBackfaces;
+                Physics.queriesHitBackfaces = true;
+                if (Physics.Raycast(p + Vector3.up * 1.2f, Vector3.down, out RaycastHit back, 1.2f + MaxDrop, solid, QueryTriggerInteraction.Ignore))
+                    s_Backfaces.Add(back.collider.name);
+                Physics.queriesHitBackfaces = was;
+            }
             return hit ? h.point.y : p.y;
         }
     }
