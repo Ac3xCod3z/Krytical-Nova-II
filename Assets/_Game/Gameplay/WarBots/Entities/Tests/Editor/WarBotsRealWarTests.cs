@@ -164,6 +164,29 @@ namespace KryticalNova.WarBots.Entities.Tests
                 int score = killsBy[FactionId.Hegemony] + killsBy[FactionId.Null];
                 Debug.Log($"[WarBotsRealWar] admitted {bots.Admitted}, fight {ticks} ticks, kill events {anyKilled}, bot deaths {deaths}, "
                           + $"score Hegemony {killsBy[FactionId.Hegemony]} / Null {killsBy[FactionId.Null]}, live {bots.Live}");
+                // the evidence per bot (Master, 17 Nov 2026): how far it moved from its yard, whether it has a target, the health it lost
+                var lines = new System.Text.StringBuilder();
+                int moved = 0, targeting = 0, hurt = 0;
+                foreach (Entity g in botGhosts)
+                {
+                    if (!em.Exists(g)) continue;
+                    FactionId side = bots.SideOf(g);
+                    var p = em.GetComponentData<PlayerPose>(g);
+                    Vector3 at = new Vector3(p.XMm, p.YMm, p.ZMm) * 0.001f, from = side == FactionId.Hegemony ? HegemonyRally : NullRally;
+                    float away = Vector3.Distance(new Vector3(at.x, 0f, at.z), new Vector3(from.x, 0f, from.z));
+                    int target = em.HasComponent<CombatState>(g) ? em.GetComponentData<CombatState>(g).TargetGhostId : 0;
+                    float lost = 0f;
+                    if (em.HasComponent<PlayerVitals>(g))
+                    {
+                        var v = em.GetComponentData<PlayerVitals>(g);
+                        lost = v.MaxHealthMilli > 0 ? 1f - (float)v.HealthMilli / v.MaxHealthMilli : 0f;
+                    }
+                    if (away > 8f) moved++;
+                    if (target != 0) targeting++;
+                    if (lost > 0f) hurt++;
+                    lines.Append($" {side}:{away:0}m/t{target}/-{lost:P0}");
+                }
+                Debug.Log($"[WarBotsRealWar] per bot (side:metres from yard/target ghost/health lost): moved {moved}, targeting {targeting}, hurt {hurt};{lines}");
 
                 // no real player in the war (the client has no body): past the grace every bot goes home, through the game's leave
                 settings.noRealPlayerSeconds = 1f;
