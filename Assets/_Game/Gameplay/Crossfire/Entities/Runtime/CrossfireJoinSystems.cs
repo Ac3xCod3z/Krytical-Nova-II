@@ -361,7 +361,7 @@ namespace KryticalNova.Crossfire.Entities
                     Result = rpc.Result, Side = (FactionId)rpc.Side,
                     KillsHegemony = rpc.KillsHegemony, KillsNull = rpc.KillsNull, KillsCovenant = rpc.KillsCovenant,
                     Title = rpc.Title.ToString(), Pay = rpc.Pay.ToString(),
-                    ShownUntil = Time.realtimeSinceStartupAsDouble + rpc.Seconds,
+                    ShownUntil = UnityEngine.Time.realtimeSinceStartupAsDouble + rpc.Seconds,
                 };
             }
         }
