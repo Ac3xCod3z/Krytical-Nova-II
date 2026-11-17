@@ -542,6 +542,34 @@ namespace KryticalNova.EditorTools.Crucible
             return log.ToString();
         }
 
+
+        /// <summary>
+        /// What the Wallstride bake needs from a placed Crucible: its region (the playable square, with headroom), one exclusion box
+        /// per stair flight (the ramp widened 1.5 m each side for the side walls, 4 m tall), and the objects to hide while baking
+        /// (blockers and stair ramps, so neither becomes a wall). False when the open scene has no Crucible.
+        /// </summary>
+        public static bool SurfaceGraphParts(out Bounds region, out Matrix4x4[] excluded, List<GameObject> hide)
+        {
+            region = default; excluded = null;
+            GameObject root = GameObject.Find(RootName);
+            if (root == null) return false;
+            region = new Bounds(root.transform.TransformPoint(new Vector3(0f, 10f, 0f)), new Vector3(340f, 60f, 340f));
+            var boxes = new List<Matrix4x4>();
+            Transform ramps = root.transform.Find("Stair Ramps"), blockers = root.transform.Find("Blockers");
+            if (ramps != null)
+                foreach (BoxCollider b in ramps.GetComponentsInChildren<BoxCollider>(true))
+                {
+                    Transform t = b.transform;
+                    Vector3 size = new Vector3(b.size.x + 3f, 4f, b.size.z + 1f);
+                    Matrix4x4 world = Matrix4x4.TRS(t.TransformPoint(new Vector3(0f, 1.6f, 0f)), t.rotation, size);
+                    boxes.Add(world.inverse);
+                }
+            if (ramps != null) hide.Add(ramps.gameObject);
+            if (blockers != null) hide.Add(blockers.gameObject);
+            excluded = boxes.ToArray();
+            return true;
+        }
+
         static Transform Child(Transform parent, string name)
         {
             var t = new GameObject(name).transform;
