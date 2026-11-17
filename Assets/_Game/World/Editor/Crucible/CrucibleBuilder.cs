@@ -89,6 +89,8 @@ namespace KryticalNova.EditorTools.Crucible
                 var pv = probes.gameObject.AddComponent<UnityEngine.Rendering.ProbeVolume>();
                 pv.mode = UnityEngine.Rendering.ProbeVolume.Mode.Local;
                 pv.size = CrucibleLighting.VolumeSize;
+                pv.overridesSubdivLevels = true;
+                pv.lowestSubdivLevelOverride = CrucibleLighting.CrucibleLowestSubdiv;
                 CheckSizes(data, placed, log);
                 MeshLods(root, log);
 

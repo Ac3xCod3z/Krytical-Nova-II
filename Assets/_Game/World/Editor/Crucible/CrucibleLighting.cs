@@ -18,6 +18,8 @@ namespace KryticalNova.EditorTools.Crucible
     public static class CrucibleLighting
     {
         const string Day = "Day", Night = "Night";
+        /// <summary>APV subdivision level 0 = 3 m between probes, each level x3: 1 = 9 m.</summary>
+        public const int CrucibleLowestSubdiv = 1;
         public static readonly Vector3 VolumeCentre = new Vector3(0f, 8f, 0f), VolumeSize = new Vector3(340f, 50f, 340f);
 
         public static void BakeBatch()
@@ -55,6 +57,9 @@ namespace KryticalNova.EditorTools.Crucible
             var vol = t.GetComponent<ProbeVolume>() ?? t.gameObject.AddComponent<ProbeVolume>();
             vol.mode = ProbeVolume.Mode.Local;
             vol.size = VolumeSize;
+            // 9 m finest probe spacing over the map (light runs 13-15: 3 m over 2,384 pieces ran the PC out of memory)
+            vol.overridesSubdivLevels = true;
+            vol.lowestSubdivLevelOverride = CrucibleLowestSubdiv;
             log.AppendLine($"Crucible volume: local {VolumeSize} at {t.position}.");
 
             // the same two scenarios Zone01 bakes, one after the other, synchronously (batch)
