@@ -118,6 +118,9 @@ namespace KryticalNova.WarBots
         [Min(0.1f)] public float stuckMeters = 1f;
         [Tooltip("...for this many seconds, not fighting, is stuck and is put back on its Rally Point.")]
         [Min(1f)] public float stuckSeconds = 12f;
+        [Tooltip("A dead bot gets up where the server revives it: in a war, at its own side's Rally Point shrine (Crossfire's yard respawn). " +
+                 "Only if it got up further than this from its Rally Point (metres; outside the war, say in town) is it put back there.")]
+        [Min(1f)] public float backToRallyAfterRespawnMeters = 60f;
         [Tooltip("Coming in: the first bot stands this far from the Rally Point's landing spot (metres)...")]
         [Min(0f)] public float rallySpreadMinMeters = 1.5f;
         [Tooltip("...each next ring of bots this much further out...")]

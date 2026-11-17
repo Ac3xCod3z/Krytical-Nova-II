@@ -369,6 +369,13 @@ namespace KryticalNova.WarBots
 
         // ------------------------------------------------------------------ geometry and counts
 
+        /// <summary>
+        /// After a respawn: the bot is put back on its Rally Point only when it got up far from it. In a war the server already revives
+        /// it at its own side's Rally Point shrine (Crossfire's yard respawn), and it stays where it got up.
+        /// </summary>
+        public static bool BackToRallyAfterRespawn(Vector3 gotUpAt, Vector3 rally, WarBotSettings s) =>
+            FlatDistance(gotUpAt, rally) > s.backToRallyAfterRespawnMeters;
+
         public static float FlatDistance(Vector3 a, Vector3 b)
         {
             float dx = a.x - b.x, dz = a.z - b.z;

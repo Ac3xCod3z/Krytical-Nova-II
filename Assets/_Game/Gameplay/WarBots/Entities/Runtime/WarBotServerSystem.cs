@@ -475,9 +475,10 @@ namespace KryticalNova.WarBots.Entities
             }
             if (b.WasDead)
             {
-                // back after a respawn (in town): to its side's Rally Point (the minimal unstick the brief allows)
+                // back after a respawn: in a war it got up at its own side's Rally Point shrine and stays there; only one that got up
+                // far away (outside the war) is put back on its Rally Point (the minimal unstick the brief allows)
                 b.WasDead = false;
-                if (WarBotRules.FlatDistance(me, b.Rally) > s.sightMeters) { ToRally(b); return; }
+                if (WarBotRules.BackToRallyAfterRespawn(me, b.Rally, s)) { ToRally(b); return; }
             }
             if (Stuck(b, me, combat)) { ToRally(b); return; }
 

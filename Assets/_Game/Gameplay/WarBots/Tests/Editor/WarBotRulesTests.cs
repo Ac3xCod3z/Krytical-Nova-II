@@ -374,5 +374,20 @@ namespace KryticalNova.WarBots.Tests
             Assert.IsFalse(WarBotRules.AllGoHome(0, ref since, 300, s));
             Assert.IsTrue(WarBotRules.AllGoHome(0, ref since, 300 + s.noRealPlayerSeconds, s), "nobody for the whole grace: every bot leaves");
         }
+
+        [Test]
+        public void ARespawnedBot_StaysAtItsYardShrine_OnlyOneThatGotUpFarAway_GoesBackToItsRallyPoint()
+        {
+            // Master-24 / crossfire-b, 16 Nov 2026: in a war a dead bot gets up at its own side's Rally Point shrine (#341's yard respawn)
+            Vector3 landing = new Vector3(-100f, 0f, 0f);
+            Vector3 shrine = landing + new Vector3(12f, 3f, -8f);          // the yard's respawn spot, a few metres off the landing
+            Vector3 ring = shrine + new Vector3(4.8f, 0f, 0f);             // a later dead one, further out on the respawn ring
+            Assert.IsFalse(WarBotRules.BackToRallyAfterRespawn(shrine, landing, s), "got up at its shrine: no teleport");
+            Assert.IsFalse(WarBotRules.BackToRallyAfterRespawn(ring, landing, s), "on the shrine's ring: no teleport");
+            Vector3 town = landing + new Vector3(s.backToRallyAfterRespawnMeters + 1f, 0f, 0f);
+            Assert.IsTrue(WarBotRules.BackToRallyAfterRespawn(town, landing, s), "got up outside the war: put back on its Rally Point");
+            Vector3 edge = landing + new Vector3(0f, 40f, s.backToRallyAfterRespawnMeters);  // height does not count, only the flat distance
+            Assert.IsFalse(WarBotRules.BackToRallyAfterRespawn(edge, landing, s), "right at the limit: stays");
+        }
     }
 }
