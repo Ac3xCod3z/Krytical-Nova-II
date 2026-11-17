@@ -631,7 +631,7 @@ namespace KryticalNova.EditorTools.Crucible
                 go.transform.localPosition = CrucibleData.V(fx["unity_pos"]);
                 var light = go.AddComponent<Light>();
                 light.type = type.StartsWith("Spot") ? LightType.Spot : LightType.Point;
-                light.color = CrucibleData.Colour(fx["colour_linear"]);
+                light.color = CrucibleData.Colour(fx["colour_linear"]).gamma;   // Fable gives linear colours; Light.color is sRGB
                 light.intensity = (float)l["intensity"];
                 light.range = (float)l["range_m"];
                 light.shadows = (string)l["shadows"] == "Soft" ? LightShadows.Soft : LightShadows.None;

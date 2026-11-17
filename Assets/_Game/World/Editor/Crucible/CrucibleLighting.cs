@@ -119,7 +119,7 @@ namespace KryticalNova.EditorTools.Crucible
             log.AppendLine($"Town pictures ({tag}): plaza {plaza}, Sky Lift {lift}, street {street}, day + night.");
         }
 
-        static void Preview(KryticalNova.World.EnvironmentPresenter env, float hours)
+        internal static void Preview(KryticalNova.World.EnvironmentPresenter env, float hours)
         {
             if (env == null) return;
             var so = new SerializedObject(env);

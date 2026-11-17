@@ -34,7 +34,7 @@ namespace KryticalNova.EditorTools.Crucible
 
         /// <summary>
         /// Fable's custom pieces: the axis change baked into the vertices (the builder uses the meshes alone, so a node rotation would be
-        /// lost), no materials or colliders from the file (the builder makes both), readable off, Mesh LOD left to the builder.
+        /// lost), no materials or colliders from the file (the builder makes both), readable on (MeshColliders), Mesh LOD left to the builder.
         /// </summary>
         void OnPreprocessModel()
         {
@@ -47,7 +47,7 @@ namespace KryticalNova.EditorTools.Crucible
             mi.addCollider = false;
             mi.importCameras = false;
             mi.importLights = false;
-            mi.isReadable = false;
+            mi.isReadable = true;   // the ground quarters and hulls are MeshColliders on turned pieces (run 7: two quarters had no collision)
             mi.importAnimation = false;
             mi.animationType = ModelImporterAnimationType.None;
         }

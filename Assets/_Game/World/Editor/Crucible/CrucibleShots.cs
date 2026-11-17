@@ -1,4 +1,5 @@
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -62,6 +63,24 @@ namespace KryticalNova.EditorTools.Crucible
                 tex.Apply();
                 File.WriteAllBytes(Path.Combine(folder, v.name + ".png"), tex.EncodeToPNG());
                 n++;
+            }
+            // the night look: Zone01's presenter previewed at midnight (moon, night ambient, the Night probe scenario)
+            var env = Object.FindAnyObjectByType<KryticalNova.World.EnvironmentPresenter>();
+            if (env != null)
+            {
+                CrucibleLighting.Preview(env, 0f);
+                if (UnityEngine.Rendering.ProbeReferenceVolume.instance.isInitialized) UnityEngine.Rendering.ProbeReferenceVolume.instance.lightingScenario = "Night";
+                foreach (var v in Views.Where(x => x.name.StartsWith("02") || x.name.StartsWith("06") || x.name.StartsWith("01")))
+                {
+                    Vector3 eye = root.transform.TransformPoint(v.eye), at = root.transform.TransformPoint(v.at);
+                    cam.transform.SetPositionAndRotation(eye, Quaternion.LookRotation(at - eye, Vector3.up));
+                    cam.Render();
+                    RenderTexture.active = rt;
+                    tex.ReadPixels(new Rect(0, 0, 1600, 900), 0, 0);
+                    tex.Apply();
+                    File.WriteAllBytes(Path.Combine(folder, v.name + "_night.png"), tex.EncodeToPNG());
+                    n++;
+                }
             }
             RenderTexture.active = null;
             Object.DestroyImmediate(camGo);

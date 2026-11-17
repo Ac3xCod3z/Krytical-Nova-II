@@ -40,7 +40,10 @@ namespace KryticalNova.EditorTools.Crucible
             int openedGates = 0;
             foreach (NavMeshObstacle ob in cf.GetComponentsInChildren<NavMeshObstacle>(true))
                 if (ob.name.StartsWith("Rally Gate")) { ob.enabled = false; openedGates++; }
-            log.AppendLine($"  ({openedGates} Rally Gates opened for the walk)");
+            // a disabled obstacle's carve only lifts on the NavMesh system's next tick, which a batch run never gives: re-bake in memory
+            var surface = root.GetComponent<Unity.AI.Navigation.NavMeshSurface>();
+            if (surface != null) surface.BuildNavMesh();
+            log.AppendLine($"  ({openedGates} Rally Gates opened for the walk; NavMesh re-baked in memory, not saved)");
             foreach (string faction in new[] { "Covenant", "Hegemony", "Null" })
             {
                 Transform landing = cf.Find("MARK_Landing_" + faction);

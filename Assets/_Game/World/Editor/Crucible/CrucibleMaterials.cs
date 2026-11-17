@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -53,7 +54,7 @@ namespace KryticalNova.EditorTools.Crucible
                     mat = source != null ? new Material(source) : new Material(shader);
                     if (source != null) fromPack++; else fresh++;
                     // a pack material on another Synty graph (Generic_Basic / Generic_Standard / Basic_Wind): carry its maps over first
-                    Texture baseMap = source != null ? First(source, "_Base_Texture", "_Albedo_Map", "_MainTex", "_BaseMap") : null;
+                    Texture baseMap = source != null ? First(source, "_Base_Texture", "_Albedo_Map", "_Main_Texture", "_MainTex", "_BaseMap") : null;
                     Texture emitMap = source != null ? First(source, "_Emission_Texture", "_Emission_Map", "_EmissionMap") : null;
                     if (mat.shader != shader)
                     {
@@ -79,12 +80,22 @@ namespace KryticalNova.EditorTools.Crucible
         {
             string mode = (string)m["mode"];
             // base colour: a pack texture (kept from the copy) or a Crucible texture, times Fable's tint; or a flat colour
-            if (mode == "flat" || mode == "box")
+            // Fable's colours are linear (Blender); a material colour is set in sRGB, so every colour goes through .gamma
+            bool hasBase = !string.IsNullOrEmpty((string)m["base_tex"]) && (string)m["base_tex"] != "" || (source != null && mat.GetTexture("_Base_Texture") != null);
+            // an image node with no file in Blender comes out as an empty name
+            bool emptyImages = (m["base_tex"] != null && (string)m["base_tex"] == "") || (m["emission_tex"] != null && (string)m["emission_tex"] == "");
+            if (emptyImages)
+            {
+                // a Blender material whose images have no file (M_Crucible_Kit on the sealed north leaf): dark iron, no glow
+                m = (JObject)m.DeepClone();
+                m["base_colour"] = new JArray(0.05f, 0.05f, 0.06f); m["emission_strength"] = 0f; m["roughness"] = 0.6f; m["metallic"] = 0.6f;
+            }
+            if (mode == "flat" || (mode == "box" && !hasBase) || emptyImages)
             {
                 mat.SetFloat("_Enable_Base_Texture", 0f);
                 mat.SetFloat("_Enable_Triplanar_Texture", 0f);
-                mat.SetColor("_Color_Tint", CrucibleData.Colour(m["base_colour"]));
-                mat.SetColor("_Color", CrucibleData.Colour(m["base_colour"]));
+                mat.SetColor("_Color_Tint", CrucibleData.Colour(m["base_colour"]).gamma);
+                mat.SetColor("_Color", CrucibleData.Colour(m["base_colour"]).gamma);
             }
             else
             {
@@ -97,7 +108,7 @@ namespace KryticalNova.EditorTools.Crucible
                 }
                 mat.SetFloat("_Enable_Base_Texture", 1f);
                 mat.SetFloat("_Enable_Triplanar_Texture", 0f);
-                Color tint = m["tint"] != null ? CrucibleData.Colour(m["tint"]) : Color.white;
+                Color tint = m["tint"] != null ? CrucibleData.Colour(m["tint"]).gamma : Color.white;
                 mat.SetColor("_Color_Tint", tint);
             }
             mat.SetFloat("_Smoothness", 1f - (float?)m["roughness"] ?? 0.2f);
@@ -108,7 +119,7 @@ namespace KryticalNova.EditorTools.Crucible
             Texture2D n = normal != null ? NormalTex(normal) : null;
             if (normal != null && n == null) missingTex++;
             float strength = Mathf.Clamp((float?)m["bump_strength"] ?? 0.35f, 0.1f, 1f) / 0.35f;
-            if (n != null && mode == "box")
+            if (n != null && mode == "box")   // box-projected relief, with or without the pack's own base texture
             {
                 float tiling = (float?)m["box_scale"] ?? 0.333f;
                 mat.SetFloat("_Enable_Normal_Texture", 0f);
@@ -129,7 +140,7 @@ namespace KryticalNova.EditorTools.Crucible
             }
 
             // emission: Fable's strength as HDR stops on the emission texture (or colour)
-            float es = (float?)m["emission_strength"] ?? 0f;
+            float es = emptyImages ? 0f : (float?)m["emission_strength"] ?? 0f;
             string emit = (string)m["emission_tex"];
             if (es > 0.01f)
             {
