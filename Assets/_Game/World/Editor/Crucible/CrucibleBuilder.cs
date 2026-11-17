@@ -156,6 +156,8 @@ namespace KryticalNova.EditorTools.Crucible
                     go.transform.SetParent(group, false);
                     go.GetComponent<MeshFilter>().sharedMesh = mesh;
                     var list = ((JArray)o["materials"]).Select(t => mats.TryGetValue((string)t, out Material m) ? m : null).ToArray();
+                    if (((string)o["mesh"]).Contains("SealShard") && mats.TryGetValue(CrucibleMaterials.SealShardMaterial, out Material shard))
+                        list = list.Select(_ => shard).ToArray();   // Master: black shards with a faint violet shimmer
                     if (list.Any(m => m == null)) matMisses++;
                     go.GetComponent<MeshRenderer>().sharedMaterials = list;
                     custom++;

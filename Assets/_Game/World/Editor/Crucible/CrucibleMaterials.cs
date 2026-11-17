@@ -37,9 +37,17 @@ namespace KryticalNova.EditorTools.Crucible
             if (!AssetDatabase.IsValidFolder(CrucibleData.MaterialFolder)) AssetDatabase.CreateFolder(CrucibleData.Folder, "Materials");
             var result = new Dictionary<string, Material>();
             int fromPack = 0, fresh = 0, missingTex = 0;
+            if (!data.Materials.Any(x => (string)x["name"] == SealShardMaterial))
+                data.Materials.Add(new JObject
+                {
+                    ["name"] = SealShardMaterial, ["mode"] = "box", ["base_colour"] = new JArray(0.012f, 0.01f, 0.018f),
+                    ["roughness"] = 0.35f, ["metallic"] = 0.2f, ["normal_tex"] = "Rock_Cliff_Texture_01_Normal_2K.png", ["box_scale"] = 0.333f,
+                    ["bump_strength"] = 0.45f, ["emission_strength"] = 0.35f, ["emission_colour"] = new JArray(0.5f, 0.3f, 1.0f),
+                });
             s_Missing.Clear();
-            foreach (JObject m in data.Materials)
+            foreach (JObject raw in data.Materials)
             {
+                JObject m = Override(raw);
                 string name = (string)m["name"];
                 string path = $"{CrucibleData.MaterialFolder}/{AssetName(name)}.mat";
                 Material source = FindPackMaterial((string)m["synty_pack"] ?? PackOf(name), (string)m["synty_material"]);
@@ -158,6 +166,34 @@ namespace KryticalNova.EditorTools.Crucible
                 mat.SetFloat("_Enable_Emission_Texture", 0f);
                 mat.SetColor("_Emission_Color_Tint", Color.black);
             }
+        }
+
+
+        /// <summary>The seal shards' own material (Master, 17 Nov 2026: black shards, faint cold-violet shimmer as Fable's SealChains FX).</summary>
+        public const string SealShardMaterial = "M_Crucible_SealShard";
+
+        /// <summary>
+        /// Master's notes on run 12 (17 Nov 2026), on top of Fable's data: the StairLight steps read as lit stone, not lights (tint at
+        /// most 0.9, no boost); the sci-fi crates' green emissive map is off (not in FX_022); the seal shards get their own near-black,
+        /// faint violet material (added as an extra entry by <see cref="Build"/>).
+        /// </summary>
+        static JObject Override(JObject raw)
+        {
+            string name = (string)raw["name"];
+            if (name.Contains("StairLight") && raw["tint"] is JArray t)
+            {
+                var m = (JObject)raw.DeepClone();
+                float max = Mathf.Max((float)t[0], Mathf.Max((float)t[1], (float)t[2]));
+                m["tint"] = new JArray((float)t[0] / max * 0.9f, (float)t[1] / max * 0.9f, (float)t[2] / max * 0.9f);
+                return m;
+            }
+            if (name == "SciFiWorlds/PolygonScifiWorlds_01_A")
+            {
+                var m = (JObject)raw.DeepClone();
+                m["emission_strength"] = 0f;
+                return m;
+            }
+            return raw;
         }
 
         static Texture First(Material m, params string[] names)
