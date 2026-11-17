@@ -25,10 +25,11 @@ namespace KryticalNova.Persistence.Entities
         static Camera s_ShotCamera;
         static Vector3 s_ShotPos;
         static Quaternion s_ShotRot;
-        static bool s_ShotOn;
+        static bool s_ShotOn, s_FogOff;
 
         static void BeforeCamera(ScriptableRenderContext ctx, Camera cam)
         {
+            if (s_FogOff) RenderSettings.fog = false;
             if (!s_ShotOn || cam != s_ShotCamera) return;
             cam.transform.SetPositionAndRotation(s_ShotPos, s_ShotRot);
         }
@@ -167,6 +168,23 @@ namespace KryticalNova.Persistence.Entities
                 Log($"jump out: {(jumpOk ? "PASS" : "FAIL")}; the body reached local x {farX:F1} at most (wall face at 159.6), stands at {after:F1}");
                 if (!jumpOk) failures++;
 
+                // 4b. a jump between two walkable places whose arc crosses a Blocker (rim -> Hegemony yard over Blocker_0003, 31 m):
+                // the landing is fine, so only the Blocker can stop it ("The jump arc or landing area is blocked.")
+                Vector3 rim = P(114f, 46f);
+                teleport(rim);
+                yield return new WaitForSeconds(2f);
+                Log($"SEGMENT jumpblock start frame {Time.frameCount}");
+                Vector3 yard = P(124f, 36f);
+                BodyClicks.Jump(yard);
+                float bt = Time.realtimeSinceStartup;
+                float maxX = float.MinValue;
+                while (Time.realtimeSinceStartup - bt < 4f) { yield return null; maxX = Mathf.Max(maxX, root.InverseTransformPoint(serverPosition()).x); }
+                bool blockOk = maxX < 117.5f;
+                Log($"SEGMENT jumpblock end frame {Time.frameCount}");
+                Log($"jump over a Blocker: {(blockOk ? "PASS" : "FAIL")}; from {root.InverseTransformPoint(rim):F1} to {root.InverseTransformPoint(yard):F1}, " +
+                    $"the body reached local x {maxX:F1} at most (the wall at 117.5), stands at {root.InverseTransformPoint(serverPosition()):F1}");
+                if (!blockOk) failures++;
+
                 // 5. the wall-run: the Rim wall UCX_wall_0441 (local x -117.7, z 40..114, 8.87 m, faces +x), not a stair side
                 teleport(P(-110f, 77f));
                 yield return new WaitForSeconds(2f);
@@ -194,6 +212,21 @@ namespace KryticalNova.Persistence.Entities
                 Log($"SEGMENT aurora start frame {Time.frameCount}");
                 yield return new WaitForSeconds(8f);
                 Log($"SEGMENT aurora end frame {Time.frameCount}");
+                // why the sky may not show (run 1 of the Play proofs, 17 Nov: a flat purple sky): the fog, the dome, the camera
+                Camera c = s_ShotCamera;
+                Log($"sky check: fog {RenderSettings.fog} {RenderSettings.fogMode} density {RenderSettings.fogDensity:F5} colour {RenderSettings.fogColor}; " +
+                    $"camera '{(c != null ? c.name : "none")}' far clip {(c != null ? c.farClipPlane : 0f):F0} at {(c != null ? root.InverseTransformPoint(c.transform.position) : Vector3.zero):F1}");
+                foreach (Renderer r in root.GetComponentsInChildren<Renderer>(true).Where(r => r.name.IndexOf("Sky", StringComparison.OrdinalIgnoreCase) >= 0).Take(4))
+                    Log($"sky check: renderer '{r.name}' active {r.gameObject.activeInHierarchy} enabled {r.enabled} visible {r.isVisible} shader '{(r.sharedMaterial != null ? r.sharedMaterial.shader.name : "none")}' " +
+                        $"bounds centre {root.InverseTransformPoint(r.bounds.center):F0} size {r.bounds.size:F0}");
+                bool fogWas = RenderSettings.fog;
+                Log($"SEGMENT aurora_nofog start frame {Time.frameCount}");
+                float nf = Time.realtimeSinceStartup;
+                s_FogOff = true;   // applied just before the camera renders (the presenter sets the fog every frame)
+                while (Time.realtimeSinceStartup - nf < 3f) yield return null;
+                s_FogOff = false;
+                RenderSettings.fog = fogWas;
+                Log($"SEGMENT aurora_nofog end frame {Time.frameCount}");
                 if (moon != null)
                 {
                     s_ShotRot = Quaternion.LookRotation(-moon.transform.forward);
@@ -214,6 +247,7 @@ namespace KryticalNova.Persistence.Entities
             finally
             {
                 s_ShotOn = false;
+                s_FogOff = false;
                 RenderPipelineManager.beginCameraRendering -= BeforeCamera;
             }
             Log(failures == 0 ? "all parts PASS" : $"{failures} part(s) FAILED");
