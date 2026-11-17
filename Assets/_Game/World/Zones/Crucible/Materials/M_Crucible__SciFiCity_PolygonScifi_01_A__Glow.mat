@@ -26,8 +26,6 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - _ALPHATEST_ON
-  - _BUILTIN_ALPHATEST_ON
-  - _BUILTIN_AlphaClip
   - _OVERLAY_UV_CHANNEL_UV0
   m_InvalidKeywords:
   - _EMISSION
@@ -37,8 +35,7 @@ Material:
   m_EnableInstancingVariants: 1
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
-  stringTagMap:
-    RenderType: TransparentCutout
+  stringTagMap: {}
   disabledShaderPasses:
   - MOTIONVECTORS
   m_LockedProperties: 
@@ -54,7 +51,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Base_Texture:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: db556d465e9f4ab4caffaf339cf5b656, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Emission_Map:
@@ -62,7 +59,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Emission_Texture:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: f31e15c1060870d4196e7875363cbb5d, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Metallic_Smoothness_Texture:
@@ -131,7 +128,7 @@ Material:
     - _BUILTIN_Blend: 0
     - _BUILTIN_CullMode: 0
     - _BUILTIN_DstBlend: 0
-    - _BUILTIN_QueueControl: 0
+    - _BUILTIN_QueueControl: -1
     - _BUILTIN_QueueOffset: 0
     - _BUILTIN_SrcBlend: 1
     - _BUILTIN_Surface: 0
@@ -153,7 +150,7 @@ Material:
     - _Enable_Ambient_Occlusion: 0
     - _Enable_Base_Texture: 1
     - _Enable_Emission: 1
-    - _Enable_Emission_Texture: 0
+    - _Enable_Emission_Texture: 1
     - _Enable_Normal_Texture: 0
     - _Enable_Overlay_Texture: 0
     - _Enable_Snow: 0

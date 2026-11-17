@@ -160,6 +160,7 @@ namespace KryticalNova.EditorTools.Crucible
                 }
                 go.name = name;
                 if (!data.TryUnityMatrix(name, pivot, out Matrix4x4 u)) { log.AppendLine("No matrix for " + name); continue; }
+                if (kind != "synty") u *= CrucibleData.CustomMeshFix;
                 CrucibleData.Apply(go.transform, u);
                 MakeStatic(go, coll == "SkyDome");
                 placed[name] = go;
@@ -260,7 +261,7 @@ namespace KryticalNova.EditorTools.Crucible
                 if (!meshes.TryGetValue(n, out Mesh mesh)) { log.AppendLine("FAIL: no hull mesh " + n); continue; }
                 var go = new GameObject(n);
                 go.transform.SetParent(hulls, false);
-                if (data.TryUnityMatrix(n, Vector3.zero, out Matrix4x4 u)) CrucibleData.Apply(go.transform, u);
+                if (data.TryUnityMatrix(n, Vector3.zero, out Matrix4x4 u)) CrucibleData.Apply(go.transform, u * CrucibleData.CustomMeshFix);
                 var mc = go.AddComponent<MeshCollider>();
                 mc.sharedMesh = mesh;
                 mc.convex = true;

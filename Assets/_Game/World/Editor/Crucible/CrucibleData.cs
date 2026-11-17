@@ -53,6 +53,13 @@ namespace KryticalNova.EditorTools.Crucible
         static readonly Matrix4x4 M = new Matrix4x4(
             new Vector4(-1f, 0f, 0f, 0f), new Vector4(0f, 0f, -1f, 0f), new Vector4(0f, 1f, 0f, 0f), new Vector4(0f, 0f, 0f, 1f));
 
+        /// <summary>
+        /// Fable's FBX is written Z-up, so Unity imports its vertices as Blender (-x, y, z) and bakeAxisConversion has nothing to bake;
+        /// this turn (-90 degrees about X) takes them to Blender (-x, z, -y), the frame the matrices are converted into (run 4 proof:
+        /// floors and stairs came in standing on end).
+        /// </summary>
+        public static readonly Matrix4x4 CustomMeshFix = Matrix4x4.Rotate(Quaternion.Euler(-90f, 0f, 0f));
+
         public static Vector3 ToUnity(Vector3 b) => new Vector3(-b.x, b.z, -b.y);
         public static Vector3 ToUnity(JToken t) => ToUnity(V(t));
         public static Vector3 V(JToken t) => new Vector3((float)t[0], (float)t[1], (float)t[2]);
