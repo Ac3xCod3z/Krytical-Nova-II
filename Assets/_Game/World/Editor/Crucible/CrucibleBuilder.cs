@@ -78,6 +78,7 @@ namespace KryticalNova.EditorTools.Crucible
                 PlaceCrossfire(data, Child(root.transform, "Crossfire"), placed, log);
                 WireGates(data, root.transform, placed, log);
                 root.AddComponent<KryticalNova.World.CrucibleNight>();
+                WireHeat(data, root.transform, placed, log);
                 PlaceLights(data, Child(root.transform, "Lights"), log);
                 AddNavMeshSurface(root);
                 CheckSizes(data, placed, log);
@@ -411,6 +412,92 @@ namespace KryticalNova.EditorTools.Crucible
                 log.AppendLine($"  {faction} gate: {leaves.Count} leaf/leaves, {shut.childCount} leaf colliders.");
             }
             log.AppendLine($"Rally Gates wired: {wired} of 3.");
+        }
+
+
+        static readonly string[] LavaMaterials = { "M_Crucible_ArenaFloor", "M_Crucible_Dais", "M_Crucible_OuterGround_LavaCracked" };
+
+        /// <summary>Lava breathing, fire flicker, crack haze, embers and smoke: one client presenter with Fable's points.</summary>
+        static void WireHeat(CrucibleData data, Transform root, Dictionary<string, GameObject> placed, StringBuilder log)
+        {
+            var heat = root.gameObject.AddComponent<KryticalNova.World.CrucibleHeat>();
+            var lava = new List<Renderer>();
+            foreach (JObject o in data.Objects)
+            {
+                if (!placed.TryGetValue((string)o["name"], out GameObject go) || o["materials"] == null) continue;
+                if (((JArray)o["materials"]).Any(m => LavaMaterials.Contains((string)m)))
+                    lava.AddRange(go.GetComponentsInChildren<Renderer>());
+            }
+            heat.lavaRenderers = lava.ToArray();
+            heat.flickerLights = root.Find("Lights").GetComponentsInChildren<Light>().Where(l => l.lightmapBakeType == LightmapBakeType.Realtime).ToArray();
+            heat.hazeBoxes = data.HazeBoxes.Select(b =>
+            {
+                Vector3 c = CrucibleData.V(b["centre_unity"]), sz = CrucibleData.V(b["size_unity"]);
+                return new Vector4(c.x, c.y - sz.y * 0.5f, c.z, Mathf.Max(sz.x, sz.z) * 0.5f);
+            }).ToArray();
+            heat.emberPoints = data.EmberPoints.Select(CrucibleData.V).ToArray();
+            heat.smokePoints = data.SmokePoints.Select(CrucibleData.V).ToArray();
+            heat.embers = MakeParticles(root, "Embers", true);
+            heat.smoke = MakeParticles(root, "Smoke", false);
+            log.AppendLine($"Heat: {lava.Count} lava renderers breathe, {heat.flickerLights.Length} lights flicker, {heat.hazeBoxes.Length} haze cells, {heat.emberPoints.Length} ember and {heat.smokePoints.Length} smoke points.");
+        }
+
+        static ParticleSystem MakeParticles(Transform root, string name, bool ember)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(root, false);
+            var ps = go.AddComponent<ParticleSystem>();
+            ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            var main = ps.main;
+            main.simulationSpace = ParticleSystemSimulationSpace.Local;
+            main.playOnAwake = true;
+            main.loop = true;
+            main.maxParticles = ember ? 400 : 120;
+            main.startLifetime = ember ? new ParticleSystem.MinMaxCurve(1.5f, 3.5f) : new ParticleSystem.MinMaxCurve(8f, 14f);
+            main.startSpeed = ember ? new ParticleSystem.MinMaxCurve(0.6f, 2.2f) : new ParticleSystem.MinMaxCurve(0.4f, 1.0f);
+            main.startSize = ember ? new ParticleSystem.MinMaxCurve(0.04f, 0.11f) : new ParticleSystem.MinMaxCurve(3f, 7f);
+            main.startColor = ember ? new ParticleSystem.MinMaxGradient(new Color(4f, 1.1f, 0.25f), new Color(3f, 0.45f, 0.08f))
+                                    : new ParticleSystem.MinMaxGradient(new Color(0.08f, 0.06f, 0.08f, 0.35f), new Color(0.14f, 0.09f, 0.1f, 0.25f));
+            main.gravityModifier = ember ? -0.08f : -0.01f;
+            var emission = ps.emission; emission.rateOverTime = 0f;
+            var shape = ps.shape; shape.enabled = true; shape.shapeType = ParticleSystemShapeType.Cone; shape.angle = ember ? 12f : 25f; shape.radius = 0.1f;
+            shape.rotation = new Vector3(-90f, 0f, 0f);
+            var noise = ps.noise; noise.enabled = true; noise.strength = ember ? 0.6f : 0.25f; noise.frequency = 0.6f;
+            var col = ps.colorOverLifetime; col.enabled = true;
+            var g = new Gradient();
+            g.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                      new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(1f, 0.15f), new GradientAlphaKey(0f, 1f) });
+            col.color = g;
+            var size = ps.sizeOverLifetime; size.enabled = !ember; size.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.Linear(0f, 0.6f, 1f, 1.6f));
+            var r = go.GetComponent<ParticleSystemRenderer>();
+            r.sharedMaterial = ParticleMaterial(ember);
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            r.receiveShadows = false;
+            return ps;
+        }
+
+        static Material ParticleMaterial(bool ember)
+        {
+            string path = $"{CrucibleData.MaterialFolder}/M_Crucible_{(ember ? "Ember" : "Smoke")}.mat";
+            var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (mat == null)
+            {
+                mat = new Material(Shader.Find("Universal Render Pipeline/Particles/Unlit"));
+                AssetDatabase.CreateAsset(mat, path);
+            }
+            mat.SetFloat("_Surface", 1f);                          // transparent
+            mat.SetFloat("_Blend", ember ? 2f : 0f);               // additive embers, alpha smoke
+            mat.SetTexture("_BaseMap", AssetDatabase.GetBuiltinExtraResource<Texture2D>("Default-Particle.psd"));
+            mat.SetColor("_BaseColor", Color.white);
+            mat.renderQueue = 3000;
+            mat.SetOverrideTag("RenderType", "Transparent");
+            mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            mat.SetInt("_DstBlend", (int)(ember ? UnityEngine.Rendering.BlendMode.One : UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha));
+            mat.SetInt("_ZWrite", 0);
+            mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            if (ember) mat.EnableKeyword("_BLENDMODE_ADD");
+            EditorUtility.SetDirty(mat);
+            return mat;
         }
 
         static bool TryFindByPrefix(Dictionary<string, GameObject> placed, string part, out GameObject go)
