@@ -201,19 +201,23 @@ namespace KryticalNova.Crossfire.Entities.Tests
                 Settle(rig);
                 Assert.AreEqual(2, entry.Sides.Count);
 
-                // the Rally: both short sides are asked; Hegemony says yes, Null does not answer
-                m_Now = Origin + 66;
-                Settle(rig);
-                Assert.AreEqual(CrossfirePhase.Muster, clock.Current.Now.Phase);
+                // the join window (owner's war flow, 16 Nov 2026): each short side's real player is asked in their yard as they come in;
+                // Hegemony says yes, Null does not answer
+                Assert.AreEqual(CrossfirePhase.Call, clock.Current.Now.Phase);
                 Assert.AreEqual(2, entry.VotesSent, "one vote to each short side's real player" + VoteWhy(entry, clock));
                 Assert.IsTrue(entry.Vote(rig.ServerGhosts[0], true));
                 Assert.IsFalse(entry.Vote(rig.ServerGhosts[0], true), "one vote each");
-                m_Now = Origin + 70;   // past the vote's 3 seconds, before the gates open
+
+                // the settle (the Rally's start): the vote closes and fills the side that voted yes; the side with nobody real is filled without a vote
+                m_Now = Origin + 66;
                 Settle(rig);
-                Assert.AreEqual(2, bots.Fills.Count, "Covenant (nobody real) at once, then the side that voted yes; Null said nothing");
-                Assert.AreEqual(FactionId.Covenant, bots.Fills[0].Faction, "a side with no real player is filled without a vote");
-                Assert.AreEqual(3, bots.Fills[0].Count);
-                WarBotRequest yes = bots.Fills[1];
+                Assert.AreEqual(CrossfirePhase.Muster, clock.Current.Now.Phase);
+                Assert.IsFalse(entry.Vote(rig.ServerGhosts[1], true), "the vote is closed at the settle");
+                Assert.AreEqual(2, bots.Fills.Count, "the side that voted yes and Covenant (nobody real); Null said nothing");
+                WarBotRequest covenant = bots.Fills.Find(f => f.Faction == FactionId.Covenant);
+                Assert.AreEqual(FactionId.Covenant, covenant.Faction, "a side with no real player is filled without a vote");
+                Assert.AreEqual(3, covenant.Count);
+                WarBotRequest yes = bots.Fills.Find(f => f.Faction == FactionId.Hegemony);
                 Assert.AreEqual(FactionId.Hegemony, yes.Faction);
                 Assert.AreEqual(2, yes.Count, "filled to the cap: 1 real + 2 bots");
                 Assert.AreEqual(10, yes.Bracket, "bracket X");
