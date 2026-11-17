@@ -77,6 +77,7 @@ namespace KryticalNova.EditorTools.Crucible
                 PlaceColliders(data, Child(root.transform, "Colliders"), meshes, placed, log);
                 PlaceBlockers(data, Child(root.transform, "Blockers"), log);
                 PlaceStairRamps(data, Child(root.transform, "Stair Ramps"), log);
+                PlaceSeamStrips(Child(root.transform.Find("Colliders"), "Seam Strips"), log);
                 PlaceCrossfire(data, Child(root.transform, "Crossfire"), placed, log);
                 WireGates(data, root.transform, placed, log);
                 root.AddComponent<KryticalNova.World.CrucibleNight>();
@@ -348,6 +349,32 @@ namespace KryticalNova.EditorTools.Crucible
                 go.AddComponent<BoxCollider>().size = CrucibleData.V(b["size_m"]);
             }
             log.AppendLine($"Blockers: {data.Blockers.Count} on layer {LayerMask.LayerToName(layer)} (left out of the NavMesh bake).");
+        }
+
+
+        /// <summary>
+        /// Fable's floor and rim quarters meet on the map's two axes, exactly where the grand stairs and gate thresholds run; a ray down
+        /// that edge can slip between the meshes (walk check, run 11: Hegemony and north feet). A 0.4 m Ground strip 1 cm under each
+        /// seam closes it (Concord's deck-floor way: the click still lands on the visible floor).
+        /// </summary>
+        static void PlaceSeamStrips(Transform holder, StringBuilder log)
+        {
+            int ground = LayerMask.NameToLayer("Ground");
+            var spans = new[] { (from: 12.4f, to: 82.4f, top: -7.5f), (from: 103.6f, to: 118.2f, top: 0f) };
+            int n = 0;
+            foreach (var sp in spans)
+                foreach (float angle in new[] { 0f, 90f, 180f, 270f })
+                {
+                    var go = new GameObject($"Seam {angle:0} r{sp.from:0}-{sp.to:0}") { layer = ground };
+                    go.transform.SetParent(holder, false);
+                    float mid = (sp.from + sp.to) * 0.5f;
+                    go.transform.localRotation = Quaternion.Euler(0f, angle, 0f);
+                    go.transform.localPosition = go.transform.localRotation * new Vector3(0f, sp.top - 0.01f - 0.25f, mid);
+                    go.AddComponent<BoxCollider>().size = new Vector3(0.4f, 0.5f, sp.to - sp.from);
+                    GameObjectUtility.SetStaticEditorFlags(go, StaticEditorFlags.NavigationStatic);
+                    n++;
+                }
+            log.AppendLine($"Seam strips: {n} (Ground, under the quarter seams).");
         }
 
         /// <summary>Concord's ramps: one invisible Ground box per flight, top through the nosings, 0.6 m thick.</summary>
