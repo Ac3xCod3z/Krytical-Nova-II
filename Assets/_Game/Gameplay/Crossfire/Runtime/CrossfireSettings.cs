@@ -18,18 +18,20 @@ namespace KryticalNova.Crossfire
         [Min(5f)] public float cycleMinutes = 60f;
 
         [Header("Phases (Call > Rally > War > End > Gap)")]
-        [Tooltip("Call: minutes before the war that eligible players are told it is coming.")]
-        [Min(0f)] public float callMinutes = 10f;
+        [Tooltip("Call: minutes before the Rally that eligible players are told the war is coming; its last Join Window Minutes are the join window (owner's war flow, 16 Nov 2026: a 10-min countdown, then the Crucible opens for 5 min).")]
+        [Min(0f)] public float callMinutes = 15f;
         [Tooltip("One call pop-up per this many seconds left before the gates open (60: \"War starts in N minutes\", once a minute). It never names seconds.")]
         [Min(5f)] public float callRepeatSeconds = 60f;
         [Tooltip("The last minutes of the Call in which the Rally Points take players in (the join window).")]
-        [Min(0f)] public float joinWindowMinutes = 3f;
-        [Tooltip("Rally: seconds everyone waits in their yard with the gates shut.")]
+        [Min(0f)] public float joinWindowMinutes = 5f;
+        [Tooltip("Rally (the settle): seconds after the join window, gates still shut, in which the server settles the Mercs and fills sides with War Bots (owner: 1 min).")]
         [Min(0f)] public float musterSeconds = 60f;
         [Tooltip("War: minutes the gates stand open and the war runs.")]
         [Min(1f)] public float warMinutes = 15f;
-        [Tooltip("End: seconds of results before everyone is sent back where they entered.")]
-        [Min(0f)] public float endSeconds = 20f;
+        [Tooltip("Seconds the Rally Gates take to open when the War starts (the leaves swing or the portcullis lifts; the way through is blocked until they are fully open).")]
+        [Min(0f)] public float gateOpeningSeconds = 3f;
+        [Tooltip("End: seconds of the results screen before everyone is sent back to exactly where they joined from (owner: 30 s).")]
+        [Min(0f)] public float endSeconds = 30f;
 
         [Header("Who")]
         [Tooltip("No war below this level.")]
@@ -46,6 +48,22 @@ namespace KryticalNova.Crossfire
         public int[] zoneBrackets = { 10 };
         [Tooltip("The portal (its ZonePortal id) that takes a called player of a bracket with a zone onto their own faction's Rally Point, on this server: the Transit Row port.")]
         public string portPortalId = "zone01-northeast";
+
+        [Header("Joining (owner's war flow, 16 Nov 2026)")]
+        [Tooltip("When the join window opens, every player of a bracket with a zone gets this prompt, wherever they are; yes puts them on their own Rally Point. {bracket}, {levels} as in the call.")]
+        [TextArea] public string joinPromptText = "The Crucible is open! Join Crossfire (bracket {bracket}, levels {levels})? You go straight to your Rally Point.";
+        [Tooltip("The small heading of the join prompt's accept / decline panel.")]
+        public string joinPromptEyebrow = "CROSSFIRE";
+        [Tooltip("Told to a player who said no to the join prompt.")]
+        [TextArea] public string joinDeclinedText = "Crossfire: you can still join at the Marshal while the war takes players.";
+        [Tooltip("Told to a player who asked to join (the Marshal) when no war takes players.")]
+        [TextArea] public string joinClosedText = "Crossfire: no war takes players right now.";
+        [Tooltip("Late join: players may still join a running war (taking a War Bot's place, or as a Merc) until this many minutes before its end (owner: the last 5 min are closed).")]
+        [Min(0f)] public float lateJoinCutoffMinutes = 5f;
+        [Tooltip("On: a late joiner's pay (EXP, Creds, the kill drop's chance) is by the share of the war they were in (joined at minute 5 of 15: 2/3). Master's placeholder, owner to confirm.")]
+        public bool latePayByShare = true;
+        [Tooltip("Told to a player who joins a war that is already running. {percent}: the share of the pay they can still earn.")]
+        [TextArea] public string lateJoinText = "Crossfire: you join the war late, so you earn {percent} % of its pay.";
 
         [Header("The sides of a war (owner, 16 Nov 2026)")]
         [Tooltip("Players a faction's side holds in one war, real players and War Bots together (33: 99 in a war). The next real player is refused at the Rally Point; a real player always takes a War Bot's place.")]
@@ -118,6 +136,12 @@ namespace KryticalNova.Crossfire
         public bool killDropBestRarity = true;
         [Tooltip("Told to the player whose kill dropped an item. {item}: its name.")]
         [TextArea] public string killDropText = "Crossfire: your kill dropped {item}!";
+
+        [Header("The results screen (the End; owner: 30 s, then back where you joined from)")]
+        public string resultsWonTitle = "VICTORY";
+        public string resultsTiedTitle = "TIE";
+        public string resultsLostTitle = "DEFEAT";
+        public string resultsNoPayTitle = "WAR OVER";
 
         [Header("Announcements (the top-of-screen news every player gets, as GM broadcasts)")]
         [Tooltip("The call, sent when the Call starts and again every Call Repeat Seconds until the gates open, to each player for THEIR OWN bracket. {time}: how long until the gates open; {bracket}: the bracket's numeral (X); {levels}: its levels (100-112); {level}: its lowest level; {where}: Where Text, or No Zone Text for a bracket with no zone yet.")]

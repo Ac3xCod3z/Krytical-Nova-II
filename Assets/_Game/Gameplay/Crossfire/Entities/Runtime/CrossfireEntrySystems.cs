@@ -59,6 +59,7 @@ namespace KryticalNova.Crossfire.Entities
             m_Port = new PortHandler { System = this, Next = ZonePortal.TransferHandler };
             ZonePortal.TransferHandler = m_Port;
             CreateWar();
+            CreateJoins();
         }
 
         protected override void OnDestroy()
@@ -92,7 +93,7 @@ namespace KryticalNova.Crossfire.Entities
             m_Clock ??= World.GetExistingSystemManaged<CrossfireClockServerSystem>();
             if (m_Clock == null) return false;
             CrossfireSettings settings = m_Clock.ActiveSettings;
-            CrossfirePortAnswer answer = CrossfirePort.Decide(settings, m_Clock.Current, portalId, level, faction, out CrossfireArea yard);
+            CrossfirePortAnswer answer = CrossfirePort.Decide(settings, m_Clock.Current, portalId, level, faction, m_Clock.Now, out CrossfireArea yard);
             LastPortAnswer = answer;
             if (answer == CrossfirePortAnswer.NotThisPort || answer == CrossfirePortAnswer.NotCalled) return false;
             string message = CrossfirePort.Message(settings, answer, level);
@@ -110,11 +111,8 @@ namespace KryticalNova.Crossfire.Entities
                 result = new ZoneTransferResult(false, answer == CrossfirePortAnswer.Land ? settings.portNoRallyText : message);
                 return true;
             }
-            yard.Landing(out Vector3 at, out float yaw);
-            var mm = new int3((int)math.round(at.x * 1000f), (int)math.round(at.y * 1000f), (int)math.round(at.z * 1000f));
-            int yawCdeg = (int)math.round(Mathf.Repeat(yaw, 360f) * 100f) % 36000;
-            PlayerEntitiesSetup.Teleport(em, ghost, mm, yawCdeg);
-            m_Arriving.Add(ghost);
+            if (!SendToRally(ghost, yard)) return false;
+            if (!m_JoinWay.ContainsKey(ghost)) m_JoinWay[ghost] = CrossfireJoinWay.Port;
             Ported++;
             result = new ZoneTransferResult(true, message);
             return true;
@@ -131,7 +129,8 @@ namespace KryticalNova.Crossfire.Entities
             EntityManager em = EntityManager;
             if (CrossfireArea.All.Count > 0)
             {
-                bool joinOpen = state.JoinOpen(m_Clock.Now);
+                // the yards take players in the join window and the settle, and a running War until its late-join cutoff (owner, 16 Nov 2026)
+                bool joinOpen = state.TakesPlayers(m_Clock.Now, LateCutoffSeconds);
                 LastJoinOpen = joinOpen;
                 Looks++;
                 foreach (var (pose, entity) in SystemAPI.Query<RefRO<PlayerPose>>().WithAll<PlayerGhostTag>().WithEntityAccess())

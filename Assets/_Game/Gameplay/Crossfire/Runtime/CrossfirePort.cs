@@ -30,14 +30,23 @@ namespace KryticalNova.Crossfire
         public static bool Calling(in CrossfireState state) =>
             state.Known && (state.Now.Phase == CrossfirePhase.Call || state.Now.Phase == CrossfirePhase.Muster);
 
+        /// <summary>The port takes players now: the Call and the Rally, and a running War until its late-join cutoff (owner, 16 Nov 2026).</summary>
+        public static bool Calling(in CrossfireState state, CrossfireSettings settings, double now) =>
+            Calling(state) || (settings != null && state.Known && !double.IsNaN(now)
+                && CrossfireRules.LateJoinOpen(state.Now, settings.lateJoinCutoffMinutes * 60.0, now));
+
         /// <summary>What the port does with a player of <paramref name="level"/> and <paramref name="faction"/>; the yard to land on for <see cref="CrossfirePortAnswer.Land"/>.</summary>
         public static CrossfirePortAnswer Decide(CrossfireSettings settings, in CrossfireState state, string portalId, int level, FactionId faction,
-                                                 out CrossfireArea yard)
+                                                 out CrossfireArea yard) => Decide(settings, state, portalId, level, faction, double.NaN, out yard);
+
+        /// <summary><see cref="Decide(CrossfireSettings, in CrossfireState, string, int, FactionId, out CrossfireArea)"/> at <paramref name="now"/>, so a running War's late join counts (NaN: the Call and the Rally only).</summary>
+        public static CrossfirePortAnswer Decide(CrossfireSettings settings, in CrossfireState state, string portalId, int level, FactionId faction,
+                                                 double now, out CrossfireArea yard)
         {
             yard = null;
             if (settings == null || string.IsNullOrEmpty(settings.portPortalId) || portalId != settings.portPortalId) return CrossfirePortAnswer.NotThisPort;
             int bracket = settings.BracketOf(level);
-            if (!Calling(state) || bracket <= 0) return CrossfirePortAnswer.NotCalled;
+            if (!Calling(state, settings, now) || bracket <= 0) return CrossfirePortAnswer.NotCalled;
             if (!settings.HasZone(bracket)) return CrossfirePortAnswer.NoZone;
             return CrossfireArea.TryRallyPoint(faction, out yard) ? CrossfirePortAnswer.Land : CrossfirePortAnswer.NoRally;
         }

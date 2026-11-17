@@ -3,6 +3,12 @@ using System;
 namespace KryticalNova.Crossfire
 {
     /// <summary>Crossfire's phases, in order. Gap is the time between two wars.</summary>
+    /// <summary>
+    /// A Rally Gate as the server's clock has it (owner, 16 Nov 2026: shut through the join window and the settle, opening together when the
+    /// War starts): the colliders follow it, a client animates the leaves from <see cref="CrossfireRules.GateOpenAmount"/>.
+    /// </summary>
+    public enum CrossfireGatePhase : byte { Shut = 0, Opening = 1, Open = 2 }
+
     public enum CrossfirePhase : byte
     {
         Gap = 0,
@@ -120,6 +126,41 @@ namespace KryticalNova.Crossfire
         /// <summary>The yards take players in: the last <see cref="CrossfireTimes.JoinWindowSeconds"/> of the Call, and the Muster.</summary>
         public static bool JoinOpen(in CrossfireNow at, in CrossfireTimes t, double now) =>
             at.Phase == CrossfirePhase.Muster || (at.Phase == CrossfirePhase.Call && now >= at.WarStart - t.JoinWindowSeconds);
+
+        /// <summary>
+        /// A running war still takes late joiners (owner, 16 Nov 2026): the War, until <paramref name="cutoffSeconds"/> before its end.
+        /// </summary>
+        public static bool LateJoinOpen(in CrossfireNow at, double cutoffSeconds, double now) =>
+            at.Phase == CrossfirePhase.War && now < at.PhaseEnd - Math.Max(0.0, cutoffSeconds);
+
+        /// <summary>
+        /// The share of a war's pay a player earns (owner: a late joiner's pay is diminished; Master's placeholder: by the share of the War
+        /// they were in). In before the gates opened: all of it. Joined at minute 5 of 15: 2/3. Never below 0 or above 1.
+        /// </summary>
+        public static float PayShare(double joinedAt, double gatesOpen, double warEnd)
+        {
+            if (double.IsNaN(joinedAt) || joinedAt <= gatesOpen || warEnd <= gatesOpen) return 1f;
+            return (float)Math.Max(0.0, Math.Min(1.0, (warEnd - joinedAt) / (warEnd - gatesOpen)));
+        }
+
+        /// <summary>
+        /// The Rally Gates at <paramref name="now"/>: shut before the War and after it, opening for the War's first
+        /// <paramref name="openingSeconds"/>, then open (every gate together: the time is the server's).
+        /// </summary>
+        public static CrossfireGatePhase GatePhaseAt(in CrossfireNow at, double openingSeconds, double now)
+        {
+            if (at.Phase != CrossfirePhase.War) return CrossfireGatePhase.Shut;
+            return now - at.PhaseStart < Math.Max(0.0, openingSeconds) ? CrossfireGatePhase.Opening : CrossfireGatePhase.Open;
+        }
+
+        /// <summary>How far the gates have opened, 0 (shut) to 1 (open), eased in and out: what a client's gate leaves show.</summary>
+        public static float GateOpenAmount(in CrossfireNow at, double openingSeconds, double now)
+        {
+            if (at.Phase != CrossfirePhase.War) return 0f;
+            if (openingSeconds <= 0.0) return 1f;
+            double t = Math.Max(0.0, Math.Min(1.0, (now - at.PhaseStart) / openingSeconds));
+            return (float)(t * t * (3.0 - 2.0 * t));
+        }
 
         /// <summary>The gates stand open only while the war runs.</summary>
         public static bool GatesOpen(CrossfirePhase phase) => phase == CrossfirePhase.War;
