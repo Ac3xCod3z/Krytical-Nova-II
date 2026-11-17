@@ -52,7 +52,15 @@ namespace KryticalNova.EditorTools.Crucible
                 {
                     mat = source != null ? new Material(source) : new Material(shader);
                     if (source != null) fromPack++; else fresh++;
-                    if (mat.shader != shader) mat.shader = shader;
+                    // a pack material on another Synty graph (Generic_Basic / Generic_Standard / Basic_Wind): carry its maps over first
+                    Texture baseMap = source != null ? First(source, "_Base_Texture", "_Albedo_Map", "_MainTex", "_BaseMap") : null;
+                    Texture emitMap = source != null ? First(source, "_Emission_Texture", "_Emission_Map", "_EmissionMap") : null;
+                    if (mat.shader != shader)
+                    {
+                        mat.shader = shader;
+                        if (baseMap != null) mat.SetTexture("_Base_Texture", baseMap);
+                        if (emitMap != null) mat.SetTexture("_Emission_Texture", emitMap);
+                    }
                     Fill(mat, m, source, ref missingTex);
                 }
                 mat.name = AssetName(name);
@@ -81,7 +89,7 @@ namespace KryticalNova.EditorTools.Crucible
             else
             {
                 string baseTex = (string)m["base_tex"];
-                if (source == null || source.GetTexture("_Base_Texture") == null)
+                if (mat.GetTexture("_Base_Texture") == null)
                 {
                     Texture2D t = Tex(baseTex);
                     if (t == null) missingTex++;
@@ -108,7 +116,7 @@ namespace KryticalNova.EditorTools.Crucible
                 foreach (string side in new[] { "Top", "Side", "Bottom" })
                 {
                     mat.SetTexture("_Triplanar_Normal_Texture_" + side, n);
-                    mat.SetFloat("_Triplanar_Normal_Tiling_" + side, tiling);
+                    mat.SetVector("_Triplanar_Normal_Tiling_" + side, new Vector4(tiling, tiling, 0f, 0f));
                     mat.SetFloat("_Triplanar_Normal_Intensity_" + side, strength);
                 }
             }
@@ -126,7 +134,7 @@ namespace KryticalNova.EditorTools.Crucible
             if (es > 0.01f)
             {
                 Texture2D e = emit != null ? Tex(emit) : null;
-                if (e == null && source != null) e = source.GetTexture("_Emission_Texture") as Texture2D;
+                if (e == null) e = mat.GetTexture("_Emission_Texture") as Texture2D;
                 Color c = m["emission_colour"] != null ? CrucibleData.Colour(m["emission_colour"]) : Color.white;
                 float intensity = Mathf.Pow(2f, es * EmissionStopsPerStrength);
                 if (e != null) { mat.SetTexture("_Emission_Texture", e); mat.SetFloat("_Enable_Emission_Texture", 1f); }
@@ -139,6 +147,13 @@ namespace KryticalNova.EditorTools.Crucible
                 mat.SetFloat("_Enable_Emission_Texture", 0f);
                 mat.SetColor("_Emission_Color_Tint", Color.black);
             }
+        }
+
+        static Texture First(Material m, params string[] names)
+        {
+            foreach (string n in names)
+                if (m.HasProperty(n) && m.GetTexture(n) != null) return m.GetTexture(n);
+            return null;
         }
 
         static string PackOf(string blenderName)

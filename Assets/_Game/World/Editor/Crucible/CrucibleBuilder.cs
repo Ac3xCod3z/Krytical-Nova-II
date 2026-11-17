@@ -79,8 +79,8 @@ namespace KryticalNova.EditorTools.Crucible
                 PlaceCrossfire(data, Child(root.transform, "Crossfire"), placed, log);
                 WireGates(data, root.transform, placed, log);
                 root.AddComponent<KryticalNova.World.CrucibleNight>();
-                WireHeat(data, root.transform, placed, log);
                 PlaceLights(data, Child(root.transform, "Lights"), log);
+                WireHeat(data, root.transform, placed, log);
                 AddNavMeshSurface(root);
                 var probes = Child(root.transform, "Probe Volume (Crucible)");
                 probes.localPosition = CrucibleLighting.VolumeCentre;
