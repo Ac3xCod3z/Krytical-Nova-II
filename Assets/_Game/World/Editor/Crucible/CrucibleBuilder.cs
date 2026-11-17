@@ -82,6 +82,7 @@ namespace KryticalNova.EditorTools.Crucible
                 PlaceLights(data, Child(root.transform, "Lights"), log);
                 AddNavMeshSurface(root);
                 CheckSizes(data, placed, log);
+                MeshLods(root, log);
 
                 Directory.CreateDirectory(Path.GetDirectoryName(CrucibleData.PrefabPath));
                 PrefabUtility.SaveAsPrefabAsset(root, CrucibleData.PrefabPath, out bool ok);
@@ -500,6 +501,34 @@ namespace KryticalNova.EditorTools.Crucible
             return mat;
         }
 
+
+        /// <summary>
+        /// Mesh LOD (the project's LOD rule, owner 17 Oct 2026: import settings, never static batching) on every model the map draws,
+        /// Fable's heavy props among them (Brazier_03/05, the crates, Barrel_01, the crenel tops), at Zone01's maximum level.
+        /// </summary>
+        static void MeshLods(GameObject root, StringBuilder log)
+        {
+            int maxLods = EnvironmentLodBuilder.LoadSettings().maxMeshLods;
+            var models = new HashSet<string>();
+            foreach (MeshFilter f in root.GetComponentsInChildren<MeshFilter>(true))
+            {
+                if (f.sharedMesh == null) continue;
+                string path = AssetDatabase.GetAssetPath(f.sharedMesh);
+                if (AssetImporter.GetAtPath(path) is ModelImporter) models.Add(path);
+            }
+            int on = 0;
+            foreach (string path in models)
+            {
+                var importer = (ModelImporter)AssetImporter.GetAtPath(path);
+                if (importer.generateMeshLods && importer.maximumMeshLod == maxLods) continue;
+                importer.generateMeshLods = true;
+                importer.maximumMeshLod = maxLods;
+                importer.SaveAndReimport();
+                on++;
+            }
+            log.AppendLine($"Mesh LOD: {models.Count} models drawn, {on} switched on now (max level {maxLods}).");
+        }
+
         static bool TryFindByPrefix(Dictionary<string, GameObject> placed, string part, out GameObject go)
         {
             go = placed.FirstOrDefault(kv => kv.Key.Contains(part)).Value;
@@ -600,6 +629,24 @@ namespace KryticalNova.EditorTools.Crucible
         }
 
         // ----------------------------------------------------------------------------------------------------------- Zone01
+
+
+        public const string OwnScenePath = "Assets/_Game/Scenes/World/Crossfire/Crucible.unity";
+
+        /// <summary>
+        /// The Crucible's own scene for build 20's map server (Master's pick, 17 Nov 2026): the same prefab at the origin, nothing else.
+        /// Not in the build list or Addressables yet; Zone01's copy is the one build 19 plays.
+        /// </summary>
+        public static string MakeOwnScene()
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(CrucibleData.PrefabPath);
+            if (prefab == null) return "FAIL: no Crucible prefab for its own scene";
+            Directory.CreateDirectory(Path.GetDirectoryName(OwnScenePath));
+            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            PrefabUtility.InstantiatePrefab(prefab, scene);
+            EditorSceneManager.SaveScene(scene, OwnScenePath);
+            return $"Own scene saved: {OwnScenePath} (prefab at the origin; build 20).";
+        }
 
         public static string PlaceInZone01()
         {
