@@ -36,6 +36,7 @@ namespace KryticalNova.EditorTools.Crucible
             if (!AssetDatabase.IsValidFolder(CrucibleData.MaterialFolder)) AssetDatabase.CreateFolder(CrucibleData.Folder, "Materials");
             var result = new Dictionary<string, Material>();
             int fromPack = 0, fresh = 0, missingTex = 0;
+            s_Missing.Clear();
             foreach (JObject m in data.Materials)
             {
                 string name = (string)m["name"];
@@ -62,7 +63,7 @@ namespace KryticalNova.EditorTools.Crucible
                 result[name] = mat;
             }
             AssetDatabase.SaveAssets();
-            log.AppendLine($"Materials: {result.Count} ({fromPack} from Synty pack materials, {fresh} fresh), textures not found: {missingTex}.");
+            log.AppendLine($"Materials: {result.Count} ({fromPack} from Synty pack materials, {fresh} fresh), textures not found: {missingTex}{(s_Missing.Count > 0 ? " (" + string.Join(", ", s_Missing) + ")" : "")}.");
             return result;
         }
 
@@ -166,9 +167,18 @@ namespace KryticalNova.EditorTools.Crucible
         }
 
         /// <summary>A Crucible texture by Blender file name (a 2K normal of a floor is its 4K copy here).</summary>
+        static readonly HashSet<string> s_Missing = new HashSet<string>();
+
         static Texture2D Tex(string file)
         {
             if (string.IsNullOrEmpty(file)) return null;
+            Texture2D found = TexOrNull(file);
+            if (found == null) s_Missing.Add(file);
+            return found;
+        }
+
+        static Texture2D TexOrNull(string file)
+        {
             string stem = Path.GetFileNameWithoutExtension(file);
             foreach (string ext in new[] { ".png", ".jpg", ".tga" })
             {
@@ -178,7 +188,11 @@ namespace KryticalNova.EditorTools.Crucible
             return null;
         }
 
-        static Texture2D NormalTex(string file) =>
-            Tex(file) ?? Tex(Path.GetFileNameWithoutExtension(file).Replace("_Normal_2K", "_Normal_4K"));
+        static Texture2D NormalTex(string file)
+        {
+            Texture2D t = TexOrNull(file) ?? TexOrNull(Path.GetFileNameWithoutExtension(file).Replace("_Normal_2K", "_Normal_4K"));
+            if (t == null) s_Missing.Add(file);
+            return t;
+        }
     }
 }

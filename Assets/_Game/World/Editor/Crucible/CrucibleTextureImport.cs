@@ -32,7 +32,27 @@ namespace KryticalNova.EditorTools.Crucible
             ti.mipmapLimitGroupName = floor4K ? FloorGroup : "";
         }
 
-        /// <summary>High and Ultra keep the 4K floors whole; every other preset drops one mip (to 2K).</summary>
+        /// <summary>
+        /// Fable's custom pieces: the axis change baked into the vertices (the builder uses the meshes alone, so a node rotation would be
+        /// lost), no materials or colliders from the file (the builder makes both), readable off, Mesh LOD left to the builder.
+        /// </summary>
+        void OnPreprocessModel()
+        {
+            if (assetPath != CrucibleData.MeshPath) return;
+            var mi = (ModelImporter)assetImporter;
+            mi.bakeAxisConversion = true;
+            mi.globalScale = 1f;
+            mi.useFileScale = true;
+            mi.materialImportMode = ModelImporterMaterialImportMode.None;
+            mi.addCollider = false;
+            mi.importCameras = false;
+            mi.importLights = false;
+            mi.isReadable = false;
+            mi.importAnimation = false;
+            mi.animationType = ModelImporterAnimationType.None;
+        }
+
+        /// <summary>Makes the floors' mip group (whole 4K in every quality level; CrucibleNight drops it to 2K below High at runtime).</summary>
         [MenuItem("Krytical Nova/World/Crucible/Set Up Floor Mipmap Group")]
         public static string EnsureFloorGroup()
         {
@@ -43,7 +63,7 @@ namespace KryticalNova.EditorTools.Crucible
             {
                 QualitySettings.SetQualityLevel(i, false);
                 string n = QualitySettings.names[i];
-                bool full = n.Contains("High") || n.Contains("Ultra");
+                bool full = true;
                 QualitySettings.SetTextureMipmapLimitSettings(FloorGroup,
                     new TextureMipmapLimitSettings { limitBias = full ? 0 : 1, limitBiasMode = TextureMipmapLimitBiasMode.OverrideGlobalLimit });
                 sb.Append($"{n}={(full ? "4K" : "2K")} ");

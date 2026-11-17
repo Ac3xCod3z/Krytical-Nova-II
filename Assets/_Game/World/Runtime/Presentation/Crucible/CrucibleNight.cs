@@ -1,3 +1,4 @@
+using KryticalNova.Rendering;
 using UnityEngine;
 
 namespace KryticalNova.World
@@ -17,6 +18,10 @@ namespace KryticalNova.World
         [Tooltip("The camera's far clip while inside (the dome is 500 m out).")]
         public float farClip = 650f;
 
+        /// <summary>The mipmap limit group of the six 4K floor normals (CrucibleTextureImport.FloorGroup).</summary>
+        public const string FloorGroup = "Crucible Floors 4K";
+        int m_FloorTier = -1;
+
         bool m_Inside;
         float m_FarClipBefore;
         Camera m_Camera;
@@ -26,6 +31,14 @@ namespace KryticalNova.World
 
         void LateUpdate()
         {
+            // owner's texture pick (17 Nov 2026): the 4K floors whole on High and Ultra, one mip down (2K) below
+            int tier = (int)WorldEffectsRuntime.Quality;
+            if (tier != m_FloorTier)
+            {
+                m_FloorTier = tier;
+                QualitySettings.SetTextureMipmapLimitSettings(FloorGroup, new TextureMipmapLimitSettings
+                    { limitBias = tier >= (int)WorldEffects.High ? 0 : 1, limitBiasMode = TextureMipmapLimitBiasMode.OverrideGlobalLimit });
+            }
             Camera cam = Camera.main;
             if (cam != m_Camera) { Leave(); m_Camera = cam; }
             if (cam == null) return;

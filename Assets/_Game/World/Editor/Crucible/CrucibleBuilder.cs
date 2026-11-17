@@ -242,6 +242,16 @@ namespace KryticalNova.EditorTools.Crucible
                 go.transform.localRotation = Quaternion.Euler(CrucibleData.V(b["unity_euler"]));
                 go.AddComponent<BoxCollider>().size = CrucibleData.V(b["size_m_unity"]);
             }
+            // Fable's gate leaf colliders are unit boxes placed by matrix (Colliders_For_Unity), not in COLLIDERS_022.json's list
+            foreach (JObject o in data.Objects)
+            {
+                string on = (string)o["name"];
+                if (!on.StartsWith("UCX_GateLeaf_") || !data.TryUnityMatrix(on, Vector3.zero, out Matrix4x4 lu)) continue;
+                var go = new GameObject(on);
+                go.transform.SetParent(on.Contains("Sealed") ? boxes : leaves, false);
+                CrucibleData.Apply(go.transform, lu);
+                go.AddComponent<BoxCollider>().size = Vector3.one;
+            }
             int hullCount = 0;
             foreach (JToken h in data.ConvexHulls)
             {
