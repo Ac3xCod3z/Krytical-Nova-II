@@ -199,9 +199,17 @@ namespace KryticalNova.WarBots.Entities.Tests
                 Debug.Log($"[WarBotsRealWar] the bots chose: {Join(bots.Plans)}; casts refused: {Join(bots.Refusals)}");
                 Debug.Log($"[WarBotsRealWar] per bot (side:metres from yard/target ghost/health lost): moved {moved}, targeting {targeting}, hurt {hurt};{lines}");
 
-                // no real player in the war (the client has no body): past the grace every bot goes home, through the game's leave
+                // the real player leaves (the test client's connection; since 3ee1551a0 it has a body in the war, 65 seen, so the bots never
+                // went home, EditMode at c71445867): with no real player left, past the grace every bot goes home, through the game's leave
+                int realBefore = 0;
+                foreach (GhostBodyEntry e in GhostBodyRegistry.Entries)
+                    if (ReferenceEquals(e.World, tw.Server) && e.Body != null && !PlayerKeys.IsServerBot(e.Key)) realBefore++;
+                using (var connections = tw.Server.EntityManager.CreateEntityQuery(typeof(Unity.NetCode.NetworkStreamConnection)))
+                using (var list = connections.ToEntityArray(Unity.Collections.Allocator.Temp))
+                    foreach (Entity c in list) tw.Server.EntityManager.AddComponent<Unity.NetCode.NetworkStreamRequestDisconnect>(c);
                 settings.noRealPlayerSeconds = 1f;
-                int homeTicks = tw.TickUntil(() => bots.Live == 0, 120);
+                int homeTicks = tw.TickUntil(() => bots.Live == 0, 300);
+                Debug.Log($"[WarBotsRealWar] real players before the leave: {realBefore}");
                 for (int i = 0; i < 10; i++) { tw.Tick(1); yield return null; }
                 Debug.Log($"[WarBotsRealWar] after the guard: live {bots.Live}, removed {bots.Removed}, went home alone {bots.WentHomeAlone} (in {homeTicks} ticks)");
                 Assert.Greater(deaths + botsKilled, 0, $"a bot died in {ticks} ticks (kill events {anyKilled}, bots killed {botsKilled}, bodies seen down {deaths})");
