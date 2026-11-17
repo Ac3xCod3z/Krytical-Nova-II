@@ -63,6 +63,10 @@ namespace KryticalNova.WarBots.Entities
             // the fight
             public double NextStimAt;
             public double NoBuffUntil;
+            /// <summary>When each buff it cast may be cast again (skill id: the cast plus its effect's time). A buff the game took is not
+            /// "ready" again while it lasts, even where the body does not show it as on (The Crucible, 17 Nov 2026: Buff won every think,
+            /// so no bot ever went hunting).</summary>
+            public readonly Dictionary<string, double> BuffAgainAt = new Dictionary<string, double>();
             public double NextThink, ReactAt, NextSkillAt, LastSaid = double.MinValue, LastEmote = double.MinValue, NextPartyTry;
             public WarBotAct PendingAct;
             public int PendingTarget;
@@ -290,7 +294,11 @@ namespace KryticalNova.WarBots.Entities
             // Run first, as every player learns it (1 point a rank): a War Bot's long walks (the hunt across the field) are paid runs
             // (PlayerServerPlanSystem: "Learn this skill first."), so without it every one was refused without a word and no bot left
             // its yard on The Crucible (17 Nov 2026); fights close by still worked, the melee approach charges no Run
-            if (body.TryGetComponent(out PlayerMovementSkills moves)) moves.TryUpgradeMultiple(MovementSkillId.Run, byte.MaxValue);
+            if (body.TryGetComponent(out PlayerMovementSkills moves))
+            {
+                moves.TryUpgradeMultiple(MovementSkillId.Run, byte.MaxValue);
+                moves.TryUpgradeMultiple(MovementSkillId.Jump, byte.MaxValue);   // fully skilled, as a test player (vaults and jumps on the way)
+            }
             // ranks bought with the level's own skill points, round the class's skills (no skill books: a bot finds none)
             if (bot.Skills != null && bot.Skills.AvailableSkills != null)
             {
@@ -770,7 +778,11 @@ namespace KryticalNova.WarBots.Entities
         /// <summary>A buff cast; one the game refuses is left alone for <see cref="WarBotSettings.buffRetrySeconds"/>, so the bot fights instead.</summary>
         void CastBuff(Bot b, SkillDefinitionSO buff, WarBotSettings s)
         {
-            if (Server()?.ServerCast(b.Body, buff.skillId, 0, out string refused) == true) return;
+            if (Server()?.ServerCast(b.Body, buff.skillId, 0, out string refused) == true)
+            {
+                b.BuffAgainAt[buff.skillId] = m_Now + Mathf.Max(buff.duration, buff.cooldown, s.buffRetrySeconds);
+                return;
+            }
             b.NoBuffUntil = m_Now + s.buffRetrySeconds;
             Count(m_Refusals, "buff: " + (refused ?? "no server"));
         }
@@ -778,6 +790,7 @@ namespace KryticalNova.WarBots.Entities
         // what the bots chose and why the game refused their casts, counted for the server log (and tests)
         readonly Dictionary<string, int> m_Plans = new Dictionary<string, int>(), m_Refusals = new Dictionary<string, int>();
         double m_NextLog;
+        int m_PlanRefusedAtLog;
         /// <summary>The plans the bots chose since the last log line (tests read it).</summary>
         public IReadOnlyDictionary<string, int> Plans => m_Plans;
         /// <summary>The casts the game refused since the last log line, by reason (tests read it).</summary>
@@ -797,7 +810,13 @@ namespace KryticalNova.WarBots.Entities
         {
             if (s.logEverySeconds <= 0f || m_Now < m_NextLog) return;
             m_NextLog = m_Now + s.logEverySeconds;
-            Debug.Log($"[WarBots] {m_Bots.Count} bots, gates {(GatesOpen() ? "open" : "shut")}, {m_Seen.Count} seen; chose: {Line(m_Plans)}; refused: {Line(m_Refusals)}");
+            // the server's walk orders it refused since the last line (every player's; a War Bot's march is one), with the last price
+            // reason ("Learn this skill first.": no bot had Run, 17 Nov 2026), so a silent refusal shows here
+            var plan = World.GetExistingSystemManaged<PlayerServerPlanSystem>();
+            int ordersRefused = plan != null ? plan.Refused - m_PlanRefusedAtLog : 0;
+            if (plan != null) m_PlanRefusedAtLog = plan.Refused;
+            Debug.Log($"[WarBots] {m_Bots.Count} bots, gates {(GatesOpen() ? "open" : "shut")}, {m_Seen.Count} seen; chose: {Line(m_Plans)}; refused: {Line(m_Refusals)}; "
+                      + $"walk orders refused {ordersRefused} (last price reason: {(string.IsNullOrEmpty(plan?.LastCostRefusal) ? "none" : plan.LastCostRefusal)})");
             m_Plans.Clear();
             m_Refusals.Clear();
         }
@@ -809,7 +828,7 @@ namespace KryticalNova.WarBots.Entities
             foreach (SkillDefinitionSO k in b.Skills.AvailableSkills)
             {
                 if (k == null || k.IsAttack || k.duration <= 0f || !b.Skills.IsLearned(k) || b.Skills.IsLocked(k) || b.Skills.IsOnCooldown(k)) continue;
-                if (b.Buffs.HasBuff(k.skillId)) continue;
+                if (b.Buffs.HasBuff(k.skillId) || (b.BuffAgainAt.TryGetValue(k.skillId, out double again) && m_Now < again)) continue;
                 buff = k;
                 return true;
             }
