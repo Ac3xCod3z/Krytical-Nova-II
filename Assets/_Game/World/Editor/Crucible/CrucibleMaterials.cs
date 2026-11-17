@@ -15,7 +15,7 @@ namespace KryticalNova.EditorTools.Crucible
     public static class CrucibleMaterials
     {
         const string ShaderPath = "Assets/Synty/PolygonGeneric/Shaders/PolygonShader.shadergraph";
-        const string SkyShader = "Universal Render Pipeline/Unlit";
+        const string SkyShader = "KN/Crucible Sky Dome";
         /// <summary>Blender emission strength to Unity HDR intensity (stops): Fable's floors use 5-7, his strips EV 3.</summary>
         const float EmissionStopsPerStrength = 0.6f;
 
@@ -45,8 +45,7 @@ namespace KryticalNova.EditorTools.Crucible
                 if ((string)m["mode"] == "unlit")
                 {
                     mat = new Material(Shader.Find(SkyShader));
-                    mat.SetTexture("_BaseMap", Tex((string)m["emission_tex"]));
-                    mat.SetColor("_BaseColor", Color.white);
+                    mat.SetTexture("_MainTex", Tex((string)m["emission_tex"]));
                 }
                 else
                 {
