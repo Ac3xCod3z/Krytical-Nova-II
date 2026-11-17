@@ -16,14 +16,14 @@ namespace KryticalNova.Crossfire.Entities
     {
         public byte Phase;
         public double PhaseStart, PhaseEnd, WarStart, JoinOpensAt;
-        public float CallRepeatSeconds;
+        public float CallRepeatSeconds, GateOpeningSeconds;
         public short MinLevel, BracketSize, BracketCount;
         public ushort KillsHegemony, KillsNull, KillsCovenant;
 
         public static CrossfireStateRpc Of(in CrossfireState s) => new CrossfireStateRpc
         {
             Phase = (byte)s.Now.Phase, PhaseStart = s.Now.PhaseStart, PhaseEnd = s.Now.PhaseEnd, WarStart = s.Now.WarStart,
-            JoinOpensAt = s.JoinOpensAt, CallRepeatSeconds = s.CallRepeatSeconds,
+            JoinOpensAt = s.JoinOpensAt, CallRepeatSeconds = s.CallRepeatSeconds, GateOpeningSeconds = s.GateOpeningSeconds,
             MinLevel = (short)s.MinLevel, BracketSize = (short)s.BracketSize, BracketCount = (short)s.BracketCount,
             KillsHegemony = (ushort)System.Math.Clamp(s.KillsHegemony, 0, ushort.MaxValue), KillsNull = (ushort)System.Math.Clamp(s.KillsNull, 0, ushort.MaxValue), KillsCovenant = (ushort)System.Math.Clamp(s.KillsCovenant, 0, ushort.MaxValue),
         };
@@ -31,13 +31,13 @@ namespace KryticalNova.Crossfire.Entities
         public CrossfireState State => new CrossfireState
         {
             Now = new CrossfireNow { Phase = (CrossfirePhase)Phase, PhaseStart = PhaseStart, PhaseEnd = PhaseEnd, WarStart = WarStart },
-            JoinOpensAt = JoinOpensAt, CallRepeatSeconds = CallRepeatSeconds,
+            JoinOpensAt = JoinOpensAt, CallRepeatSeconds = CallRepeatSeconds, GateOpeningSeconds = GateOpeningSeconds,
             MinLevel = MinLevel, BracketSize = BracketSize, BracketCount = BracketCount, Known = true,
             KillsHegemony = KillsHegemony, KillsNull = KillsNull, KillsCovenant = KillsCovenant,
         };
 
         public bool SameAs(in CrossfireStateRpc o) => Phase == o.Phase && PhaseStart.Equals(o.PhaseStart) && PhaseEnd.Equals(o.PhaseEnd)
-            && WarStart.Equals(o.WarStart) && JoinOpensAt.Equals(o.JoinOpensAt) && CallRepeatSeconds == o.CallRepeatSeconds
+            && WarStart.Equals(o.WarStart) && JoinOpensAt.Equals(o.JoinOpensAt) && CallRepeatSeconds == o.CallRepeatSeconds && GateOpeningSeconds == o.GateOpeningSeconds
             && MinLevel == o.MinLevel && BracketSize == o.BracketSize && BracketCount == o.BracketCount
             && KillsHegemony == o.KillsHegemony && KillsNull == o.KillsNull && KillsCovenant == o.KillsCovenant;
     }
@@ -195,7 +195,7 @@ namespace KryticalNova.Crossfire.Entities
             CrossfireNow at = CrossfireRules.At(cycle, t, m_Override, now);
             return new CrossfireState
             {
-                Now = at, JoinOpensAt = at.WarStart - t.JoinWindowSeconds, CallRepeatSeconds = s.callRepeatSeconds,
+                Now = at, JoinOpensAt = at.WarStart - t.JoinWindowSeconds, CallRepeatSeconds = s.callRepeatSeconds, GateOpeningSeconds = s.gateOpeningSeconds,
                 MinLevel = s.minLevel, BracketSize = s.bracketSize, BracketCount = s.bracketCount, Known = true,
                 KillsHegemony = m_KillsH, KillsNull = m_KillsN, KillsCovenant = m_KillsC,
             };

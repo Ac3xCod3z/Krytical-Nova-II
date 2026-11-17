@@ -59,7 +59,7 @@ namespace KryticalNova.Crossfire
         void Follow()
         {
             CrossfireState state = CrossfireView.ForGates;
-            double now = NetClock.Now, opening = OpeningSeconds;
+            double now = NetClock.Now, opening = openingSeconds > 0f || !state.Known ? OpeningSeconds : state.GateOpeningSeconds;
             OpenAmount = state.GateOpenAmount(now, opening);
             Apply(state.GatePhase(now, opening));
         }

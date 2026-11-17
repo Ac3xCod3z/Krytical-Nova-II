@@ -150,7 +150,8 @@ namespace KryticalNova.Crossfire
         public static CrossfireGatePhase GatePhaseAt(in CrossfireNow at, double openingSeconds, double now)
         {
             if (at.Phase != CrossfirePhase.War) return CrossfireGatePhase.Shut;
-            return now - at.PhaseStart < Math.Max(0.0, openingSeconds) ? CrossfireGatePhase.Opening : CrossfireGatePhase.Open;
+            if (openingSeconds <= 0.0) return CrossfireGatePhase.Open;   // no swing: open the moment the War starts (as GateOpenAmount)
+            return now - at.PhaseStart < openingSeconds ? CrossfireGatePhase.Opening : CrossfireGatePhase.Open;
         }
 
         /// <summary>How far the gates have opened, 0 (shut) to 1 (open), eased in and out: what a client's gate leaves show.</summary>

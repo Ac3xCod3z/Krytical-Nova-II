@@ -40,6 +40,8 @@ namespace KryticalNova.Crossfire
         public bool Known;
         /// <summary>The team deathmatch's kills per side this war (owner, 16 Nov 2026), for the HUD's counter.</summary>
         public int KillsHegemony, KillsNull, KillsCovenant;
+        /// <summary>Seconds the Rally Gates take to open (the server's <see cref="CrossfireSettings.gateOpeningSeconds"/>, so every gate swings alike).</summary>
+        public float GateOpeningSeconds;
 
         public bool GatesOpen => Known && CrossfireRules.GatesOpen(Now.Phase);
 

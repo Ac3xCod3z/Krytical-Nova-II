@@ -110,6 +110,16 @@ namespace KryticalNova.Crossfire.Entities.Tests
             CrossfireArea.Track(yard);
         }
 
+        static readonly System.Reflection.BindingFlags Inst = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+
+        /// <summary>The vote's inner state, for a failed vote count's message.</summary>
+        static string VoteWhy(CrossfireEntryServerSystem entry, CrossfireClockServerSystem clock)
+        {
+            object F(string n) => typeof(CrossfireEntryServerSystem).GetField(n, Inst)?.GetValue(entry);
+            CrossfireState c = clock.Current;
+            return $" [voteOpen {F("m_VoteOpen")} for {F("m_VoteFor")} closes {F("m_VoteCloses")}; clock now {clock.Now} phase {c.Now.Phase} war {c.Now.WarStart} joinOpens {c.JoinOpensAt}; real H {entry.Sides.Real(FactionId.Hegemony)} N {entry.Sides.Real(FactionId.Null)}; bots {(WarBots.Fill == null ? "none" : WarBots.Fill.GetType().Name)}]";
+        }
+
         static void Settle(PlayerRig rig) => rig.Tick(30);
 
         (PlayerRig rig, CrossfireClockServerSystem clock, CrossfireEntryServerSystem entry) Start(FactionId[] factions)
@@ -195,7 +205,7 @@ namespace KryticalNova.Crossfire.Entities.Tests
                 m_Now = Origin + 66;
                 Settle(rig);
                 Assert.AreEqual(CrossfirePhase.Muster, clock.Current.Now.Phase);
-                Assert.AreEqual(2, entry.VotesSent, "one vote to each short side's real player");
+                Assert.AreEqual(2, entry.VotesSent, "one vote to each short side's real player" + VoteWhy(entry, clock));
                 Assert.IsTrue(entry.Vote(rig.ServerGhosts[0], true));
                 Assert.IsFalse(entry.Vote(rig.ServerGhosts[0], true), "one vote each");
                 m_Now = Origin + 70;   // past the vote's 3 seconds, before the gates open
@@ -319,7 +329,7 @@ namespace KryticalNova.Crossfire.Entities.Tests
                 Assert.AreEqual(2, entry.SidesAutoFilled, "Null and Covenant, with nobody real, are filled at once");
                 Assert.AreEqual(33, bots.Count(FactionId.Null));
                 Assert.AreEqual(33, bots.Count(FactionId.Covenant));
-                Assert.AreEqual(1, entry.VotesSent, "Hegemony, the side with a real player, gets the vote");
+                Assert.AreEqual(1, entry.VotesSent, "Hegemony, the side with a real player, gets the vote" + VoteWhy(entry, clock));
                 Assert.AreEqual(0, bots.Count(FactionId.Hegemony), "and has no bots until it votes yes");
                 Assert.IsTrue(bots.Fills.TrueForAll(f => f.Bracket == 10), "bracket X");
             }
