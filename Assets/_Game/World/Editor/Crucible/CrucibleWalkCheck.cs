@@ -40,7 +40,12 @@ namespace KryticalNova.EditorTools.Crucible
             // the war opens the Rally Gates; the routes are walked open (the shut gates' carved blockers are proven to stop the walk)
             int openedGates = 0;
             foreach (NavMeshObstacle ob in cf.GetComponentsInChildren<NavMeshObstacle>(true))
-                if (ob.name.StartsWith("Rally Gate")) { ob.enabled = false; openedGates++; }
+                if (ob.name.StartsWith("Rally Gate"))
+                {
+                    ob.enabled = false; openedGates++;
+                    var gate = ob.GetComponent<KryticalNova.Crossfire.MusterGate>();
+                    if (gate != null) gate.Apply(true);   // its shut look (the leaf colliders) off, as the war does
+                }
             // a disabled obstacle's carve only lifts on the NavMesh system's next tick, which a batch run never gives: re-bake in memory
             var surface = root.GetComponent<Unity.AI.Navigation.NavMeshSurface>();
             if (surface != null) surface.BuildNavMesh();
@@ -50,6 +55,17 @@ namespace KryticalNova.EditorTools.Crucible
                 Transform landing = cf.Find("MARK_Landing_" + faction);
                 if (landing == null) { log.AppendLine("FAIL: no landing " + faction); failures++; continue; }
                 failures += Route($"{faction} landing -> heart", landing.position, heart, solid, log);
+            }
+            // diagnosis of ground: every ground collider, and what a ray meets at the points that failed before
+            foreach (MeshCollider mc in root.transform.Find("Colliders/Ground").GetComponentsInChildren<MeshCollider>(true))
+                log.AppendLine($"  ground {mc.name}: enabled {mc.enabled}, mesh {(mc.sharedMesh != null ? mc.sharedMesh.name + " v" + mc.sharedMesh.vertexCount + " readable " + mc.sharedMesh.isReadable : "none")}, bounds {mc.bounds.center:F1} size {mc.bounds.size:F1}");
+            foreach (Vector3 lp in new[] { new Vector3(77.44f, -7.4f, 0f), new Vector3(110.09f, 0.2f, 0f), new Vector3(0f, -7.4f, -77.44f), new Vector3(-77.44f, -7.4f, 0f) })
+            {
+                Vector3 wp = root.transform.TransformPoint(lp);
+                bool was = Physics.queriesHitBackfaces; Physics.queriesHitBackfaces = true;
+                var hits = Physics.RaycastAll(wp + Vector3.up * 30f, Vector3.down, 60f, ~0, QueryTriggerInteraction.Collide);
+                Physics.queriesHitBackfaces = was;
+                log.AppendLine($"  ray at {lp}: " + string.Join("; ", hits.OrderBy(h => h.distance).Select(h => $"{h.collider.name} y{h.point.y:F2} L{LayerMask.LayerToName(h.collider.gameObject.layer)}")));
             }
             CrucibleData data = CrucibleData.Load();
             foreach (JObject f in data.Flights)
