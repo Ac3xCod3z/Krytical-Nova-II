@@ -600,7 +600,9 @@ namespace KryticalNova.WarBots.Entities
             IBeatClock clock = BeatClock.Current;
             if (tryCombo && b.Cadence != null && clock != null && clock.HasBeat && clock.TryBeatAt(clock.Now, out _, out double fromBeat, out _))
                 b.Cadence.ServerNotePressFromView(skill.skillId, clock.Now - fromBeat + WarBotRules.BeatError(s, b.Profile.Skill, b.Rng.NextDouble()));
-            if (Server()?.ServerCast(b.Body, skill.skillId, target, out string refused) == true) b.LastHits = Mathf.Max(1, skill.hitCount);
+            PlayerRequestServerSystem server = Server();
+            string refused = null;
+            if (server != null && server.ServerCast(b.Body, skill.skillId, target, out refused)) b.LastHits = Mathf.Max(1, skill.hitCount);
             else Count(m_Refusals, "attack: " + (refused ?? "no server"));
             b.NextSkillAt = m_Now + Mathf.Lerp(s.skillGapMinSeconds, s.skillGapMaxSeconds, (float)b.Rng.NextDouble());
         }
@@ -778,7 +780,9 @@ namespace KryticalNova.WarBots.Entities
         /// <summary>A buff cast; one the game refuses is left alone for <see cref="WarBotSettings.buffRetrySeconds"/>, so the bot fights instead.</summary>
         void CastBuff(Bot b, SkillDefinitionSO buff, WarBotSettings s)
         {
-            if (Server()?.ServerCast(b.Body, buff.skillId, 0, out string refused) == true)
+            PlayerRequestServerSystem server = Server();
+            string refused = null;
+            if (server != null && server.ServerCast(b.Body, buff.skillId, 0, out refused))
             {
                 b.BuffAgainAt[buff.skillId] = m_Now + Mathf.Max(buff.duration, buff.cooldown, s.buffRetrySeconds);
                 return;
