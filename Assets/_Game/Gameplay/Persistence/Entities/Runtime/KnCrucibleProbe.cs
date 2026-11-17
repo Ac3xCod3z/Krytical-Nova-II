@@ -363,6 +363,8 @@ namespace KryticalNova.Persistence.Entities
                 // follow camera, in the middle of it
                 s_ShotPos = root.TransformPoint(new Vector3(0f, 22f, -58f));
                 s_ShotRot = Quaternion.LookRotation(root.TransformPoint(new Vector3(0f, -7f, 8f)) - s_ShotPos);
+                PathCheck(root, Log);
+                DumpBots(root, Log);
                 Log($"SEGMENT warfight start frame {Time.frameCount}");
                 float f0 = Time.realtimeSinceStartup;
                 while (Time.realtimeSinceStartup - f0 < 25f) { yes.Tick(); yield return null; }
@@ -374,7 +376,7 @@ namespace KryticalNova.Persistence.Entities
                 while (Time.realtimeSinceStartup - h0 < 60f)
                 {
                     yes.Tick();
-                    if (Time.realtimeSinceStartup - h0 >= hLog) { hLog += 15f; Gm("gm.crossfire status"); }
+                    if (Time.realtimeSinceStartup - h0 >= hLog) { hLog += 10f; Gm("gm.crossfire status"); DumpBots(root, Log); }
                     yield return null;
                 }
                 Log($"SEGMENT warheart end frame {Time.frameCount}");
@@ -411,6 +413,80 @@ namespace KryticalNova.Persistence.Entities
             }
         }
 
+
+        /// <summary>
+        /// The War Bots as the server holds them (Master, 17 Nov 2026: why did nobody fight?): per side the count, the mean place, the mean
+        /// distance to the heart, how many have a walk goal, a target, are retreating, and how long the stillest has stood still (12 s still
+        /// with a goal puts a bot back on its Rally Point). Read by name from KryticalNova.WarBots.Entities (this Editor probe references
+        /// no War Bots type).
+        /// </summary>
+        static void DumpBots(Transform root, Action<string> Log)
+        {
+            try
+            {
+                var sysType = Type.GetType("KryticalNova.WarBots.Entities.WarBotServerSystem, KryticalNova.WarBots.Entities");
+                var server = KryticalNova.Networking.Entities.KnBootstrap.ServerWorld;
+                if (sysType == null || server == null || !server.IsCreated) { Log("BOTS: no War Bot system type or server world"); return; }
+                object sys = server.GetExistingSystemManaged(sysType);
+                if (sys == null) { Log("BOTS: the server world runs no WarBotServerSystem"); return; }
+                var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public;
+                var list = sysType.GetField("m_Bots", flags)?.GetValue(sys) as System.Collections.IList;
+                double now = sysType.GetField("m_Now", flags)?.GetValue(sys) is double d ? d : 0;
+                if (list == null) { Log("BOTS: no m_Bots list"); return; }
+                Vector3 heart = root.TransformPoint(new Vector3(0f, -6.3f, 0f));
+                var sides = new Dictionary<string, (int n, Vector3 sum, float dist, int goal, int target, int retreat, double still, string acts)>();
+                foreach (object bot in list)
+                {
+                    Type bt = bot.GetType();
+                    string side = bt.GetField("Side").GetValue(bot).ToString();
+                    var body = bt.GetField("Body").GetValue(bot) as GameObject;
+                    Vector3 pos = body != null ? body.transform.position : Vector3.zero;
+                    bool hasGoal = (bool)bt.GetField("HasGoal").GetValue(bot);
+                    int target = (int)bt.GetField("Target").GetValue(bot);
+                    bool retreat = (bool)bt.GetField("Retreating").GetValue(bot);
+                    double stillSince = (double)bt.GetField("StillSince").GetValue(bot);
+                    string act = bt.GetField("PendingAct").GetValue(bot).ToString();
+                    sides.TryGetValue(side, out var t);
+                    t.n++; t.sum += pos; t.dist += Vector3.Distance(new Vector3(pos.x, 0f, pos.z), new Vector3(heart.x, 0f, heart.z));
+                    if (hasGoal) t.goal++; if (target != 0) t.target++; if (retreat) t.retreat++;
+                    t.still = Math.Max(t.still, now - stillSince);
+                    if ((t.acts ?? "").Length < 60) t.acts = (t.acts == null ? "" : t.acts + ",") + act;
+                    if (t.n == 1 && hasGoal)
+                    {
+                        Vector3 goal = (Vector3)bt.GetField("Goal").GetValue(bot);
+                        var path = new UnityEngine.AI.NavMeshPath();
+                        bool from = UnityEngine.AI.NavMesh.SamplePosition(pos, out UnityEngine.AI.NavMeshHit fh, 3f, UnityEngine.AI.NavMesh.AllAreas);
+                        bool to = UnityEngine.AI.NavMesh.SamplePosition(goal, out UnityEngine.AI.NavMeshHit th, 3f, UnityEngine.AI.NavMesh.AllAreas);
+                        if (from && to) UnityEngine.AI.NavMesh.CalculatePath(fh.position, th.position, UnityEngine.AI.NavMesh.AllAreas, path);
+                        Log($"BOTS {side} first bot at local {root.InverseTransformPoint(pos):F1} goal local {root.InverseTransformPoint(goal):F1}: on NavMesh {from}, goal on NavMesh {to}, path {(from && to ? path.status.ToString() + " " + path.corners.Length + " corners" : "not tried")}");
+                    }
+                    sides[side] = t;
+                }
+                foreach (var kv in sides)
+                {
+                    var t = kv.Value;
+                    Log($"BOTS {kv.Key}: {t.n} bots, mean local {root.InverseTransformPoint(t.sum / Math.Max(1, t.n)):F1}, mean {t.dist / Math.Max(1, t.n):F0} m from the heart, " +
+                        $"{t.goal} walking to a goal, {t.target} with a target, {t.retreat} retreating, stillest {t.still:F0} s; acts {t.acts}");
+                }
+            }
+            catch (Exception e) { Log("BOTS: the read threw " + e.GetType().Name + ": " + e.Message); }
+        }
+
+        /// <summary>A NavMesh path from each side's landing to the heart, as the server's planner would ask for it.</summary>
+        static void PathCheck(Transform root, Action<string> Log)
+        {
+            Vector3 heart = root.TransformPoint(new Vector3(0f, -6.3f, 0f));
+            foreach (Transform t in root.GetComponentsInChildren<Transform>(true).Where(x => x.name.StartsWith("MARK_Landing_")))
+            {
+                var path = new UnityEngine.AI.NavMeshPath();
+                bool from = UnityEngine.AI.NavMesh.SamplePosition(t.position, out UnityEngine.AI.NavMeshHit fh, 3f, UnityEngine.AI.NavMesh.AllAreas);
+                bool to = UnityEngine.AI.NavMesh.SamplePosition(heart, out UnityEngine.AI.NavMeshHit th, 3f, UnityEngine.AI.NavMesh.AllAreas);
+                float len = 0f;
+                if (from && to && UnityEngine.AI.NavMesh.CalculatePath(fh.position, th.position, UnityEngine.AI.NavMesh.AllAreas, path))
+                    for (int i = 1; i < path.corners.Length; i++) len += Vector3.Distance(path.corners[i - 1], path.corners[i]);
+                Log($"PATH {t.name} -> heart: landing on NavMesh {from}, heart on NavMesh {to}, {(from && to ? path.status + $", {path.corners.Length} corners, {len:F1} m" : "not tried")}");
+            }
+        }
     }
 }
 #endif
