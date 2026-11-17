@@ -134,20 +134,25 @@ namespace KryticalNova.Crossfire.Entities
                 bool joinOpen = state.TakesPlayers(m_Clock.Now, LateCutoffSeconds);
                 LastJoinOpen = joinOpen;
                 Looks++;
-                foreach (var (pose, entity) in SystemAPI.Query<RefRO<PlayerPose>>().WithAll<PlayerGhostTag>().WithEntityAccess())
+                m_InLook = true;   // Admit's offers are queued until the look is done (no structural change while it iterates)
+                try
                 {
-                    Vector3 at = Meters(pose.ValueRO);
-                    var spot = new CrossfireSpot { Mm = new Vector3Int(pose.ValueRO.XMm, pose.ValueRO.YMm, pose.ValueRO.ZMm), YawCdeg = pose.ValueRO.YawCdeg };
-                    bool inArea = CrossfireArea.AnyContains(at, false), inYard = inArea && CrossfireArea.AnyContains(at, true);
-                    // a newcomer to a Rally Point while it takes players in: their side takes them, or (full) puts them back
-                    if (IsBot(entity)) continue;   // War Bots are never admitted, paid or sent back as real players (review 1, item 4)
-                    if (!inArea && m_Sides.TryGetSide(entity, out _) && !m_Arriving.Contains(entity)) m_Leaving.Add(entity);   // left the war (item 2)
-                    if (inArea) m_Arriving.Remove(entity);
-                    if (inArea && m_Mercs.Contains(entity) && !m_MercInside.Contains(entity)) m_ToSide.Add(entity);   // a Merc only once inside the war area
-                    if (inYard && joinOpen && !m_Entries.TryEntry(entity, out _) && m_Entries.TryOutside(entity, out CrossfireSpot from) && !Admit(entity, from))
-                        continue;
-                    m_Entries.Observe(entity, spot, inArea, inYard, joinOpen);
+                    foreach (var (pose, entity) in SystemAPI.Query<RefRO<PlayerPose>>().WithAll<PlayerGhostTag>().WithEntityAccess())
+                    {
+                        Vector3 at = Meters(pose.ValueRO);
+                        var spot = new CrossfireSpot { Mm = new Vector3Int(pose.ValueRO.XMm, pose.ValueRO.YMm, pose.ValueRO.ZMm), YawCdeg = pose.ValueRO.YawCdeg };
+                        bool inArea = CrossfireArea.AnyContains(at, false), inYard = inArea && CrossfireArea.AnyContains(at, true);
+                        // a newcomer to a Rally Point while it takes players in: their side takes them, or (full) puts them back
+                        if (IsBot(entity)) continue;   // War Bots are never admitted, paid or sent back as real players (review 1, item 4)
+                        if (!inArea && m_Sides.TryGetSide(entity, out _) && !m_Arriving.Contains(entity)) m_Leaving.Add(entity);   // left the war (item 2)
+                        if (inArea) m_Arriving.Remove(entity);
+                        if (inArea && m_Mercs.Contains(entity) && !m_MercInside.Contains(entity)) m_ToSide.Add(entity);   // a Merc only once inside the war area
+                        if (inYard && joinOpen && !m_Entries.TryEntry(entity, out _) && m_Entries.TryOutside(entity, out CrossfireSpot from) && !Admit(entity, from))
+                            continue;
+                        m_Entries.Observe(entity, spot, inArea, inYard, joinOpen);
+                    }
                 }
+                finally { SendQueued(); }
                 foreach (Entity who in m_ToSide) EnterAsMerc(who);
                 m_ToSide.Clear();
                 foreach (Entity who in m_Leaving) LeaveWar(who, true);

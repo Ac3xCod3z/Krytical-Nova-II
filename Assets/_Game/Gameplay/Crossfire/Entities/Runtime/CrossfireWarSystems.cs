@@ -355,6 +355,10 @@ namespace KryticalNova.Crossfire.Entities
             return true;
         }
 
+        /// <summary>RPCs made while the yard look iterates the players (no structural change is allowed there), sent right after it.</summary>
+        EntityCommandBuffer m_Outbox;
+        bool m_InLook, m_HasOutbox;
+
         void SendTo<T>(Entity who, T rpc) where T : unmanaged, IRpcCommand
         {
             EntityManager em = EntityManager;
@@ -364,10 +368,29 @@ namespace KryticalNova.Crossfire.Entities
             foreach (Entity c in connections)
             {
                 if (em.GetComponentData<NetworkId>(c).Value != id) continue;
+                if (m_InLook)
+                {
+                    // a vote or Merc offer from Admit inside the look: creating the RPC there threw, so the offer was never sent (EditMode, 16 Nov 2026)
+                    if (!m_HasOutbox) { m_Outbox = new EntityCommandBuffer(Allocator.Temp); m_HasOutbox = true; }
+                    Entity queued = m_Outbox.CreateEntity();
+                    m_Outbox.AddComponent(queued, rpc);
+                    m_Outbox.AddComponent(queued, new SendRpcCommandRequest { TargetConnection = c });
+                    continue;
+                }
                 Entity e = em.CreateEntity();
                 em.AddComponentData(e, rpc);
                 em.AddComponentData(e, new SendRpcCommandRequest { TargetConnection = c });
             }
+        }
+
+        /// <summary>Sends what the yard look queued (<see cref="SendTo{T}"/>).</summary>
+        void SendQueued()
+        {
+            m_InLook = false;
+            if (!m_HasOutbox) return;
+            m_HasOutbox = false;
+            m_Outbox.Playback(EntityManager);
+            m_Outbox.Dispose();
         }
 
         /// <summary>
