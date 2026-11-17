@@ -36,12 +36,15 @@ namespace KryticalNova.WarBots.Entities.Tests
         const int MaxFightTicks = 5400;   // 3 minutes of game time at 30 Hz
         static readonly Vector3 Centre = new Vector3(900f, 0f, 900f);   // away from anything the scene has
         // 100 m apart, beyond a bot's sight (60 m), as the Crucible's yards are: the bots must hunt each other down (Master, 17 Nov 2026)
-        static readonly Vector3 HegemonyRally = Centre + new Vector3(-50f, 0f, 0f);
-        static readonly Vector3 NullRally = Centre + new Vector3(50f, 0f, 0f);
 
+        /// <param name="yardsApart">Metres between the two Rally Points, both past Sight: 100, or 240 (about The Crucible's yards). The bots
+        /// must hunt across the field with paid runs (17 Nov 2026: no bot left its yard there, no War Bot had learned Run, every such
+        /// order was refused without a word).</param>
         [UnityTest]
-        public IEnumerator ThirtyTwoBotsASide_ComeInAtTheirRallyPoint_FightAndKill_AndAllLeaveAtTheWarsEnd()
+        public IEnumerator ThirtyTwoBotsASide_ComeInAtTheirRallyPoint_FightAndKill_AndAllLeaveAtTheWarsEnd([Values(100f, 240f)] float yardsApart)
         {
+            Vector3 HegemonyRally = Centre + new Vector3(-yardsApart * 0.5f, 0f, 0f);
+            Vector3 NullRally = Centre + new Vector3(yardsApart * 0.5f, 0f, 0f);
             yield return new EnterPlayMode();
             LogAssert.ignoreFailingMessages = true;   // bodies without a NetworkManager print their NGO stubs' lines
             INetRoleAdapter oldAdapter = NetRole.Adapter;
@@ -136,6 +139,11 @@ namespace KryticalNova.WarBots.Entities.Tests
                     Vector3 rally = bots.SideOf(e.Ghost) == FactionId.Hegemony ? HegemonyRally : NullRally;
                     Vector3 d = e.Body.transform.position - rally; d.y = 0f;
                     Assert.Less(d.magnitude, 8f, e.Body.name + " came in at its own Rally Point");
+                    // every bot can pay a run to a far destination, as its hunt across the field is (owner's Crucible, 17 Nov 2026)
+                    var moves = e.Body.GetComponent<PlayerMovementSkills>();
+                    Assert.IsNotNull(moves, e.Body.name + " has movement skills");
+                    Assert.Greater(moves.RunRank, 0, e.Body.name + " learned Run");
+                    Assert.IsTrue(moves.CanPayForCommand(MovementSkillId.Run, out string runRefused), e.Body.name + " can pay a run: " + runRefused);
                 }
 
                 // the fight: the kills each side makes, as Crossfire counts them (CombatEntity.AnyKilled, the killer's side)
@@ -259,17 +267,17 @@ namespace KryticalNova.WarBots.Entities.Tests
             var floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
             made.Add(floor);
             floor.transform.position = Centre;
-            floor.transform.localScale = new Vector3(20f, 1f, 20f);   // 200 m
+            floor.transform.localScale = new Vector3(30f, 1f, 30f);   // 300 m: room for yards 240 m apart
             var source = new UnityEngine.AI.NavMeshBuildSource
             {
                 shape = UnityEngine.AI.NavMeshBuildSourceShape.Box,
-                size = new Vector3(200f, 0.2f, 200f),
+                size = new Vector3(300f, 0.2f, 300f),
                 transform = Matrix4x4.TRS(Centre + Vector3.down * 0.1f, Quaternion.identity, Vector3.one),
                 area = 0,
             };
             UnityEngine.AI.NavMeshData data = UnityEngine.AI.NavMeshBuilder.BuildNavMeshData(UnityEngine.AI.NavMesh.GetSettingsByIndex(0),
                 new List<UnityEngine.AI.NavMeshBuildSource> { source },
-                new Bounds(Centre, new Vector3(210f, 20f, 210f)), Vector3.zero, Quaternion.identity);
+                new Bounds(Centre, new Vector3(310f, 20f, 310f)), Vector3.zero, Quaternion.identity);
             return UnityEngine.AI.NavMesh.AddNavMeshData(data);
         }
     }

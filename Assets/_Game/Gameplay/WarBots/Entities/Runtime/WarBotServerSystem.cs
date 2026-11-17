@@ -287,6 +287,10 @@ namespace KryticalNova.WarBots.Entities
                 for (int i = 0; i < split.Length; i++)
                     if (split[i] > 0) progression.TryAllocateMultiple((CharacterAttribute)i, split[i]);
             }
+            // Run first, as every player learns it (1 point a rank): a War Bot's long walks (the hunt across the field) are paid runs
+            // (PlayerServerPlanSystem: "Learn this skill first."), so without it every one was refused without a word and no bot left
+            // its yard on The Crucible (17 Nov 2026); fights close by still worked, the melee approach charges no Run
+            if (body.TryGetComponent(out PlayerMovementSkills moves)) moves.TryUpgradeMultiple(MovementSkillId.Run, byte.MaxValue);
             // ranks bought with the level's own skill points, round the class's skills (no skill books: a bot finds none)
             if (bot.Skills != null && bot.Skills.AvailableSkills != null)
             {
