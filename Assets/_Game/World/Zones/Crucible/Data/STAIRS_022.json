@@ -1,0 +1,1294 @@
+{
+ "checkpoint": "022b",
+ "axes": "Unity (x, y, z) = Blender (-x, z, -y), metres; euler = Unity order (Z, X, Y applied), degrees",
+ "rule": "Concord040Setup.Flights form: (x min, x max, z start, y start, z end, y end) for flights along Unity z; flights along Unity x give (z min, z max, x start, y start, x end, y end). Each flight gets an invisible BoxCollider on the Ground layer, 0.6 m thick, its top face through the step nosings (start = one tread before the first riser, at ground height; end = the last nosing, at the landing height). Stairs and their side walls are excluded from the Wallstride bake (SurfaceGraphBuilder ConcordStairFootprints).",
+ "flights": [
+  {
+   "name": "Grand stair East (Covenant)",
+   "kind": "grand stair",
+   "concord_form": {
+    "axis": "x",
+    "z_min": -7.0,
+    "z_max": 7.0,
+    "x_start": -78.7,
+    "y_start": -7.5,
+    "x_end": -103.7,
+    "y_end": 0.0
+   },
+   "width_m": 14.0,
+   "steps": 25,
+   "step_height_m": 0.3,
+   "tread_m": 1.0,
+   "start_unity": [
+    -78.7,
+    -7.5,
+    -0.0
+   ],
+   "end_unity": [
+    -103.7,
+    0.0,
+    -0.0
+   ],
+   "footprint_unity": [
+    [
+     -78.7,
+     -7.5,
+     -7.0
+    ],
+    [
+     -78.7,
+     -7.5,
+     7.0
+    ],
+    [
+     -103.7,
+     0.0,
+     -7.0
+    ],
+    [
+     -103.7,
+     0.0,
+     7.0
+    ]
+   ]
+  },
+  {
+   "name": "Grand stair North (sealed gate)",
+   "kind": "grand stair",
+   "concord_form": {
+    "axis": "z",
+    "x_min": -7.0,
+    "x_max": 7.0,
+    "z_start": -78.7,
+    "y_start": -7.5,
+    "z_end": -103.7,
+    "y_end": 0.0
+   },
+   "width_m": 14.0,
+   "steps": 25,
+   "step_height_m": 0.3,
+   "tread_m": 1.0,
+   "start_unity": [
+    -0.0,
+    -7.5,
+    -78.7
+   ],
+   "end_unity": [
+    -0.0,
+    0.0,
+    -103.7
+   ],
+   "footprint_unity": [
+    [
+     7.0,
+     -7.5,
+     -78.7
+    ],
+    [
+     -7.0,
+     -7.5,
+     -78.7
+    ],
+    [
+     7.0,
+     0.0,
+     -103.7
+    ],
+    [
+     -7.0,
+     0.0,
+     -103.7
+    ]
+   ]
+  },
+  {
+   "name": "Grand stair West (Hegemony)",
+   "kind": "grand stair",
+   "concord_form": {
+    "axis": "x",
+    "z_min": -7.0,
+    "z_max": 7.0,
+    "x_start": 78.7,
+    "y_start": -7.5,
+    "x_end": 103.7,
+    "y_end": 0.0
+   },
+   "width_m": 14.0,
+   "steps": 25,
+   "step_height_m": 0.3,
+   "tread_m": 1.0,
+   "start_unity": [
+    78.7,
+    -7.5,
+    -0.0
+   ],
+   "end_unity": [
+    103.7,
+    0.0,
+    -0.0
+   ],
+   "footprint_unity": [
+    [
+     78.7,
+     -7.5,
+     7.0
+    ],
+    [
+     78.7,
+     -7.5,
+     -7.0
+    ],
+    [
+     103.7,
+     0.0,
+     7.0
+    ],
+    [
+     103.7,
+     0.0,
+     -7.0
+    ]
+   ]
+  },
+  {
+   "name": "Grand stair South (Null)",
+   "kind": "grand stair",
+   "concord_form": {
+    "axis": "z",
+    "x_min": -7.0,
+    "x_max": 7.0,
+    "z_start": 78.7,
+    "y_start": -7.5,
+    "z_end": 103.7,
+    "y_end": 0.0
+   },
+   "width_m": 14.0,
+   "steps": 25,
+   "step_height_m": 0.3,
+   "tread_m": 1.0,
+   "start_unity": [
+    0.0,
+    -7.5,
+    78.7
+   ],
+   "end_unity": [
+    0.0,
+    0.0,
+    103.7
+   ],
+   "footprint_unity": [
+    [
+     -7.0,
+     -7.5,
+     78.7
+    ],
+    [
+     7.0,
+     -7.5,
+     78.7
+    ],
+    [
+     -7.0,
+     0.0,
+     103.7
+    ],
+    [
+     7.0,
+     0.0,
+     103.7
+    ]
+   ]
+  },
+  {
+   "name": "Covenant gate threshold, rim side",
+   "kind": "gate threshold",
+   "concord_form": {
+    "axis": "x",
+    "z_min": -6.0,
+    "z_max": 6.0,
+    "x_start": -111.35,
+    "y_start": 0.0,
+    "x_end": -113.95,
+    "y_end": 1.2
+   },
+   "width_m": 12.0,
+   "steps": 4,
+   "step_height_m": 0.3,
+   "tread_m": 0.65,
+   "start_unity": [
+    -111.35,
+    0.0,
+    -0.0
+   ],
+   "end_unity": [
+    -113.95,
+    1.2,
+    -0.0
+   ],
+   "footprint_unity": [
+    [
+     -111.35,
+     0.0,
+     -6.0
+    ],
+    [
+     -111.35,
+     0.0,
+     6.0
+    ],
+    [
+     -113.95,
+     1.2,
+     -6.0
+    ],
+    [
+     -113.95,
+     1.2,
+     6.0
+    ]
+   ]
+  },
+  {
+   "name": "Covenant gate threshold, yard side",
+   "kind": "gate threshold",
+   "concord_form": {
+    "axis": "x",
+    "z_min": -6.0,
+    "z_max": 6.0,
+    "x_start": -123.25,
+    "y_start": 0.0,
+    "x_end": -121.45,
+    "y_end": 1.2
+   },
+   "width_m": 12.0,
+   "steps": 4,
+   "step_height_m": 0.3,
+   "tread_m": 0.45,
+   "start_unity": [
+    -123.25,
+    0.0,
+    -0.0
+   ],
+   "end_unity": [
+    -121.45,
+    1.2,
+    -0.0
+   ],
+   "footprint_unity": [
+    [
+     -123.25,
+     0.0,
+     6.0
+    ],
+    [
+     -123.25,
+     0.0,
+     -6.0
+    ],
+    [
+     -121.45,
+     1.2,
+     6.0
+    ],
+    [
+     -121.45,
+     1.2,
+     -6.0
+    ]
+   ]
+  },
+  {
+   "name": "Hegemony gate threshold, rim side",
+   "kind": "gate threshold",
+   "concord_form": {
+    "axis": "x",
+    "z_min": -6.0,
+    "z_max": 6.0,
+    "x_start": 111.35,
+    "y_start": 0.0,
+    "x_end": 113.95,
+    "y_end": 1.2
+   },
+   "width_m": 12.0,
+   "steps": 4,
+   "step_height_m": 0.3,
+   "tread_m": 0.65,
+   "start_unity": [
+    111.35,
+    0.0,
+    -0.0
+   ],
+   "end_unity": [
+    113.95,
+    1.2,
+    -0.0
+   ],
+   "footprint_unity": [
+    [
+     111.35,
+     0.0,
+     6.0
+    ],
+    [
+     111.35,
+     0.0,
+     -6.0
+    ],
+    [
+     113.95,
+     1.2,
+     6.0
+    ],
+    [
+     113.95,
+     1.2,
+     -6.0
+    ]
+   ]
+  },
+  {
+   "name": "Hegemony gate threshold, yard side",
+   "kind": "gate threshold",
+   "concord_form": {
+    "axis": "x",
+    "z_min": -6.0,
+    "z_max": 6.0,
+    "x_start": 123.25,
+    "y_start": 0.0,
+    "x_end": 121.45,
+    "y_end": 1.2
+   },
+   "width_m": 12.0,
+   "steps": 4,
+   "step_height_m": 0.3,
+   "tread_m": 0.45,
+   "start_unity": [
+    123.25,
+    0.0,
+    -0.0
+   ],
+   "end_unity": [
+    121.45,
+    1.2,
+    -0.0
+   ],
+   "footprint_unity": [
+    [
+     123.25,
+     0.0,
+     -6.0
+    ],
+    [
+     123.25,
+     0.0,
+     6.0
+    ],
+    [
+     121.45,
+     1.2,
+     -6.0
+    ],
+    [
+     121.45,
+     1.2,
+     6.0
+    ]
+   ]
+  },
+  {
+   "name": "Null gate threshold, rim side",
+   "kind": "gate threshold",
+   "concord_form": {
+    "axis": "z",
+    "x_min": -6.0,
+    "x_max": 6.0,
+    "z_start": 111.35,
+    "y_start": 0.0,
+    "z_end": 113.95,
+    "y_end": 1.2
+   },
+   "width_m": 12.0,
+   "steps": 4,
+   "step_height_m": 0.3,
+   "tread_m": 0.65,
+   "start_unity": [
+    -0.0,
+    0.0,
+    111.35
+   ],
+   "end_unity": [
+    -0.0,
+    1.2,
+    113.95
+   ],
+   "footprint_unity": [
+    [
+     -6.0,
+     0.0,
+     111.35
+    ],
+    [
+     6.0,
+     0.0,
+     111.35
+    ],
+    [
+     -6.0,
+     1.2,
+     113.95
+    ],
+    [
+     6.0,
+     1.2,
+     113.95
+    ]
+   ]
+  },
+  {
+   "name": "Null gate threshold, yard side",
+   "kind": "gate threshold",
+   "concord_form": {
+    "axis": "z",
+    "x_min": -6.0,
+    "x_max": 6.0,
+    "z_start": 123.25,
+    "y_start": 0.0,
+    "z_end": 121.45,
+    "y_end": 1.2
+   },
+   "width_m": 12.0,
+   "steps": 4,
+   "step_height_m": 0.3,
+   "tread_m": 0.45,
+   "start_unity": [
+    -0.0,
+    0.0,
+    123.25
+   ],
+   "end_unity": [
+    -0.0,
+    1.2,
+    121.45
+   ],
+   "footprint_unity": [
+    [
+     6.0,
+     0.0,
+     123.25
+    ],
+    [
+     -6.0,
+     0.0,
+     123.25
+    ],
+    [
+     6.0,
+     1.2,
+     121.45
+    ],
+    [
+     -6.0,
+     1.2,
+     121.45
+    ]
+   ]
+  },
+  {
+   "name": "Covenant RampartStair 01",
+   "kind": "rampart stair",
+   "concord_form": {
+    "axis": "x",
+    "z_min": 35.3,
+    "z_max": 38.3,
+    "x_start": -144.124,
+    "y_start": 0.0,
+    "x_end": -123.124,
+    "y_end": 8.6
+   },
+   "width_m": 3.0,
+   "steps": 29,
+   "step_height_m": 0.297,
+   "tread_m": 0.724,
+   "start_unity": [
+    -144.124,
+    0.0,
+    36.8
+   ],
+   "end_unity": [
+    -123.124,
+    8.6,
+    36.8
+   ],
+   "footprint_unity": [
+    [
+     -144.124,
+     0.0,
+     38.3
+    ],
+    [
+     -144.124,
+     0.0,
+     35.3
+    ],
+    [
+     -123.124,
+     8.6,
+     38.3
+    ],
+    [
+     -123.124,
+     8.6,
+     35.3
+    ]
+   ]
+  },
+  {
+   "name": "Covenant RampartStair 02",
+   "kind": "rampart stair",
+   "concord_form": {
+    "axis": "x",
+    "z_min": -38.3,
+    "z_max": -35.3,
+    "x_start": -144.124,
+    "y_start": 0.0,
+    "x_end": -123.124,
+    "y_end": 8.6
+   },
+   "width_m": 3.0,
+   "steps": 29,
+   "step_height_m": 0.297,
+   "tread_m": 0.724,
+   "start_unity": [
+    -144.124,
+    0.0,
+    -36.8
+   ],
+   "end_unity": [
+    -123.124,
+    8.6,
+    -36.8
+   ],
+   "footprint_unity": [
+    [
+     -144.124,
+     0.0,
+     -35.3
+    ],
+    [
+     -144.124,
+     0.0,
+     -38.3
+    ],
+    [
+     -123.124,
+     8.6,
+     -35.3
+    ],
+    [
+     -123.124,
+     8.6,
+     -38.3
+    ]
+   ]
+  },
+  {
+   "name": "Hegemony RampartStair 01",
+   "kind": "rampart stair",
+   "concord_form": {
+    "axis": "x",
+    "z_min": -38.3,
+    "z_max": -35.3,
+    "x_start": 144.124,
+    "y_start": 0.0,
+    "x_end": 123.124,
+    "y_end": 8.6
+   },
+   "width_m": 3.0,
+   "steps": 29,
+   "step_height_m": 0.297,
+   "tread_m": 0.724,
+   "start_unity": [
+    144.124,
+    0.0,
+    -36.8
+   ],
+   "end_unity": [
+    123.124,
+    8.6,
+    -36.8
+   ],
+   "footprint_unity": [
+    [
+     144.124,
+     0.0,
+     -38.3
+    ],
+    [
+     144.124,
+     0.0,
+     -35.3
+    ],
+    [
+     123.124,
+     8.6,
+     -38.3
+    ],
+    [
+     123.124,
+     8.6,
+     -35.3
+    ]
+   ]
+  },
+  {
+   "name": "Hegemony RampartStair 02",
+   "kind": "rampart stair",
+   "concord_form": {
+    "axis": "x",
+    "z_min": 35.3,
+    "z_max": 38.3,
+    "x_start": 144.124,
+    "y_start": 0.0,
+    "x_end": 123.124,
+    "y_end": 8.6
+   },
+   "width_m": 3.0,
+   "steps": 29,
+   "step_height_m": 0.297,
+   "tread_m": 0.724,
+   "start_unity": [
+    144.124,
+    0.0,
+    36.8
+   ],
+   "end_unity": [
+    123.124,
+    8.6,
+    36.8
+   ],
+   "footprint_unity": [
+    [
+     144.124,
+     0.0,
+     35.3
+    ],
+    [
+     144.124,
+     0.0,
+     38.3
+    ],
+    [
+     123.124,
+     8.6,
+     35.3
+    ],
+    [
+     123.124,
+     8.6,
+     38.3
+    ]
+   ]
+  },
+  {
+   "name": "Null RampartStair 01",
+   "kind": "rampart stair",
+   "concord_form": {
+    "axis": "z",
+    "x_min": 35.3,
+    "x_max": 38.3,
+    "z_start": 144.124,
+    "y_start": 0.0,
+    "z_end": 123.124,
+    "y_end": 8.6
+   },
+   "width_m": 3.0,
+   "steps": 29,
+   "step_height_m": 0.297,
+   "tread_m": 0.724,
+   "start_unity": [
+    36.8,
+    0.0,
+    144.124
+   ],
+   "end_unity": [
+    36.8,
+    8.6,
+    123.124
+   ],
+   "footprint_unity": [
+    [
+     38.3,
+     0.0,
+     144.124
+    ],
+    [
+     35.3,
+     0.0,
+     144.124
+    ],
+    [
+     38.3,
+     8.6,
+     123.124
+    ],
+    [
+     35.3,
+     8.6,
+     123.124
+    ]
+   ]
+  },
+  {
+   "name": "Null RampartStair 02",
+   "kind": "rampart stair",
+   "concord_form": {
+    "axis": "z",
+    "x_min": -38.3,
+    "x_max": -35.3,
+    "z_start": 144.124,
+    "y_start": 0.0,
+    "z_end": 123.124,
+    "y_end": 8.6
+   },
+   "width_m": 3.0,
+   "steps": 29,
+   "step_height_m": 0.297,
+   "tread_m": 0.724,
+   "start_unity": [
+    -36.8,
+    0.0,
+    144.124
+   ],
+   "end_unity": [
+    -36.8,
+    8.6,
+    123.124
+   ],
+   "footprint_unity": [
+    [
+     -35.3,
+     0.0,
+     144.124
+    ],
+    [
+     -38.3,
+     0.0,
+     144.124
+    ],
+    [
+     -35.3,
+     8.6,
+     123.124
+    ],
+    [
+     -38.3,
+     8.6,
+     123.124
+    ]
+   ]
+  }
+ ],
+ "ring_steps": [
+  {
+   "name": "Heart dais (Bowl_CrucibleFloor_Dais)",
+   "centre_unity": [
+    0.0,
+    -7.5,
+    0.0
+   ],
+   "note": "round dais 1.2 m high with eight ways up between kerb blocks: plain MeshCollider (walkable, validated); no ramp needed"
+  },
+  {
+   "name": "Covenant and Null respawn daises",
+   "note": "round steps 0.3 / 0.6 / 0.9 m to the 0.9 m platform, drum to 2.3 m: convex hull collider (UCX_Yard_*_RespawnShrine) works as a cone ramp to the platform"
+  },
+  {
+   "name": "Hegemony tech plinth",
+   "note": "hex plinth: convex hull collider"
+  }
+ ],
+ "side_walls_not_wallstride": [
+  {
+   "stair": "Grand stair East (Covenant)",
+   "from_unity": [
+    -78.7,
+    -7.5,
+    -7.0
+   ],
+   "to_unity": [
+    -103.7,
+    0.0,
+    -7.0
+   ]
+  },
+  {
+   "stair": "Grand stair East (Covenant)",
+   "from_unity": [
+    -78.7,
+    -7.5,
+    7.0
+   ],
+   "to_unity": [
+    -103.7,
+    0.0,
+    7.0
+   ]
+  },
+  {
+   "stair": "Grand stair North (sealed gate)",
+   "from_unity": [
+    7.0,
+    -7.5,
+    -78.7
+   ],
+   "to_unity": [
+    7.0,
+    0.0,
+    -103.7
+   ]
+  },
+  {
+   "stair": "Grand stair North (sealed gate)",
+   "from_unity": [
+    -7.0,
+    -7.5,
+    -78.7
+   ],
+   "to_unity": [
+    -7.0,
+    0.0,
+    -103.7
+   ]
+  },
+  {
+   "stair": "Grand stair West (Hegemony)",
+   "from_unity": [
+    78.7,
+    -7.5,
+    7.0
+   ],
+   "to_unity": [
+    103.7,
+    0.0,
+    7.0
+   ]
+  },
+  {
+   "stair": "Grand stair West (Hegemony)",
+   "from_unity": [
+    78.7,
+    -7.5,
+    -7.0
+   ],
+   "to_unity": [
+    103.7,
+    0.0,
+    -7.0
+   ]
+  },
+  {
+   "stair": "Grand stair South (Null)",
+   "from_unity": [
+    -7.0,
+    -7.5,
+    78.7
+   ],
+   "to_unity": [
+    -7.0,
+    0.0,
+    103.7
+   ]
+  },
+  {
+   "stair": "Grand stair South (Null)",
+   "from_unity": [
+    7.0,
+    -7.5,
+    78.7
+   ],
+   "to_unity": [
+    7.0,
+    0.0,
+    103.7
+   ]
+  },
+  {
+   "stair": "Covenant gate threshold, rim side",
+   "from_unity": [
+    -111.35,
+    0.0,
+    -6.0
+   ],
+   "to_unity": [
+    -113.95,
+    1.2,
+    -6.0
+   ]
+  },
+  {
+   "stair": "Covenant gate threshold, rim side",
+   "from_unity": [
+    -111.35,
+    0.0,
+    6.0
+   ],
+   "to_unity": [
+    -113.95,
+    1.2,
+    6.0
+   ]
+  },
+  {
+   "stair": "Covenant gate threshold, yard side",
+   "from_unity": [
+    -123.25,
+    0.0,
+    6.0
+   ],
+   "to_unity": [
+    -121.45,
+    1.2,
+    6.0
+   ]
+  },
+  {
+   "stair": "Covenant gate threshold, yard side",
+   "from_unity": [
+    -123.25,
+    0.0,
+    -6.0
+   ],
+   "to_unity": [
+    -121.45,
+    1.2,
+    -6.0
+   ]
+  },
+  {
+   "stair": "Hegemony gate threshold, rim side",
+   "from_unity": [
+    111.35,
+    0.0,
+    6.0
+   ],
+   "to_unity": [
+    113.95,
+    1.2,
+    6.0
+   ]
+  },
+  {
+   "stair": "Hegemony gate threshold, rim side",
+   "from_unity": [
+    111.35,
+    0.0,
+    -6.0
+   ],
+   "to_unity": [
+    113.95,
+    1.2,
+    -6.0
+   ]
+  },
+  {
+   "stair": "Hegemony gate threshold, yard side",
+   "from_unity": [
+    123.25,
+    0.0,
+    -6.0
+   ],
+   "to_unity": [
+    121.45,
+    1.2,
+    -6.0
+   ]
+  },
+  {
+   "stair": "Hegemony gate threshold, yard side",
+   "from_unity": [
+    123.25,
+    0.0,
+    6.0
+   ],
+   "to_unity": [
+    121.45,
+    1.2,
+    6.0
+   ]
+  },
+  {
+   "stair": "Null gate threshold, rim side",
+   "from_unity": [
+    -6.0,
+    0.0,
+    111.35
+   ],
+   "to_unity": [
+    -6.0,
+    1.2,
+    113.95
+   ]
+  },
+  {
+   "stair": "Null gate threshold, rim side",
+   "from_unity": [
+    6.0,
+    0.0,
+    111.35
+   ],
+   "to_unity": [
+    6.0,
+    1.2,
+    113.95
+   ]
+  },
+  {
+   "stair": "Null gate threshold, yard side",
+   "from_unity": [
+    6.0,
+    0.0,
+    123.25
+   ],
+   "to_unity": [
+    6.0,
+    1.2,
+    121.45
+   ]
+  },
+  {
+   "stair": "Null gate threshold, yard side",
+   "from_unity": [
+    -6.0,
+    0.0,
+    123.25
+   ],
+   "to_unity": [
+    -6.0,
+    1.2,
+    121.45
+   ]
+  },
+  {
+   "stair": "Covenant RampartStair 01",
+   "from_unity": [
+    -144.124,
+    0.0,
+    38.3
+   ],
+   "to_unity": [
+    -123.124,
+    8.6,
+    38.3
+   ]
+  },
+  {
+   "stair": "Covenant RampartStair 01",
+   "from_unity": [
+    -144.124,
+    0.0,
+    35.3
+   ],
+   "to_unity": [
+    -123.124,
+    8.6,
+    35.3
+   ]
+  },
+  {
+   "stair": "Covenant RampartStair 02",
+   "from_unity": [
+    -144.124,
+    0.0,
+    -35.3
+   ],
+   "to_unity": [
+    -123.124,
+    8.6,
+    -35.3
+   ]
+  },
+  {
+   "stair": "Covenant RampartStair 02",
+   "from_unity": [
+    -144.124,
+    0.0,
+    -38.3
+   ],
+   "to_unity": [
+    -123.124,
+    8.6,
+    -38.3
+   ]
+  },
+  {
+   "stair": "Hegemony RampartStair 01",
+   "from_unity": [
+    144.124,
+    0.0,
+    -38.3
+   ],
+   "to_unity": [
+    123.124,
+    8.6,
+    -38.3
+   ]
+  },
+  {
+   "stair": "Hegemony RampartStair 01",
+   "from_unity": [
+    144.124,
+    0.0,
+    -35.3
+   ],
+   "to_unity": [
+    123.124,
+    8.6,
+    -35.3
+   ]
+  },
+  {
+   "stair": "Hegemony RampartStair 02",
+   "from_unity": [
+    144.124,
+    0.0,
+    35.3
+   ],
+   "to_unity": [
+    123.124,
+    8.6,
+    35.3
+   ]
+  },
+  {
+   "stair": "Hegemony RampartStair 02",
+   "from_unity": [
+    144.124,
+    0.0,
+    38.3
+   ],
+   "to_unity": [
+    123.124,
+    8.6,
+    38.3
+   ]
+  },
+  {
+   "stair": "Null RampartStair 01",
+   "from_unity": [
+    38.3,
+    0.0,
+    144.124
+   ],
+   "to_unity": [
+    38.3,
+    8.6,
+    123.124
+   ]
+  },
+  {
+   "stair": "Null RampartStair 01",
+   "from_unity": [
+    35.3,
+    0.0,
+    144.124
+   ],
+   "to_unity": [
+    35.3,
+    8.6,
+    123.124
+   ]
+  },
+  {
+   "stair": "Null RampartStair 02",
+   "from_unity": [
+    -35.3,
+    0.0,
+    144.124
+   ],
+   "to_unity": [
+    -35.3,
+    8.6,
+    123.124
+   ]
+  },
+  {
+   "stair": "Null RampartStair 02",
+   "from_unity": [
+    -38.3,
+    0.0,
+    144.124
+   ],
+   "to_unity": [
+    -38.3,
+    8.6,
+    123.124
+   ]
+  }
+ ],
+ "wallstride_faces_cut_by_stairs": [
+  {
+   "collider": "UCX_wall_0614",
+   "stair": "Covenant gate threshold, rim side"
+  },
+  {
+   "collider": "UCX_wall_0616",
+   "stair": "Covenant gate threshold, rim side"
+  },
+  {
+   "collider": "UCX_wall_0617",
+   "stair": "Covenant RampartStair 01"
+  },
+  {
+   "collider": "UCX_wall_0617",
+   "stair": "Hegemony RampartStair 02"
+  },
+  {
+   "collider": "UCX_wall_0618",
+   "stair": "Covenant RampartStair 02"
+  },
+  {
+   "collider": "UCX_wall_0618",
+   "stair": "Hegemony RampartStair 01"
+  },
+  {
+   "collider": "UCX_wall_0706",
+   "stair": "Hegemony gate threshold, rim side"
+  },
+  {
+   "collider": "UCX_wall_0708",
+   "stair": "Hegemony gate threshold, rim side"
+  },
+  {
+   "collider": "UCX_wall_0709",
+   "stair": "Covenant RampartStair 02"
+  },
+  {
+   "collider": "UCX_wall_0709",
+   "stair": "Hegemony RampartStair 01"
+  },
+  {
+   "collider": "UCX_wall_0710",
+   "stair": "Covenant RampartStair 01"
+  },
+  {
+   "collider": "UCX_wall_0710",
+   "stair": "Hegemony RampartStair 02"
+  },
+  {
+   "collider": "UCX_wall_0842",
+   "stair": "Null gate threshold, rim side"
+  },
+  {
+   "collider": "UCX_wall_0843",
+   "stair": "Null gate threshold, rim side"
+  },
+  {
+   "collider": "UCX_wall_0844",
+   "stair": "Null RampartStair 01"
+  },
+  {
+   "collider": "UCX_wall_0845",
+   "stair": "Null RampartStair 02"
+  }
+ ]
+}

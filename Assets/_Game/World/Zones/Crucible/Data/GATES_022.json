@@ -1,0 +1,234 @@
+{
+ "checkpoint": "022b",
+ "axes": "Unity (x, y, z) = Blender (-x, z, -y), metres; euler = Unity order (Z, X, Y applied), degrees",
+ "gates": [
+  {
+   "name": "GateLeaf_Covenant_L",
+   "faction": "Covenant",
+   "motion": "slide sideways into the wall",
+   "pivot_note": "object origin = bottom centre of the leaf in its CLOSED place; the slide axis runs through it",
+   "closed_pos_unity": [
+    -117.8,
+    0.0,
+    3.0
+   ],
+   "open_pos_unity": [
+    -117.8,
+    0.0,
+    9.3
+   ],
+   "slide_vector_unity": [
+    -0.0,
+    0.0,
+    6.3
+   ],
+   "slide_distance_m": 6.3,
+   "unity_euler": [
+    -0.0,
+    0.0,
+    0.0
+   ],
+   "size_m": [
+    0.76,
+    6.0,
+    8.0
+   ],
+   "opens_when": "Crossfire starts (all three faction gates together); suggested 2.5 s ease-in-out",
+   "blender_pos": [
+    117.8,
+    -3.0,
+    0.0
+   ]
+  },
+  {
+   "name": "GateLeaf_Covenant_R",
+   "faction": "Covenant",
+   "motion": "slide sideways into the wall",
+   "pivot_note": "object origin = bottom centre of the leaf in its CLOSED place; the slide axis runs through it",
+   "closed_pos_unity": [
+    -117.8,
+    0.0,
+    -3.0
+   ],
+   "open_pos_unity": [
+    -117.8,
+    0.0,
+    -9.3
+   ],
+   "slide_vector_unity": [
+    -0.0,
+    0.0,
+    -6.3
+   ],
+   "slide_distance_m": 6.3,
+   "unity_euler": [
+    -0.0,
+    0.0,
+    0.0
+   ],
+   "size_m": [
+    0.76,
+    6.0,
+    8.0
+   ],
+   "opens_when": "Crossfire starts (all three faction gates together); suggested 2.5 s ease-in-out",
+   "blender_pos": [
+    117.8,
+    3.0,
+    0.0
+   ]
+  },
+  {
+   "name": "GateLeaf_Hegemony_L",
+   "faction": "Hegemony",
+   "motion": "slide sideways into the wall",
+   "pivot_note": "object origin = bottom centre of the leaf in its CLOSED place; the slide axis runs through it",
+   "closed_pos_unity": [
+    117.8,
+    0.0,
+    -3.0
+   ],
+   "open_pos_unity": [
+    117.8,
+    0.0,
+    -9.3
+   ],
+   "slide_vector_unity": [
+    -0.0,
+    0.0,
+    -6.3
+   ],
+   "slide_distance_m": 6.3,
+   "unity_euler": [
+    -0.0,
+    180.0,
+    0.0
+   ],
+   "size_m": [
+    0.76,
+    6.0,
+    8.0
+   ],
+   "opens_when": "Crossfire starts (all three faction gates together); suggested 2.5 s ease-in-out",
+   "blender_pos": [
+    -117.8,
+    3.0,
+    0.0
+   ]
+  },
+  {
+   "name": "GateLeaf_Hegemony_R",
+   "faction": "Hegemony",
+   "motion": "slide sideways into the wall",
+   "pivot_note": "object origin = bottom centre of the leaf in its CLOSED place; the slide axis runs through it",
+   "closed_pos_unity": [
+    117.8,
+    0.0,
+    3.0
+   ],
+   "open_pos_unity": [
+    117.8,
+    0.0,
+    9.3
+   ],
+   "slide_vector_unity": [
+    0.0,
+    0.0,
+    6.3
+   ],
+   "slide_distance_m": 6.3,
+   "unity_euler": [
+    -0.0,
+    180.0,
+    0.0
+   ],
+   "size_m": [
+    0.76,
+    6.0,
+    8.0
+   ],
+   "opens_when": "Crossfire starts (all three faction gates together); suggested 2.5 s ease-in-out",
+   "blender_pos": [
+    -117.8,
+    -3.0,
+    0.0
+   ]
+  },
+  {
+   "name": "GateLeaf_Null_Portcullis",
+   "faction": "Null",
+   "motion": "slide up (portcullis)",
+   "pivot_note": "object origin = bottom centre of the leaf in its CLOSED place; the slide axis runs through it",
+   "closed_pos_unity": [
+    0.0,
+    0.0,
+    117.8
+   ],
+   "open_pos_unity": [
+    0.0,
+    8.3,
+    117.8
+   ],
+   "slide_vector_unity": [
+    -0.0,
+    8.3,
+    -0.0
+   ],
+   "slide_distance_m": 8.3,
+   "unity_euler": [
+    -0.0,
+    90.0,
+    0.0
+   ],
+   "size_m": [
+    0.76,
+    12.0,
+    8.0
+   ],
+   "opens_when": "Crossfire starts (all three faction gates together); suggested 2.5 s ease-in-out",
+   "blender_pos": [
+    -0.0,
+    -117.8,
+    0.0
+   ]
+  },
+  {
+   "name": "GateLeaf_Sealed_North",
+   "faction": "Sealed",
+   "motion": "sealed (never opens)",
+   "pivot_note": "object origin = bottom centre of the leaf in its CLOSED place; the slide axis runs through it",
+   "closed_pos_unity": [
+    -0.0,
+    0.0,
+    -117.8
+   ],
+   "open_pos_unity": [
+    -0.0,
+    0.0,
+    -117.8
+   ],
+   "slide_vector_unity": [
+    -0.0,
+    0.0,
+    -0.0
+   ],
+   "slide_distance_m": 0.0,
+   "unity_euler": [
+    -0.0,
+    -90.0,
+    0.0
+   ],
+   "size_m": [
+    0.9,
+    12.0,
+    8.0
+   ],
+   "opens_when": "Crossfire starts (all three faction gates together); suggested 2.5 s ease-in-out",
+   "blender_pos": [
+    0.0,
+    117.8,
+    0.0
+   ]
+  }
+ ]
+}

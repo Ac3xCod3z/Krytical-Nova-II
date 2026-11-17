@@ -110,6 +110,16 @@ namespace KryticalNova.Crossfire.Entities.Tests
             CrossfireArea.Track(yard);
         }
 
+        static readonly System.Reflection.BindingFlags Inst = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+
+        /// <summary>The vote's inner state, for a failed vote count's message.</summary>
+        static string VoteWhy(CrossfireEntryServerSystem entry, CrossfireClockServerSystem clock)
+        {
+            object F(string n) => typeof(CrossfireEntryServerSystem).GetField(n, Inst)?.GetValue(entry);
+            CrossfireState c = clock.Current;
+            return $" [voteOpen {F("m_VoteOpen")} for {F("m_VoteFor")} closes {F("m_VoteCloses")}; clock now {clock.Now} phase {c.Now.Phase} war {c.Now.WarStart} joinOpens {c.JoinOpensAt}; real H {entry.Sides.Real(FactionId.Hegemony)} N {entry.Sides.Real(FactionId.Null)}; bots {(WarBots.Fill == null ? "none" : WarBots.Fill.GetType().Name)}]";
+        }
+
         static void Settle(PlayerRig rig) => rig.Tick(30);
 
         (PlayerRig rig, CrossfireClockServerSystem clock, CrossfireEntryServerSystem entry) Start(FactionId[] factions)
@@ -191,19 +201,23 @@ namespace KryticalNova.Crossfire.Entities.Tests
                 Settle(rig);
                 Assert.AreEqual(2, entry.Sides.Count);
 
-                // the Rally: both short sides are asked; Hegemony says yes, Null does not answer
+                // the join window (owner's war flow, 16 Nov 2026): each short side's real player is asked in their yard as they come in;
+                // Hegemony says yes, Null does not answer
+                Assert.AreEqual(CrossfirePhase.Call, clock.Current.Now.Phase);
+                Assert.AreEqual(2, entry.VotesSent, "one vote to each short side's real player" + VoteWhy(entry, clock));
+                Assert.IsTrue(entry.Vote(rig.ServerGhosts[0], true));
+                Assert.IsFalse(entry.Vote(rig.ServerGhosts[0], true), "one vote each");
+
+                // the settle (the Rally's start): the vote closes and fills the side that voted yes; the side with nobody real is filled without a vote
                 m_Now = Origin + 66;
                 Settle(rig);
                 Assert.AreEqual(CrossfirePhase.Muster, clock.Current.Now.Phase);
-                Assert.AreEqual(2, entry.VotesSent, "one vote to each short side's real player");
-                Assert.IsTrue(entry.Vote(rig.ServerGhosts[0], true));
-                Assert.IsFalse(entry.Vote(rig.ServerGhosts[0], true), "one vote each");
-                m_Now = Origin + 70;   // past the vote's 3 seconds, before the gates open
-                Settle(rig);
-                Assert.AreEqual(2, bots.Fills.Count, "Covenant (nobody real) at once, then the side that voted yes; Null said nothing");
-                Assert.AreEqual(FactionId.Covenant, bots.Fills[0].Faction, "a side with no real player is filled without a vote");
-                Assert.AreEqual(3, bots.Fills[0].Count);
-                WarBotRequest yes = bots.Fills[1];
+                Assert.IsFalse(entry.Vote(rig.ServerGhosts[1], true), "the vote is closed at the settle");
+                Assert.AreEqual(2, bots.Fills.Count, "the side that voted yes and Covenant (nobody real); Null said nothing");
+                WarBotRequest covenant = bots.Fills.Find(f => f.Faction == FactionId.Covenant);
+                Assert.AreEqual(FactionId.Covenant, covenant.Faction, "a side with no real player is filled without a vote");
+                Assert.AreEqual(3, covenant.Count);
+                WarBotRequest yes = bots.Fills.Find(f => f.Faction == FactionId.Hegemony);
                 Assert.AreEqual(FactionId.Hegemony, yes.Faction);
                 Assert.AreEqual(2, yes.Count, "filled to the cap: 1 real + 2 bots");
                 Assert.AreEqual(10, yes.Bracket, "bracket X");
@@ -319,9 +333,34 @@ namespace KryticalNova.Crossfire.Entities.Tests
                 Assert.AreEqual(2, entry.SidesAutoFilled, "Null and Covenant, with nobody real, are filled at once");
                 Assert.AreEqual(33, bots.Count(FactionId.Null));
                 Assert.AreEqual(33, bots.Count(FactionId.Covenant));
-                Assert.AreEqual(1, entry.VotesSent, "Hegemony, the side with a real player, gets the vote");
+                Assert.AreEqual(1, entry.VotesSent, "Hegemony, the side with a real player, gets the vote" + VoteWhy(entry, clock));
                 Assert.AreEqual(0, bots.Count(FactionId.Hegemony), "and has no bots until it votes yes");
                 Assert.IsTrue(bots.Fills.TrueForAll(f => f.Bracket == 10), "bracket X");
+            }
+        }
+
+        /// <summary>
+        /// A war whose first real player comes in during the Rally (a GM's war that skips the join window, a Marshal join): the empty sides
+        /// are filled then (crucible-unity-2's test war, 17 Nov 2026: they got no bots, so there was nobody to fight).
+        /// </summary>
+        [Test]
+        public void TheFirstRealPlayer_ComingInDuringTheRally_StillHasTheEmptySidesFilled()
+        {
+            var bots = new FakeBots();
+            var (rig, clock, entry) = Start(new[] { FactionId.Hegemony });
+            WarBots.Fill = bots;
+            using (rig)
+            {
+                m_Now = Origin + 66;   // the Rally, with nobody in the war yet
+                Settle(rig);
+                Assert.AreEqual(CrossfirePhase.Muster, clock.Current.Now.Phase);
+                Assert.AreEqual(0, entry.SidesAutoFilled, "nobody real: no war to fill yet");
+                Port(rig, entry, 0, FactionId.Hegemony, true, "the first real player, in the Rally");
+                Settle(rig);
+                Assert.AreEqual(2, entry.SidesAutoFilled, "Null and Covenant are filled once a real player is in");
+                Assert.AreEqual(33, bots.Count(FactionId.Null));
+                Assert.AreEqual(33, bots.Count(FactionId.Covenant));
+                Assert.AreEqual(0, bots.Count(FactionId.Hegemony), "the real side still votes");
             }
         }
 

@@ -16,6 +16,11 @@ namespace KryticalNova.Crossfire.Entities.Tests
         {
             m_Settings = ScriptableObject.CreateInstance<CrossfireSettings>();
             m_Settings.anchorToNightfall = false;   // a test world has no world clock
+            // Pinned to the timings these tests were written for (the defaults moved to the owner's war flow, 16 Nov 2026).
+            m_Settings.callMinutes = 10f;
+            m_Settings.joinWindowMinutes = 3f;
+            m_Settings.endSeconds = 20f;
+            m_Settings.gateOpeningSeconds = 0f;
             m_Now = 1000;
             CrossfireClockServerSystem.ClockSource = () => (false, default(WorldEnvironmentState));
         }

@@ -17,8 +17,19 @@ namespace KryticalNova.Rendering
         /// <summary>Metres from the camera where the shimmer begins (x) and is full (y).</summary>
         public static Vector2 Distance = new Vector2(60f, 220f);
 
+        /// <summary>
+        /// Local heat over hot ground (owner's Crucible list, section 6, 17 Nov 2026: one masked pass on the main lava cracks):
+        /// 0 none .. 1 full, already scaled by the World Effects tier. Only inside <see cref="LocalBoxes"/>, near or far.
+        /// </summary>
+        public static float LocalStrength;
+        /// <summary>Most local boxes a frame (the presenter sends the nearest).</summary>
+        public const int MaxLocalBoxes = 32;
+        /// <summary>Each box: x, z centre (world), w half size (square), y the hot ground's height; the haze rises 3 m.</summary>
+        public static readonly Vector4[] LocalBoxes = new Vector4[MaxLocalBoxes];
+        public static int LocalCount;
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void Reset() { Strength = 0f; Distance = new Vector2(60f, 220f); }
+        static void Reset() { Strength = 0f; Distance = new Vector2(60f, 220f); LocalStrength = 0f; LocalCount = 0; }
     }
 
     /// <summary>
@@ -42,6 +53,8 @@ namespace KryticalNova.Rendering
             [Range(0f, 6f)] public float riseSpeed = 1.8f;
             [Tooltip("The sky shimmers only this far above the horizon (the up share of the view direction).")]
             [Range(0.01f, 0.5f)] public float skyFade = 0.12f;
+            [Tooltip("Local heat (lava cracks): shimmer size in screen heights at full strength.")]
+            [Range(0f, 0.02f)] public float localAmplitude = 0.004f;
         }
 
         public Settings settings = new Settings();
@@ -52,6 +65,8 @@ namespace KryticalNova.Rendering
 
         static readonly int ParamsId = Shader.PropertyToID("_HazeParams");
         static readonly int NoiseId = Shader.PropertyToID("_HazeNoise");
+        static readonly int LocalId = Shader.PropertyToID("_HazeLocal");
+        static readonly int BoxesId = Shader.PropertyToID("_HazeBoxes");
 
         public override void Create()
         {
@@ -64,13 +79,16 @@ namespace KryticalNova.Rendering
             CameraType type = renderingData.cameraData.cameraType;
             if (type == CameraType.Preview || type == CameraType.Reflection) return;
             float strength = HeatHazeRuntime.Strength;
-            if (strength <= 0.001f || shader == null) return;
+            float local = HeatHazeRuntime.LocalCount > 0 ? HeatHazeRuntime.LocalStrength : 0f;
+            if ((strength <= 0.001f && local <= 0.001f) || shader == null) return;
             if (_material == null) _material = CoreUtils.CreateEngineMaterial(shader);
 
             Vector2 d = HeatHazeRuntime.Distance;
             float near = Mathf.Max(1f, d.x), far = Mathf.Max(near + 1f, d.y);
             _material.SetVector(ParamsId, new Vector4(near, 1f / (far - near), strength * settings.amplitude, settings.skyFade));
             _material.SetVector(NoiseId, new Vector4(settings.noiseScale.x, settings.noiseScale.y, settings.riseSpeed, 0f));
+            _material.SetVector(LocalId, new Vector4(local > 0.001f ? HeatHazeRuntime.LocalCount : 0, local * settings.localAmplitude, 3f, 0f));
+            if (local > 0.001f) _material.SetVectorArray(BoxesId, HeatHazeRuntime.LocalBoxes);
 
             _pass.renderPassEvent = settings.renderPassEvent;
             _pass.requiresIntermediateTexture = true;

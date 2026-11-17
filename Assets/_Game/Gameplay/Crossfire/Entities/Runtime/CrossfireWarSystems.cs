@@ -60,6 +60,8 @@ namespace KryticalNova.Crossfire.Entities
             if (m_Mercs.Remove(who)) ApplyWarSide(who, FactionId.None);   // a Merc who leaves is their home faction again at once
             m_MercSide.Remove(who);
             m_MercInside.Remove(who);
+            m_JoinWay.Remove(who);   // a rejoin later is a new join (and a late one's share is from then)
+            m_JoinedAt.Remove(who);
             Left++;
             if (tell && Settings != null) Tell(who, Settings.leftWarText);
         }
@@ -140,9 +142,56 @@ namespace KryticalNova.Crossfire.Entities
             m_Connections = GetEntityQuery(ComponentType.ReadOnly<NetworkId>(), ComponentType.ReadOnly<NetworkStreamInGame>());
             m_MercAnswers = GetEntityQuery(ComponentType.ReadOnly<CrossfireMercAnswerRpc>(), ComponentType.ReadOnly<ReceiveRpcCommandRequest>());
             CombatEntity.AnyKilled += OnAnyKilled;
+            m_RespawnNext = PlayerDeathMotor.ServerRespawnSpot;
+            m_RespawnHandler = RespawnInYard;
+            PlayerDeathMotor.ServerRespawnSpot = m_RespawnHandler;
         }
 
-        void DestroyWar() => CombatEntity.AnyKilled -= OnAnyKilled;
+        void DestroyWar()
+        {
+            CombatEntity.AnyKilled -= OnAnyKilled;
+            if (ReferenceEquals(PlayerDeathMotor.ServerRespawnSpot, m_RespawnHandler)) PlayerDeathMotor.ServerRespawnSpot = m_RespawnNext;
+            m_RespawnHandler = null;
+        }
+
+        PlayerDeathMotor.RespawnSpotHandler m_RespawnHandler, m_RespawnNext;
+        readonly Dictionary<FactionId, int> m_Respawns = new Dictionary<FactionId, int>();
+
+        /// <summary>Players and War Bots who got up in their own yard (tests).</summary>
+        public int RespawnsInYard { get; private set; }
+
+        /// <summary>The side a real player or a War Bot fights for in this war; false for anyone outside it.</summary>
+        bool WarSideOf(Entity ghost, out FactionId side)
+        {
+            if (m_Sides.TryGetSide(ghost, out side)) return true;
+            side = IsBot(ghost) ? Bots.SideOf(ghost) : FactionId.None;
+            return side != FactionId.None;
+        }
+
+        /// <summary>
+        /// Where a dead body gets up (owner, crossfire-plan "the dead come back in their own yard"): a player on a war side (a Merc: the side
+        /// they fight for) gets up on that side's Rally Point, inside the war area, so a death never costs their place or pay; a War Bot on its side's too. Any other body:
+        /// the next handler (another server world in tests), then the map's spawn points.
+        /// </summary>
+        bool RespawnInYard(GameObject body, out Vector3 position, out Quaternion rotation)
+        {
+            CrossfireSettings s = Settings;
+            if (s != null && TryGhostOf(body, out Entity ghost) && WarSideOf(ghost, out FactionId side)
+                && CrossfireArea.TryRallyPoint(side, out CrossfireArea yard))
+            {
+                m_Respawns.TryGetValue(side, out int n);
+                m_Respawns[side] = n + 1;
+                yard.RespawnSpot(n, s.respawnSpacing, s.respawnSpots, out position, out float yaw);
+                rotation = Quaternion.Euler(0f, yaw, 0f);
+                m_Arriving.Add(ghost);   // the teleport lands a tick later: never a leaver meanwhile
+                RespawnsInYard++;
+                return true;
+            }
+            if (m_RespawnNext != null) return m_RespawnNext(body, out position, out rotation);
+            position = default;
+            rotation = Quaternion.identity;
+            return false;
+        }
 
         CrossfireSettings Settings => m_Clock != null ? m_Clock.ActiveSettings : null;
         static IWarBotFill Bots => WarBots.Fill;
@@ -226,20 +275,21 @@ namespace KryticalNova.Crossfire.Entities
             FactionId side = SideOfReal(who);
             m_Home[who] = side;
             CrossfireJoin join = m_Sides.TryJoin(who, side, s.capPerFaction, BotsOn(side));
-            switch (join)
+            if (join == CrossfireJoin.Full)
             {
-                case CrossfireJoin.Full:
-                    m_Refused.Add((who, from));
-                    Refused++;
-                    if (!TryOfferMerc(who, side, s)) Tell(who, Fill(s.sideFullText, s, m_Sides.Real(side)));
-                    return false;
-                case CrossfireJoin.TookBotsPlace:
-                    m_BotsOut.Add(side);   // after the look over every player: a bot leaving changes the world
-                    Tell(who, s.tookBotsPlaceText);
-                    return true;
-                default:
-                    return true;
+                m_Refused.Add((who, from));
+                Refused++;
+                if (!TryOfferMerc(who, side, s)) Tell(who, Fill(s.sideFullText, s, m_Sides.Real(side)));
+                return false;
             }
+            if (join == CrossfireJoin.TookBotsPlace)
+            {
+                m_BotsOut.Add(side);   // after the look over every player: a bot leaving changes the world
+                Tell(who, s.tookBotsPlaceText);
+            }
+            MarkJoined(who, CrossfireJoinWay.Walked);
+            OfferVoteTo(who, side, s);   // owner: they vote on bots in the yard, while the join window runs
+            return true;
         }
 
         /// <summary>The port's cap check: the player's side is full of real players.</summary>
@@ -305,6 +355,10 @@ namespace KryticalNova.Crossfire.Entities
             return true;
         }
 
+        /// <summary>RPCs made while the yard look iterates the players (no structural change is allowed there), sent right after it.</summary>
+        EntityCommandBuffer m_Outbox;
+        bool m_InLook, m_HasOutbox;
+
         void SendTo<T>(Entity who, T rpc) where T : unmanaged, IRpcCommand
         {
             EntityManager em = EntityManager;
@@ -314,10 +368,29 @@ namespace KryticalNova.Crossfire.Entities
             foreach (Entity c in connections)
             {
                 if (em.GetComponentData<NetworkId>(c).Value != id) continue;
+                if (m_InLook)
+                {
+                    // a vote or Merc offer from Admit inside the look: creating the RPC there threw, so the offer was never sent (EditMode, 16 Nov 2026)
+                    if (!m_HasOutbox) { m_Outbox = new EntityCommandBuffer(Allocator.Temp); m_HasOutbox = true; }
+                    Entity queued = m_Outbox.CreateEntity();
+                    m_Outbox.AddComponent(queued, rpc);
+                    m_Outbox.AddComponent(queued, new SendRpcCommandRequest { TargetConnection = c });
+                    continue;
+                }
                 Entity e = em.CreateEntity();
                 em.AddComponentData(e, rpc);
                 em.AddComponentData(e, new SendRpcCommandRequest { TargetConnection = c });
             }
+        }
+
+        /// <summary>Sends what the yard look queued (<see cref="SendTo{T}"/>).</summary>
+        void SendQueued()
+        {
+            m_InLook = false;
+            if (!m_HasOutbox) return;
+            m_HasOutbox = false;
+            m_Outbox.Playback(EntityManager);
+            m_Outbox.Dispose();
         }
 
         /// <summary>
@@ -329,7 +402,7 @@ namespace KryticalNova.Crossfire.Entities
             if (!m_Offers.TryGetValue(who, out (FactionId side, double expires, double war) offer)) return false;
             m_Offers.Remove(who);
             CrossfireSettings s = Settings;
-            bool open = s != null && m_Clock.Current.JoinOpen(m_Clock.Now) && m_Clock.Current.Now.WarStart.Equals(offer.war);
+            bool open = s != null && TakesPlayers && m_Clock.Current.Now.WarStart.Equals(offer.war);
             CrossfireJoin join = yes && open ? m_Sides.TryJoin(who, offer.side, s.capPerFaction, BotsOn(offer.side)) : CrossfireJoin.Full;
             if (join == CrossfireJoin.Full)
             {
@@ -342,15 +415,11 @@ namespace KryticalNova.Crossfire.Entities
             if (join == CrossfireJoin.TookBotsPlace) m_BotsOut.Add(offer.side);
             m_Mercs.Add(who);
             m_MercSide[who] = offer.side;
+            m_JoinWay[who] = CrossfireJoinWay.Merc;
+            MarkJoined(who, CrossfireJoinWay.Merc);
             MercsTaken++;   // the war side itself waits until they are inside the war area (owner, 16 Nov 2026: EnterAsMerc)
             EntityManager em = EntityManager;
-            if (CrossfireArea.TryRallyPoint(offer.side, out CrossfireArea yard) && em.Exists(who) && em.HasComponent<TeleportRequest>(who))
-            {
-                yard.Landing(out Vector3 at, out float yaw);
-                PlayerEntitiesSetup.Teleport(em, who, new Unity.Mathematics.int3((int)Math.Round(at.x * 1000f), (int)Math.Round(at.y * 1000f), (int)Math.Round(at.z * 1000f)),
-                    (int)Math.Round(Mathf.Repeat(yaw, 360f) * 100f) % 36000);
-                m_Arriving.Add(who);
-            }
+            if (CrossfireArea.TryRallyPoint(offer.side, out CrossfireArea yard)) SendToRally(who, yard);
             Tell(who, (s.mercJoinedText ?? string.Empty).Replace("{side}", offer.side.ToString()));
             SendRefusedBack();
             return true;
@@ -425,7 +494,7 @@ namespace KryticalNova.Crossfire.Entities
             if (!m_Sides.AddKill(killerSide, victimSide)) return false;
             m_Clock.SetScore(m_Sides.Kills(FactionId.Hegemony), m_Sides.Kills(FactionId.Null), m_Sides.Kills(FactionId.Covenant));
             CrossfireSettings s = Settings;
-            if (CrossfireRewards.KillDrops(s, killerBot, victimBot, m_Random.NextDouble())) GiveDrop(killer, s);
+            if (CrossfireRewards.KillDrops(s, killerBot, victimBot, m_Random.NextDouble(), ShareOf(killer))) GiveDrop(killer, s);   // a late joiner's chance is their share
             FlushTells();
             return true;
         }
@@ -563,6 +632,7 @@ namespace KryticalNova.Crossfire.Entities
             m_Arriving.RemoveWhere(e => !em.Exists(e));
             ReadVoteAnswers();
             ReadMercAnswers();
+            RunJoins(state, now);
             CrossfirePhase phase = state.Now.Phase;
             double war = state.Now.WarStart;
 
@@ -581,25 +651,28 @@ namespace KryticalNova.Crossfire.Entities
                 }
             }
 
-            // the Rally: ONE real player in any Rally Point starts the war (owner, 16 Nov 2026). Sides with real players vote on War Bots;
-            // sides with none are filled with them at once (nobody to ask), to the cap; real players and Mercs still take bots' places.
-            if (phase == CrossfirePhase.Muster && !m_VoteFor.Equals(war))
+            // the War Bot vote (owner's war flow, 16 Nov 2026): open the whole join window, the players voting from their yard (each who comes
+            // in while it is open gets it); it closes when the settle starts, which fills the sides that voted yes. A GM's war that skips the
+            // window votes in the Rally as before (closing a second before the gates). ONE real player starts the war: at the settle, sides
+            // with nobody real are filled with War Bots to the cap (nobody to ask); real players and Mercs still take bots' places.
+            bool joinWindow = (phase == CrossfirePhase.Call && now >= state.JoinOpensAt) || phase == CrossfirePhase.Muster;
+            if (joinWindow && !m_VoteFor.Equals(war))
             {
                 m_VoteFor = war;
                 m_Votes.Clear();
                 m_Voted.Clear();
                 double gatesOpen = war + s.musterSeconds;
-                m_VoteCloses = Math.Min(now + s.voteSeconds, gatesOpen - s.voteClosesBeforeGatesSeconds);
+                m_VoteCloses = phase == CrossfirePhase.Call ? war : Math.Min(now + s.voteSeconds, gatesOpen - s.voteClosesBeforeGatesSeconds);
                 m_VoteOpen = true;
                 foreach (FactionId side in CrossfireSides<Entity>.Factions)
                 {
-                    if (m_Sides.Count > 0 && Bots != null && m_Sides.Real(side) == 0) { AutoFill(side, s); continue; }
-                    if (!CrossfireVote.Offered(m_Sides.Real(side), BotsOn(side), s.capPerFaction, Bots != null)) continue;
+                    if (m_Sides.Real(side) == 0 || !CrossfireVote.Offered(m_Sides.Real(side), BotsOn(side), s.capPerFaction, Bots != null)) continue;
                     m_Votes[side] = (0, 0);
                     SendVote(side, s, war);
                 }
             }
-            if (m_VoteOpen && (now >= m_VoteCloses || phase != CrossfirePhase.Muster || !m_VoteFor.Equals(war))) CloseVote(s);
+            if (m_VoteOpen && (now >= m_VoteCloses || !joinWindow || !m_VoteFor.Equals(war))) CloseVote(s);
+            SettleSides(state, s);
 
             // the War's end: the most kills wins; every real player is paid by their side's outcome
             if (phase == CrossfirePhase.End && !m_PaidFor.Equals(war))
@@ -619,13 +692,17 @@ namespace KryticalNova.Crossfire.Entities
         {
             LastPay.Clear();
             LastGiven.Clear();
-            if (m_NoPayFor.Equals(m_PaidFor)) return;   // ended early with no real player left: nobody is paid
+            if (m_NoPayFor.Equals(m_PaidFor)) return;   // ended early with no real player left: nobody is paid (and nobody is left to see results)
             // owner, 16 Nov 2026: a war with no kill on any side pays nothing to anyone (no farming by standing in a yard)
             int kills = 0;
             foreach (FactionId f in CrossfireSides<Entity>.Factions) kills += m_Sides.Kills(f);
             if (kills == 0)
             {
-                foreach (KeyValuePair<Entity, FactionId> p in m_Sides.Players) Tell(p.Key, s.noKillsText);
+                foreach (KeyValuePair<Entity, FactionId> p in m_Sides.Players)
+                {
+                    Tell(p.Key, s.noKillsText);
+                    SendResults(p.Key, s, CrossfireResultKind.NoPay, p.Value, default);
+                }
                 return;
             }
             int bracket = BracketOfWar(s);
@@ -638,7 +715,8 @@ namespace KryticalNova.Crossfire.Entities
                 IGrowthShare pet = Share(body, GrowthShareKind.Pet), mount = Share(body, GrowthShareKind.Mount);
                 (bool maxed, int step, int petState, int mountState) growth = GrowthOf != null ? GrowthOf(p.Key)
                     : (progression != null && progression.IsAtLevelCap, progression != null ? progression.ExperienceRequired : 0, StateOf(pet), StateOf(mount));
-                CrossfirePay pay = CrossfireRewards.Payout(s, outcome, bracket, growth.maxed, growth.step, growth.petState, growth.mountState);
+                CrossfirePay pay = CrossfireRewards.Scaled(CrossfireRewards.Payout(s, outcome, bracket, growth.maxed, growth.step, growth.petState, growth.mountState),
+                    ShareOf(p.Key));   // a late joiner earns their share of the war (owner: diminished)
                 LastPay[p.Key] = pay;
                 // what was really given, and only that is told (review 1, item 5: a wallet at its cap takes less)
                 var given = new CrossfirePay();
@@ -649,6 +727,8 @@ namespace KryticalNova.Crossfire.Entities
                 LastGiven[p.Key] = given;
                 string text = outcome == CrossfireOutcome.Won ? s.wonText : outcome == CrossfireOutcome.Tied ? s.tiedText : s.lostText;
                 Tell(p.Key, (text ?? string.Empty).Replace("{kills}", m_Sides.Kills(p.Value).ToString()).Replace("{score}", score).Replace("{pay}", Words(given)));
+                SendResults(p.Key, s, outcome == CrossfireOutcome.Won ? CrossfireResultKind.Won : outcome == CrossfireOutcome.Tied ? CrossfireResultKind.Tied : CrossfireResultKind.Lost,
+                    p.Value, given);
             }
         }
 
@@ -678,6 +758,8 @@ namespace KryticalNova.Crossfire.Entities
             foreach (Entity merc in m_Mercs) ApplyWarSide(merc, FactionId.None);   // every Merc is their home faction again
             m_Mercs.Clear();
             m_MercSide.Clear();
+            m_Respawns.Clear();
+            ClearJoins();
             m_MercInside.Clear();
             m_Offers.Clear();
             m_Declined.Clear();
@@ -686,6 +768,9 @@ namespace KryticalNova.Crossfire.Entities
             m_Sides.Clear();
             m_Votes.Clear();
             m_VoteOpen = false;
+            m_VoteFor = double.NaN;     // the next war (even the same start a GM runs again) opens its own vote,
+            m_PromptFor = double.NaN;   // sends its own join prompts
+            m_FilledFor = double.NaN;   // and settles its own sides
             m_Clock?.SetScore(0, 0, 0);
             Bots?.EndWar();
         }

@@ -35,6 +35,11 @@ namespace KryticalNova.Crossfire.Entities.Tests
         {
             m_Settings = ScriptableObject.CreateInstance<CrossfireSettings>();
             m_Settings.anchorToNightfall = false;   // fixed cycle from the server's start: Call 1000-1600, Muster 1600-1660, War to 2560
+            // Pinned to the timings these tests were written for (the defaults moved to the owner's war flow, 16 Nov 2026).
+            m_Settings.callMinutes = 10f;
+            m_Settings.joinWindowMinutes = 3f;
+            m_Settings.endSeconds = 20f;
+            m_Settings.gateOpeningSeconds = 0f;
             m_Now = 1000;
             CrossfireClockServerSystem.ClockSource = () => (false, default(WorldEnvironmentState));
             m_Had = ServerChat.AnnounceTo;

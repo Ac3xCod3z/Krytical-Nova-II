@@ -66,10 +66,16 @@ namespace KryticalNova.EditorTools
         private static void RemoveClientOnlyScripts(Scene scene)
         {
             var doomed = new List<MonoBehaviour>();
+            int carriers = 0;
             foreach (GameObject root in scene.GetRootGameObjects())
                 foreach (MonoBehaviour mb in root.GetComponentsInChildren<MonoBehaviour>(true))
                 {
-                    if (mb == null || !ServerExcludedAssemblies.Contains(mb.GetType().Assembly.GetName().Name)) continue;
+                    if (mb == null) continue;
+                    // its own script is left out of the server, or a kept (vendor) script carries one inside it: Feel's MMF_Player with
+                    // GameFeel's feedbacks pulled their prefabs (the PFX_Word comic words) into the server as missing scripts (16 Nov 2026)
+                    bool own = ServerExcludedAssemblies.Contains(mb.GetType().Assembly.GetName().Name);
+                    if (!own && !CarriesClientOnlyType(mb)) continue;
+                    if (!own) carriers++;
                     if (mb is Unity.Netcode.NetworkBehaviour)
                     {
                         Debug.LogWarning($"[Build] Server copy of {scene.name}: {mb.GetType().FullName} on '{mb.name}' is client-only but an NGO NetworkBehaviour: kept.");
@@ -91,7 +97,7 @@ namespace KryticalNova.EditorTools
                     progress = true;
                 }
             }
-            if (removed > 0) Debug.Log($"[Build] Server copy of {scene.name}: {removed} client-only script(s) taken out (no missing scripts on the server).");
+            if (removed > 0) Debug.Log($"[Build] Server copy of {scene.name}: {removed} client-only script(s) taken out, {carriers} of them kept scripts carrying a client-only type (no missing scripts on the server).");
             foreach (MonoBehaviour left in doomed)
                 Debug.LogWarning($"[Build] Server copy of {scene.name}: {left.GetType().FullName} on '{left.name}' could not be taken out (another component requires it).");
         }
@@ -109,6 +115,22 @@ namespace KryticalNova.EditorTools
         }
 
         private static bool Requires(System.Type required, System.Type type) => required != null && required.IsAssignableFrom(type);
+
+        /// <summary>
+        /// True when one of the script's [SerializeReference] values is a type of an assembly the server leaves out. On the server that
+        /// value could not be read, and the assets it names would be packed as missing scripts; the script carrying it does nothing there.
+        /// </summary>
+        private static bool CarriesClientOnlyType(MonoBehaviour mb)
+        {
+            long[] ids = UnityEngine.Serialization.ManagedReferenceUtility.GetManagedReferenceIds(mb);
+            if (ids == null) return false;
+            foreach (long id in ids)
+            {
+                object value = UnityEngine.Serialization.ManagedReferenceUtility.GetManagedReference(mb, id);
+                if (value != null && ServerExcludedAssemblies.Contains(value.GetType().Assembly.GetName().Name)) return true;
+            }
+            return false;
+        }
     }
 
     /// <summary>The first-party assemblies a dedicated server leaves out: their .asmdef says "!UNITY_SERVER" in defineConstraints.</summary>

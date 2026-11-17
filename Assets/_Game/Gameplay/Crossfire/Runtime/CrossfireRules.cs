@@ -3,6 +3,12 @@ using System;
 namespace KryticalNova.Crossfire
 {
     /// <summary>Crossfire's phases, in order. Gap is the time between two wars.</summary>
+    /// <summary>
+    /// A Rally Gate as the server's clock has it (owner, 16 Nov 2026: shut through the join window and the settle, opening together when the
+    /// War starts): the colliders follow it, a client animates the leaves from <see cref="CrossfireRules.GateOpenAmount"/>.
+    /// </summary>
+    public enum CrossfireGatePhase : byte { Shut = 0, Opening = 1, Open = 2 }
+
     public enum CrossfirePhase : byte
     {
         Gap = 0,
@@ -121,6 +127,42 @@ namespace KryticalNova.Crossfire
         public static bool JoinOpen(in CrossfireNow at, in CrossfireTimes t, double now) =>
             at.Phase == CrossfirePhase.Muster || (at.Phase == CrossfirePhase.Call && now >= at.WarStart - t.JoinWindowSeconds);
 
+        /// <summary>
+        /// A running war still takes late joiners (owner, 16 Nov 2026): the War, until <paramref name="cutoffSeconds"/> before its end.
+        /// </summary>
+        public static bool LateJoinOpen(in CrossfireNow at, double cutoffSeconds, double now) =>
+            at.Phase == CrossfirePhase.War && now < at.PhaseEnd - Math.Max(0.0, cutoffSeconds);
+
+        /// <summary>
+        /// The share of a war's pay a player earns (owner: a late joiner's pay is diminished; Master's placeholder: by the share of the War
+        /// they were in). In before the gates opened: all of it. Joined at minute 5 of 15: 2/3. Never below 0 or above 1.
+        /// </summary>
+        public static float PayShare(double joinedAt, double gatesOpen, double warEnd)
+        {
+            if (double.IsNaN(joinedAt) || joinedAt <= gatesOpen || warEnd <= gatesOpen) return 1f;
+            return (float)Math.Max(0.0, Math.Min(1.0, (warEnd - joinedAt) / (warEnd - gatesOpen)));
+        }
+
+        /// <summary>
+        /// The Rally Gates at <paramref name="now"/>: shut before the War and after it, opening for the War's first
+        /// <paramref name="openingSeconds"/>, then open (every gate together: the time is the server's).
+        /// </summary>
+        public static CrossfireGatePhase GatePhaseAt(in CrossfireNow at, double openingSeconds, double now)
+        {
+            if (at.Phase != CrossfirePhase.War) return CrossfireGatePhase.Shut;
+            if (openingSeconds <= 0.0) return CrossfireGatePhase.Open;   // no swing: open the moment the War starts (as GateOpenAmount)
+            return now - at.PhaseStart < openingSeconds ? CrossfireGatePhase.Opening : CrossfireGatePhase.Open;
+        }
+
+        /// <summary>How far the gates have opened, 0 (shut) to 1 (open), eased in and out: what a client's gate leaves show.</summary>
+        public static float GateOpenAmount(in CrossfireNow at, double openingSeconds, double now)
+        {
+            if (at.Phase != CrossfirePhase.War) return 0f;
+            if (openingSeconds <= 0.0) return 1f;
+            double t = Math.Max(0.0, Math.Min(1.0, (now - at.PhaseStart) / openingSeconds));
+            return (float)(t * t * (3.0 - 2.0 * t));
+        }
+
         /// <summary>The gates stand open only while the war runs.</summary>
         public static bool GatesOpen(CrossfirePhase phase) => phase == CrossfirePhase.War;
 
@@ -192,6 +234,19 @@ namespace KryticalNova.Crossfire
             if (bracket <= 0) return string.Empty;
             string[] tens = { "", "X", "XX", "XXX" }, ones = { "", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX" };
             return bracket >= 40 ? bracket.ToString() : tens[bracket / 10] + ones[bracket % 10];
+        }
+
+        /// <summary>
+        /// The offset (metres, flat) of the <paramref name="index"/>-th respawn from a yard's respawn spot: 0 is the spot itself, the rest a
+        /// sunflower spiral (each about <paramref name="spacing"/> metres from its neighbours), repeating every <paramref name="spots"/>.
+        /// </summary>
+        public static UnityEngine.Vector3 RespawnSpread(int index, float spacing, int spots)
+        {
+            if (spots < 1) spots = 1;
+            int n = ((index % spots) + spots) % spots;
+            if (n == 0) return UnityEngine.Vector3.zero;
+            double r = spacing * Math.Sqrt(n), a = n * 2.39996322972865332;   // the golden angle, radians
+            return new UnityEngine.Vector3((float)(r * Math.Cos(a)), 0f, (float)(r * Math.Sin(a)));
         }
     }
 }

@@ -21,6 +21,10 @@ namespace KryticalNova.Crossfire
         public FactionId faction = FactionId.None;
         [Tooltip("A Muster Yard: where a player the Transit Row port sends lands, and the way they face (on the ground). Put it on the ground inside the box. Empty: the box's centre, facing as the box does.")]
         public Transform landing;
+        [Tooltip("A Muster Yard: where its side's dead get up during a war (the yard's shrine), on the ground inside the box. Empty: the landing.")]
+        public Transform respawn;
+        [Tooltip("A Muster Yard: the stand points round its shrine where the dead get up (The Crucible: Front, Left, Rear, Right). Each next one of its side's dead takes the next stand, a little apart on a small ring there; the shrine itself is never stood in. Empty: the respawn spot (or the landing).")]
+        public Transform[] respawnStands = new Transform[0];
 
         static readonly List<CrossfireArea> s_All = new List<CrossfireArea>();
 
@@ -64,6 +68,49 @@ namespace KryticalNova.Crossfire
             Transform t = landing != null ? landing : transform;
             at = t.position;   // the centre is always inside the box, so the player counts as in the yard (a floor point would sit on its edge)
             yawDegrees = t.eulerAngles.y;
+        }
+
+        /// <summary>
+        /// Where the <paramref name="index"/>-th of this side's dead gets up (world, metres) and faces: the respawn spot (or the landing), each
+        /// next one a little apart on a ring so bodies do not stand in each other. Always inside the box, so the player is still in the war.
+        /// </summary>
+        public void RespawnSpot(int index, float spacing, int spots, out Vector3 at, out float yawDegrees)
+        {
+            Transform t = respawn != null ? respawn : (landing != null ? landing : transform);
+            int stands = CountStands();
+            if (stands > 0)
+            {
+                // the stands take turns (Front, Left, Rear, Right, Front...), each with its own share of the spread's spots
+                index = Mathf.Max(0, index);
+                t = StandAt(index % stands);
+                index /= stands;
+                spots = Mathf.Max(1, spots / stands);
+            }
+            Vector3 offset = CrossfireRules.RespawnSpread(index, spacing, spots);
+            at = t.position + offset;
+            yawDegrees = t.eulerAngles.y;
+            if (!Contains(at)) at = t.position - offset;   // a spot past the box's edge: the same spot on the other side of the stand
+            if (!Contains(at)) at = t.position;            // still outside: no spread rather than a spot outside the war
+        }
+
+        int CountStands()
+        {
+            int n = 0;
+            if (respawnStands != null)
+                for (int i = 0; i < respawnStands.Length; i++)
+                    if (respawnStands[i] != null) n++;
+            return n;
+        }
+
+        /// <summary>The <paramref name="k"/>-th stand that is set (empty slots are skipped).</summary>
+        Transform StandAt(int k)
+        {
+            for (int i = 0; i < respawnStands.Length; i++)
+            {
+                if (respawnStands[i] == null) continue;
+                if (k-- == 0) return respawnStands[i];
+            }
+            return transform;
         }
 
         /// <summary>The Rally Point (Muster Yard) of <paramref name="faction"/> in the loaded maps; false when it has none.</summary>

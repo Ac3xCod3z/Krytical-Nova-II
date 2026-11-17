@@ -55,5 +55,20 @@ namespace KryticalNova.Core
             ByConnection.Remove(connection);
             ByKey.Remove(key);
         }
+
+        /// <summary>
+        /// The first "connection" number of the players the server itself runs (War Bots, owner 16 Nov 2026): far above any transport
+        /// id, so a key of this range can only have been minted by <see cref="MintServerBot"/>, never for a connection.
+        /// </summary>
+        public const ulong ServerBotBase = 1UL << 62;
+
+        /// <summary>A key for server-run player number <paramref name="bot"/> (a War Bot): live like a connection's, with no connection.</summary>
+        public static PlayerKey MintServerBot(uint bot) => Mint(ServerBotBase + bot);
+
+        /// <summary>True for a live key minted by <see cref="MintServerBot"/>: a player the server runs, which no client can send as its own.</summary>
+        public static bool IsServerBot(PlayerKey key) => TryGetConnection(key, out ulong connection) && connection >= ServerBotBase;
+
+        /// <summary>Server-run player <paramref name="bot"/> is gone: its key dies (as <see cref="Release"/>).</summary>
+        public static void ReleaseServerBot(uint bot) => Release(ServerBotBase + bot);
     }
 }
