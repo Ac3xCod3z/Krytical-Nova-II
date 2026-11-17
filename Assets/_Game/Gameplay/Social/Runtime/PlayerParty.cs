@@ -96,6 +96,15 @@ namespace KryticalNova.Social
         /// <summary>True on every peer while this player and <paramref name="other"/> are in the same party.</summary>
         public bool IsInPartyWith(PlayerParty other) => other != null && other != this && InParty && other.PartyId == PartyId;
 
+        /// <summary>Server only (War Bots, 16 Nov 2026): whose squad invite this server body has open and unexpired; null when none.</summary>
+        public PlayerParty ServerInvitedBy => EntityServer && invitedBy != null && Time.time <= inviteExpires ? invitedBy : null;
+
+        /// <summary>Server only (War Bots): the leader of this body's squad, null when it is in none.</summary>
+        public PlayerParty ServerLeader => EntityServer && group != null && group.Members.Count > 0 ? group.Members[0] : null;
+
+        /// <summary>Server only (War Bots): how many are in this body's squad (0 when in none).</summary>
+        public int ServerSize => EntityServer && group != null ? group.Members.Count : 0;
+
         // Enter Play Mode runs without a domain reload, so statics must be reset by hand.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics() => lastPartyId = NoParty;
