@@ -108,7 +108,8 @@ namespace KryticalNova.Crossfire.Entities.Tests
             {
                 Entity a = rig.ServerGhosts[0];
                 low = rig.ServerGhosts[2];
-                m_Now = Origin + 66;   // straight into the Rally, as gm.crossfire start does: the join window never ran
+                Settle(rig);   // the Gap
+                Assert.IsTrue(clock.Run(CrossfireCommand.StartNow), "gm.crossfire start: straight into the Rally, the join window never runs");
                 Settle(rig);
                 Assert.AreEqual(CrossfirePhase.Muster, clock.Current.Now.Phase);
                 Assert.AreEqual(2, entry.PromptsSent, "the bracket's two players are asked in the Rally, not the level-5 one");

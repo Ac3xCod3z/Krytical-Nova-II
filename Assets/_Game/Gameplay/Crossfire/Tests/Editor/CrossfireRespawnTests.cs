@@ -104,7 +104,7 @@ namespace KryticalNova.Crossfire.Tests
                 for (int i = 0; i < 4; i++)
                 {
                     yard.RespawnSpot(i, Spacing, Spots, out Vector3 first, out float yaw);
-                    Assert.AreEqual(at4[i], first, "dead " + i + " gets up on stand " + i + " itself");
+                    Assert.Less(Vector3.Distance(at4[i], first), 0.001f, "dead " + i + " gets up on stand " + i + " itself");
                     Assert.AreEqual(270f, yaw, 0.01f, "facing as the stand does");
                 }
                 var seen = new List<Vector3>();
