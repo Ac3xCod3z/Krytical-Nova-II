@@ -339,6 +339,31 @@ namespace KryticalNova.Crossfire.Entities.Tests
             }
         }
 
+        /// <summary>
+        /// A war whose first real player comes in during the Rally (a GM's war that skips the join window, a Marshal join): the empty sides
+        /// are filled then (crucible-unity-2's test war, 17 Nov 2026: they got no bots, so there was nobody to fight).
+        /// </summary>
+        [Test]
+        public void TheFirstRealPlayer_ComingInDuringTheRally_StillHasTheEmptySidesFilled()
+        {
+            var bots = new FakeBots();
+            var (rig, clock, entry) = Start(new[] { FactionId.Hegemony });
+            WarBots.Fill = bots;
+            using (rig)
+            {
+                m_Now = Origin + 66;   // the Rally, with nobody in the war yet
+                Settle(rig);
+                Assert.AreEqual(CrossfirePhase.Muster, clock.Current.Now.Phase);
+                Assert.AreEqual(0, entry.SidesAutoFilled, "nobody real: no war to fill yet");
+                Port(rig, entry, 0, FactionId.Hegemony, true, "the first real player, in the Rally");
+                Settle(rig);
+                Assert.AreEqual(2, entry.SidesAutoFilled, "Null and Covenant are filled once a real player is in");
+                Assert.AreEqual(33, bots.Count(FactionId.Null));
+                Assert.AreEqual(33, bots.Count(FactionId.Covenant));
+                Assert.AreEqual(0, bots.Count(FactionId.Hegemony), "the real side still votes");
+            }
+        }
+
         /// <summary>Owner, 16 Nov 2026: a war left with no real player ends early and pays nobody (kills or not).</summary>
         [Test]
         public void AWarLeftWithNoRealPlayer_EndsEarly_AndPaysNobody()

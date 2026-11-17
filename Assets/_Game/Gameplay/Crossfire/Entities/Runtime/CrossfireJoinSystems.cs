@@ -267,13 +267,18 @@ namespace KryticalNova.Crossfire.Entities
             VotesSent++;
         }
 
-        /// <summary>The settle (the Rally's start): every side with no real player in a war that has one is filled with War Bots, once.</summary>
+        /// <summary>
+        /// The settle (the Rally): every side with no real player in a war that has one is filled with War Bots, once. A war whose first
+        /// real player comes in during the Rally (a GM's war that skips the join window, a Marshal join) is settled then, not skipped:
+        /// the settle counts as done only once there is a real player to fight for and War Bots to fill with (crucible-unity-2's test war,
+        /// 17 Nov 2026: the empty sides got no bots).
+        /// </summary>
         void SettleSides(in CrossfireState state, CrossfireSettings s)
         {
             double war = state.Now.WarStart;
             if (state.Now.Phase != CrossfirePhase.Muster || m_FilledFor.Equals(war)) return;
-            m_FilledFor = war;
             if (m_Sides.Count == 0 || Bots == null) return;
+            m_FilledFor = war;
             foreach (FactionId side in CrossfireSides<Entity>.Factions)
                 if (m_Sides.Real(side) == 0) AutoFill(side, s);
         }
