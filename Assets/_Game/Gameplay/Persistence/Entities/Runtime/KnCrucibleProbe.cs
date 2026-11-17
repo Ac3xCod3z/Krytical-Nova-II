@@ -20,7 +20,39 @@ namespace KryticalNova.Persistence.Entities
     static class KnCrucibleProbe
     {
         public const string Variable = "KN_PLAYHERE_CRUCIBLE";
-        public static bool On => Environment.GetEnvironmentVariable(Variable) == "1";
+        /// <summary>=1: the ONE test war on the Crucible instead of the proofs (#346 flow, War Bots, gates).</summary>
+        public const string WarVariable = "KN_PLAYHERE_CRUCIBLE_WAR";
+        public static bool War => Environment.GetEnvironmentVariable(WarVariable) == "1";
+        public static bool On => Environment.GetEnvironmentVariable(Variable) == "1" || War;
+
+        /// <summary>The test war answers every Crossfire prompt yes (join, bot vote, Merc), still showing the real prompt.</summary>
+        sealed class YesPrompts : IRequestPromptSink
+        {
+            public IRequestPromptSink Inner;
+            public Action<string> Log;
+            public readonly List<(float at, Action<bool> answer, string id)> Pending = new List<(float, Action<bool>, string)>();
+            public int Shown;
+            public void Show(string id, string eyebrow, string text, float seconds, Action<bool> answer)
+            {
+                Shown++;
+                Log($"prompt '{id}' ({eyebrow}): {text} [{seconds:F0} s] -> answering yes in 2 s");
+                Inner?.Show(id, eyebrow, text, seconds, answer);
+                Pending.Add((Time.realtimeSinceStartup + 2f, answer, id));
+            }
+            public void Hide(string id) => Inner?.Hide(id);
+            public void Tick()
+            {
+                for (int i = Pending.Count - 1; i >= 0; i--)
+                    if (Time.realtimeSinceStartup >= Pending[i].at)
+                    {
+                        var (_, answer, id) = Pending[i];
+                        Pending.RemoveAt(i);
+                        Inner?.Hide(id);
+                        answer(true);
+                        Log($"prompt '{id}': answered yes");
+                    }
+            }
+        }
 
         static Camera s_ShotCamera;
         static Vector3 s_ShotPos;
@@ -54,6 +86,14 @@ namespace KryticalNova.Persistence.Entities
             RenderPipelineManager.beginCameraRendering -= BeforeCamera;
             RenderPipelineManager.beginCameraRendering += BeforeCamera;
             int failures = 0;
+            if (War)
+            {
+                try { yield return RunWar(root, P, teleport, serverPosition, Log, ok => failures += ok ? 0 : 1); }
+                finally { s_ShotOn = false; RenderPipelineManager.beginCameraRendering -= BeforeCamera; }
+                Log(failures == 0 ? "test war PASS" : "test war FAILED");
+                verdict(failures == 0);
+                yield break;
+            }
             try
             {
                 ulong? host = null;
@@ -256,6 +296,92 @@ namespace KryticalNova.Persistence.Entities
             Log(failures == 0 ? "all parts PASS" : $"{failures} part(s) FAILED");
             verdict(failures == 0);
         }
+
+        static IEnumerator RunWar(Transform root, Func<float, float, float, Vector3> P, Action<Vector3> teleport, Func<Vector3> serverPosition,
+            Action<string> Log, Action<bool> verdict)
+        {
+            float wait = Time.realtimeSinceStartup;
+            while (!KryticalNova.Networking.GmRoster.Host.HasValue && Time.realtimeSinceStartup - wait < 30f) yield return null;
+            ulong? host = KryticalNova.Networking.GmRoster.Host;
+            string Gm(string line)
+            {
+                if (!(host is ulong h) || KryticalNova.Networking.PlayerGm.CommandRunner == null) return "NO GM runner";
+                string a = KryticalNova.Networking.PlayerGm.CommandRunner(h, line);
+                Log($"'{line}' -> {a}");
+                return a;
+            }
+            var yes = new YesPrompts { Inner = ClientPresentationRegistry.Prompts, Log = Log };
+            ClientPresentationRegistry.RegisterPrompts(yes);
+            try
+            {
+                // the Tester waits in Zone01's town square: the join prompt reaches every bracket player wherever they are
+                yield return new WaitForSeconds(2f);
+                Log($"WAR the Tester at {serverPosition():F1} before the war");
+                Gm("gm.crossfire status");
+                Gm("gm.crossfire start");
+                // walk the clock to the join window (the prompts), then to the War; at most 6 steps
+                string status = "";
+                for (int step = 0; step < 6; step++)
+                {
+                    float t0 = Time.realtimeSinceStartup;
+                    while (Time.realtimeSinceStartup - t0 < 6f) { yes.Tick(); yield return null; }
+                    status = Gm("gm.crossfire status");
+                    if (status.Contains("War,")) break;
+                    Gm("gm.crossfire skip");
+                }
+                Vector3 inWar = root.InverseTransformPoint(serverPosition());
+                Log($"WAR phase: {status}; prompts shown {yes.Shown}; the Tester stands at local {inWar:F1}");
+                bool atCrucible = Mathf.Abs(inWar.x) < 200f && Mathf.Abs(inWar.z) < 200f;
+                if (!atCrucible) Log("WAR FAIL: the Tester is not in the Crucible (join prompt not taken?)");
+                // the gate from the rim, high, looking into the Hegemony yard: the leaves slide and the side streams out
+                s_ShotPos = root.TransformPoint(new Vector3(96f, 14f, -14f));
+                s_ShotRot = Quaternion.LookRotation(root.TransformPoint(new Vector3(135f, 0f, 0f)) - s_ShotPos);
+                s_ShotOn = true;
+                Log($"SEGMENT wargate start frame {Time.frameCount}");
+                float g0 = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - g0 < 12f) { yes.Tick(); yield return null; }
+                Log($"SEGMENT wargate end frame {Time.frameCount}");
+                // the fight: from above the heart, looking down the arena
+                s_ShotPos = root.TransformPoint(new Vector3(0f, 45f, -70f));
+                s_ShotRot = Quaternion.LookRotation(root.TransformPoint(new Vector3(0f, -7f, 0f)) - s_ShotPos);
+                Log($"SEGMENT warfight start frame {Time.frameCount}");
+                float f0 = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - f0 < 45f) { yes.Tick(); yield return null; }
+                Log($"SEGMENT warfight end frame {Time.frameCount}");
+                s_ShotOn = false;
+                // a death in the war and the rise at the side's shrine (the follow camera on the Tester)
+                Vector3 before = root.InverseTransformPoint(serverPosition());
+                Log($"SEGMENT wardeath start frame {Time.frameCount}");
+                Gm("gm.kill crit");
+                float d0 = Time.realtimeSinceStartup, nextLog = 0f;
+                while (Time.realtimeSinceStartup - d0 < 16f)
+                {
+                    yes.Tick();
+                    if (Time.realtimeSinceStartup - d0 >= nextLog) { nextLog += 2f; Log($"WAR death watch +{Time.realtimeSinceStartup - d0:F0} s: the Tester at local {root.InverseTransformPoint(serverPosition()):F1}"); }
+                    yield return null;
+                }
+                Log($"SEGMENT wardeath end frame {Time.frameCount}");
+                Vector3 after = root.InverseTransformPoint(serverPosition());
+                Transform shrine = root.GetComponentsInChildren<Transform>(true).Where(t => t.name.IndexOf("shrine", StringComparison.OrdinalIgnoreCase) >= 0)
+                    .OrderBy(t => (root.InverseTransformPoint(t.position) - after).sqrMagnitude).FirstOrDefault();
+                Log($"WAR death: before {before:F1}, after {after:F1}; the nearest shrine marker is " +
+                    (shrine != null ? $"'{shrine.name}' at {root.InverseTransformPoint(shrine.position):F1} ({Vector3.Distance(root.InverseTransformPoint(shrine.position), after):F1} m away)" : "none"));
+                Gm("gm.crossfire status");
+                Gm("gm.crossfire end");
+                float e0 = Time.realtimeSinceStartup;
+                Log($"SEGMENT warend start frame {Time.frameCount}");
+                while (Time.realtimeSinceStartup - e0 < 8f) { yes.Tick(); yield return null; }
+                Log($"SEGMENT warend end frame {Time.frameCount}");
+                Gm("gm.crossfire status");
+                Log($"WAR summary: prompts {yes.Shown}, war reached {status.Contains("War,")}, Tester in the Crucible {atCrucible}");
+                verdict(status.Contains("War,") && atCrucible && yes.Shown > 0);
+            }
+            finally
+            {
+                if (ReferenceEquals(ClientPresentationRegistry.Prompts, yes)) ClientPresentationRegistry.RegisterPrompts(yes.Inner);
+            }
+        }
+
     }
 }
 #endif
