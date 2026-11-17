@@ -36,6 +36,11 @@ namespace KryticalNova.EditorTools.Crucible
             int failures = 0;
             Transform cf = root.transform.Find("Crossfire");
             Vector3 heart = root.transform.TransformPoint(new Vector3(0f, -6.3f, 0f));
+            // the war opens the Rally Gates; the routes are walked open (the shut gates' carved blockers are proven to stop the walk)
+            int openedGates = 0;
+            foreach (NavMeshObstacle ob in cf.GetComponentsInChildren<NavMeshObstacle>(true))
+                if (ob.name.StartsWith("Rally Gate")) { ob.enabled = false; openedGates++; }
+            log.AppendLine($"  ({openedGates} Rally Gates opened for the walk)");
             foreach (string faction in new[] { "Covenant", "Hegemony", "Null" })
             {
                 Transform landing = cf.Find("MARK_Landing_" + faction);
@@ -66,6 +71,7 @@ namespace KryticalNova.EditorTools.Crucible
                 return 1;
             }
             int walls = 0, high = 0, noGround = 0;
+            Vector3 firstNoGround = Vector3.zero, firstWall = Vector3.zero;
             float length = 0f;
             Vector3 prev = path.corners[0];
             float prevY = Ground(prev, solid, out _);
@@ -78,15 +84,15 @@ namespace KryticalNova.EditorTools.Crucible
                 {
                     Vector3 p = Vector3.Lerp(p0, p1, s / seg);
                     float y = Ground(p, solid, out bool hit);
-                    if (!hit) { noGround++; continue; }
+                    if (!hit) { if (noGround++ == 0) firstNoGround = p; continue; }
                     if (Mathf.Abs(y - prevY) > MaxStep) high++;
                     Vector3 foot = new Vector3(p.x, y + Radius + 0.35f, p.z), head = new Vector3(p.x, y + Height - Radius, p.z);
-                    if (Physics.CheckCapsule(foot, head, Radius * 0.9f, solid, QueryTriggerInteraction.Ignore)) walls++;
+                    if (Physics.CheckCapsule(foot, head, Radius * 0.9f, solid, QueryTriggerInteraction.Ignore)) { if (walls++ == 0) firstWall = p; }
                     prevY = y;
                 }
             }
             bool ok = walls == 0 && high == 0 && noGround == 0;
-            log.AppendLine($"  {(ok ? "ok  " : "FAIL")} {name}: {length:F1} m, wall blocks {walls}, too-high steps {high}, no-ground steps {noGround}");
+            log.AppendLine($"  {(ok ? "ok  " : "FAIL")} {name}: {length:F1} m, wall blocks {walls}, too-high steps {high}, no-ground steps {noGround}{(noGround > 0 ? $" (first at {firstNoGround})" : "")}{(walls > 0 ? $" (first wall at {firstWall})" : "")}");
             return ok ? 0 : 1;
         }
 
