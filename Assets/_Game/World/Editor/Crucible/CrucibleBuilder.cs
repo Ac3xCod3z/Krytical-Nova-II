@@ -81,6 +81,11 @@ namespace KryticalNova.EditorTools.Crucible
                 WireHeat(data, root.transform, placed, log);
                 PlaceLights(data, Child(root.transform, "Lights"), log);
                 AddNavMeshSurface(root);
+                var probes = Child(root.transform, "Probe Volume (Crucible)");
+                probes.localPosition = CrucibleLighting.VolumeCentre;
+                var pv = probes.gameObject.AddComponent<UnityEngine.Rendering.ProbeVolume>();
+                pv.mode = UnityEngine.Rendering.ProbeVolume.Mode.Local;
+                pv.size = CrucibleLighting.VolumeSize;
                 CheckSizes(data, placed, log);
                 MeshLods(root, log);
 
