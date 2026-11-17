@@ -304,10 +304,26 @@ def make(asm):
     # the template's references to packages and vendors stand (Unity points at their built DLLs where it made no
     # project for them); our own assemblies come from the checkout's .asmdef below
     refs = PROJREF.findall(text)
+    extra_refs = []
     if asm in asmdefs:   # the checkout's .asmdef decides which of our assemblies it references
         wanted = {guid_names.get(r, r) for r in asmdefs[asm].get("references", [])}
         refs = [r for r in refs if not r.startswith("KryticalNova") or r[:-7] in wanted]
         refs += [w + ".csproj" for w in wanted if w.startswith("KryticalNova") and w + ".csproj" not in refs]
+    if asm in asmdefs and not ecs_names(asm)[1]:   # Entities assemblies get their package DLLs below
+        have = {r[:-7] for r in refs} | set(re.findall(r'<Reference Include="([^",]+)', text))
+        for want in sorted({guid_names.get(r, r) for r in asmdefs[asm].get("references", [])}):
+            if want.startswith("KryticalNova") or want.startswith("GUID:") or want in have:
+                continue
+            dll = next((os.path.join(root, "Library", "ScriptAssemblies", want + ".dll") for root in (ECS_LIB, PROJECTS)
+                        if os.path.exists(os.path.join(root, "Library", "ScriptAssemblies", want + ".dll"))), None)
+            if os.path.exists(os.path.join(PROJECTS, want + ".csproj")):
+                refs.append(want + ".csproj")   # the Editor wrote a project for the package: reference it as Unity would
+                ADDED_REFS.append(f"{asm} -> {want}")
+            elif dll:
+                extra_refs.append(f'    <Reference Include="{want}"><HintPath>{dll}</HintPath></Reference>')
+                ADDED_REFS.append(f"{asm} -> {want} (dll)")
+            else:
+                STALE_REFS.append(f"{asm} -> {want}")
     ecs_lines = []
     names, is_ecs = ecs_names(asm)
     if is_ecs:   # the packages' projects the Editor wrote stay only where this .asmdef names them; the rest come as built DLLs
@@ -329,8 +345,8 @@ def make(asm):
     pinned = (f"  <PropertyGroup>\n    <OutputPath>{bin_dir}</OutputPath>\n"
               "    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>\n  </PropertyGroup>\n")
     block = f"  <ItemGroup>\n{compile_items}\n  </ItemGroup>\n  <ItemGroup>\n" + "\n".join(lines) + "\n  </ItemGroup>\n"
-    if ecs_lines:
-        block += "  <ItemGroup>\n" + "\n".join(ecs_lines) + "\n  </ItemGroup>\n"
+    if ecs_lines or extra_refs:
+        block += "  <ItemGroup>\n" + "\n".join(ecs_lines + extra_refs) + "\n  </ItemGroup>\n"
     block += pinned
     text = text.replace('  <Import Project="Sdk.targets"', block + '  <Import Project="Sdk.targets"', 1)
     path = os.path.join(OUT, asm + ".csproj")
@@ -339,7 +355,13 @@ def make(asm):
     return path
 
 
+ADDED_REFS, STALE_REFS = [], []
 built = [p for p in (make(a) for a in ours) if p]
+if ADDED_REFS:
+    print("note: the borrowed project files lacked references their .asmdef names (added as Unity would): " + "; ".join(ADDED_REFS))
+if STALE_REFS:
+    print("WARN STALE PROJECT FILES: these .asmdef references have no project or built DLL in " + PROJECTS + " (Unity last wrote "
+          "them for another commit); regenerate them with one Unity run on a current commit if they fail below: " + "; ".join(STALE_REFS))
 if SERVER:   # the server build has no Editor or test assemblies, nor the ones marked !UNITY_SERVER
     def on_server(p):
         name = os.path.basename(p)[:-7]
@@ -373,6 +395,12 @@ else:
     # --restore-only runs the restore step alone, to prove the guard below fails a run that compiled nothing
     r = subprocess.run(["dotnet", "build", batch] + BUILD + (["-t:Restore"] if "--restore-only" in args else []),
                        capture_output=True, text=True)
+    if "Cannot create a file when that file already exists" in r.stdout + r.stderr:
+        print("NuGet restore raced (file already exists): once more, restoring one project at a time", flush=True)
+        time.sleep(3)
+        started = time.time()
+        r = subprocess.run(["dotnet", "build", batch] + BUILD + ["-p:RestoreDisableParallel=true"]
+                           + (["-t:Restore"] if "--restore-only" in args else []), capture_output=True, text=True)
     own = {}   # assembly -> its own errors, from the project named at the end of each error line
     for l in (r.stdout + r.stderr).splitlines():
         if ": error " not in l:
@@ -401,8 +429,15 @@ else:
                 bad.add(name)
                 grew = True
     failed = [os.path.basename(p)[:-7] for p in built if os.path.basename(p)[:-7] in bad]
-    for name in sorted(own):
-        errors += [e for e in own[name] if e not in errors]
+    real = {n: es for n, es in own.items() if not all(e.endswith("not compiled (no output from this run)") for e in es)}
+    blocked = sorted(n for n in own if n not in real)
+    roots = sorted(real)
+    for name in roots:
+        errors += [e for e in real[name] if e not in errors]
+    if blocked and roots:
+        errors.append(f"{len(blocked)} more not compiled only because {', '.join(roots)} failed first: {', '.join(blocked)}")
+    elif blocked:
+        errors += [f"{n}: not compiled (no output from this run)" for n in blocked]
     if r.returncode != 0 and not errors:
         failed = failed or ["all"]
         errors.append(f"all.proj: build failed ({r.returncode})")
