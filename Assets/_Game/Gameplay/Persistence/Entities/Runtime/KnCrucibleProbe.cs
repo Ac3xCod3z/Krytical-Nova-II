@@ -219,6 +219,9 @@ namespace KryticalNova.Persistence.Entities
                 foreach (Renderer r in root.GetComponentsInChildren<Renderer>(true).Where(r => r.name.IndexOf("Sky", StringComparison.OrdinalIgnoreCase) >= 0).Take(4))
                     Log($"sky check: renderer '{r.name}' active {r.gameObject.activeInHierarchy} enabled {r.enabled} visible {r.isVisible} shader '{(r.sharedMaterial != null ? r.sharedMaterial.shader.name : "none")}' " +
                         $"bounds centre {root.InverseTransformPoint(r.bounds.center):F0} size {r.bounds.size:F0}");
+                Log($"sky check: moon globals _KN_MoonDir {Shader.GetGlobalVector("_KN_MoonDir")} _KN_BodyTexParams {Shader.GetGlobalVector("_KN_BodyTexParams")} " +
+                    $"_KN_BodyTexBrightness {Shader.GetGlobalVector("_KN_BodyTexBrightness")} _KN_MoonTex {(Shader.GetGlobalTexture("_KN_MoonTex") != null ? Shader.GetGlobalTexture("_KN_MoonTex").name : "none")}; " +
+                    $"moon light forward {(moon != null ? -moon.transform.forward : Vector3.zero):F2}");
                 bool fogWas = RenderSettings.fog;
                 Log($"SEGMENT aurora_nofog start frame {Time.frameCount}");
                 float nf = Time.realtimeSinceStartup;
