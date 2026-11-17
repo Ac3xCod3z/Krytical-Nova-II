@@ -16,6 +16,8 @@ Use it to check a refactor in a worktree while the owner's Editor stays open on 
     python ".../compile_check.py" --maxcpu 2   build with at most 2 MSBuild nodes (default 4; nodes exit with the build)
     python ".../compile_check.py" --each       one dotnet run per assembly, the old slower way (same output)
     python ".../compile_check.py" --restore-only   restore only: must fail with "not compiled" (a test of the guard)
+    python ".../compile_check.py" --as crossfire-b   who you are (or KN_SESSION): refused (exit 3) while compile-slot line 1
+                                               names another session; --ignore-slot skips that guard (test_compile_slot_guard.py)
 It prints the errors and exits 1 when any assembly fails. Warnings are not shown.
 
 Entities and Netcode for Entities (DOTS migration, M2b-2): an assembly whose .asmdef references Unity.Entities or Unity.NetCode is
@@ -78,8 +80,41 @@ ECS_LIB = os.path.normpath(arg("--ecs-library", CHECKOUT if os.path.isdir(os.pat
 
 # ONE COMPILE AT A TIME on this PC (owner, 14 Nov 2026: "don't allow them to compile at the same time"). Every compile_check
 # (and so every kn_check) takes this machine-wide lock first and waits its turn; parallel runs also clashed in NuGet restore.
+# The lock is a FIXED path every session shares (16 Nov 2026: it was under TEMP, which each session's shell redirects, so two
+# sessions each held "the" lock and compiled at once). KN_COMPILE_LOCK overrides it (tests).
 import msvcrt, atexit
-_LOCK_PATH = os.path.join(os.environ.get("TEMP", CHECKOUT), "kn-compile-check.lock")
+_LOCK_PATH = os.environ.get("KN_COMPILE_LOCK") or r"C:\Users\dlaco\KN-locks\compile.lock"
+os.makedirs(os.path.dirname(_LOCK_PATH), exist_ok=True)
+
+# THE COMPILE SLOT (owner, 15 Nov 2026: one user of Unity and the test lane at a time, by line 1 of compile-slot.txt). A compile
+# while line 1 names ANOTHER session holding the slot is refused: it clashes with that session's Unity run (16 Nov 2026, crossfire-b
+# compiled during warbots-spawn-b's EditMode run). Who you are: --as <name> or KN_SESSION (kn_check passes the environment on).
+# Line 1 starting with FREE, or naming you, lets the compile run. KN_COMPILE_SLOT overrides the file (tests); --ignore-slot skips it.
+_SLOT_PATH = os.environ.get("KN_COMPILE_SLOT") or os.path.join(os.environ.get("LOCALAPPDATA_REAL", r"C:\Users\dlaco\AppData\Local"),
+    "Claude-Data", "claude_pzs8sxrjxfjjc", "side-session-notes", "local_e3a639b2-3a82-443f-9e67-c44c07f59989", "compile-slot.txt")
+
+def slot_holder(first_line):
+    """The session line 1 says holds the slot, or None when it is free (pure: tested)."""
+    line = (first_line or "").strip()
+    if not line or line.upper().startswith("FREE") or " HOLDS" not in line:
+        return None
+    return line.split()[0]
+
+def slot_refuses(first_line, me):
+    """The reason this compile may not run now, or None (pure: tested)."""
+    holder = slot_holder(first_line)
+    if holder is None or (me and holder == me):
+        return None
+    return (f"compile refused: compile-slot line 1 says {holder} holds the slot (Unity or the test lane); a compile now clashes "
+            f"with its run. Queue under line 1 and wait, then claim it. " + ("" if me else "Name yourself with --as <name> or KN_SESSION."))
+
+if "--ignore-slot" not in sys.argv and os.path.exists(_SLOT_PATH):
+    with open(_SLOT_PATH, encoding="utf-8", errors="replace") as _slot:
+        _why = slot_refuses(_slot.readline(), arg("--as", os.environ.get("KN_SESSION", "")))
+    if _why:
+        print(_why, flush=True)
+        sys.exit(3)
+
 _lock_file = open(_LOCK_PATH, "a+")
 _waited = 0
 while True:
