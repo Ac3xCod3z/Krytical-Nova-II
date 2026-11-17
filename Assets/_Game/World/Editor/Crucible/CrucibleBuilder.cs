@@ -425,7 +425,29 @@ namespace KryticalNova.EditorTools.Crucible
                 var t = Marker(data, holder, (string)o["name"], out _);
                 if (t != null) landings[(string)o["faction"]] = t;
             }
-            int areas = 0, gates = 0;
+            // The dead get up on their yard's shrine stands (Fable's MARK_RespawnStand_<faction>_Front/Left/Rear/Right round the shrine),
+            // facing the way the yard's landing faces (towards the gate).
+            var shrines = new Dictionary<string, Transform>();
+            var stands = new Dictionary<string, List<Transform>>();
+            foreach (JObject o in data.Objects)
+            {
+                string faction = (string)o["faction"], name = (string)o["name"];
+                if (faction == null) continue;
+                if ((string)o["kind"] == "respawn_shrine")
+                {
+                    Transform t = Marker(data, holder, name, out _);
+                    if (t != null) shrines[faction] = t;
+                }
+                else if (o["respawn_stand"] != null)
+                {
+                    Transform t = Marker(data, holder, name, out _);
+                    if (t == null) continue;
+                    if (landings.TryGetValue(faction, out Transform faces)) t.rotation = Quaternion.Euler(0f, faces.eulerAngles.y, 0f);
+                    if (!stands.TryGetValue(faction, out List<Transform> list)) stands[faction] = list = new List<Transform>();
+                    list.Add(t);
+                }
+            }
+            int areas = 0, gates = 0, standCount = 0;
             foreach (JObject o in data.Objects)
             {
                 string kind = (string)o["kind"], faction = (string)o["faction"], name = (string)o["name"];
@@ -435,12 +457,21 @@ namespace KryticalNova.EditorTools.Crucible
                     if (t == null) continue;
                     var area = t.gameObject.AddComponent<CrossfireArea>();
                     area.size = halfExtent * 2f;
+                    RaiseToWarTop(t, area);
                     if (faction == "Battle") area.kind = CrossfireArea.AreaKind.Field;
                     else
                     {
                         area.kind = CrossfireArea.AreaKind.MusterYard;
                         area.faction = Faction(faction);
                         landings.TryGetValue(faction, out area.landing);
+                        shrines.TryGetValue(faction, out area.respawn);
+                        if (stands.TryGetValue(faction, out List<Transform> own))
+                        {
+                            area.respawnStands = own.Where(s => area.Contains(s.position)).ToArray();
+                            standCount += area.respawnStands.Length;
+                            if (area.respawnStands.Length != own.Count)
+                                log.AppendLine($"Crossfire: WARNING {own.Count - area.respawnStands.Length} respawn stand(s) of {faction} are outside its yard box and were left out.");
+                        }
                     }
                     areas++;
                 }
@@ -458,7 +489,7 @@ namespace KryticalNova.EditorTools.Crucible
                     t.name = "Rally Gate " + faction;
                     gates++;
                 }
-                else if (kind == "respawn_shrine" || kind == "heart") Marker(data, holder, name, out _);
+                else if (kind == "heart") Marker(data, holder, name, out _);   // the shrines and their stands are placed above
             }
             // The sealed north gate never opens: a carved obstacle that is always on, so nobody is walked in (Ronin stay hidden).
             if (placed.TryGetValue("Yard_Sealed_GateLeaf", out GameObject sealedLeaf) || TryFindByPrefix(placed, "GateLeaf_Sealed", out sealedLeaf))
@@ -471,7 +502,45 @@ namespace KryticalNova.EditorTools.Crucible
                 obstacle.size = new Vector3(14f, 9f, 3f);
                 obstacle.carving = true;
             }
-            log.AppendLine($"Crossfire: {areas} areas (3 yards + field), {gates} Rally Gates (carved blockers), {landings.Count} landings.");
+            // The sealed north yard is part of the war area too (a Field, never a Rally Point): nobody can walk in, but a Wallstride run or a
+            // jump onto its walls from the battle must never count as leaving the war.
+            JObject sealedYard = data.Layout?["sealed_yard"]?["footprint"] as JObject;
+            if (sealedYard != null)
+            {
+                float r0 = (float)sealedYard["radial_m"][0], r1 = (float)sealedYard["radial_m"][1];
+                float t0 = (float)sealedYard["tangential_m"][0], t1 = (float)sealedYard["tangential_m"][1];
+                var north = new GameObject("MARK_CrossfireArea_SealedNorth (war area)").transform;
+                north.SetParent(holder, false);
+                // Blender +Y is north; Unity (x, y, z) = Blender (x, z, y)
+                north.localPosition = new Vector3((t0 + t1) * 0.5f, 0f, (r0 + r1) * 0.5f);
+                var field = north.gameObject.AddComponent<CrossfireArea>();
+                field.kind = CrossfireArea.AreaKind.Field;
+                field.size = new Vector3(t1 - t0, 2f * WarAreaFloorBelowRim, r1 - r0);
+                RaiseToWarTop(north, field);
+                areas++;
+            }
+            else log.AppendLine("Crossfire: WARNING no sealed_yard footprint in the layout; its walls are outside the war area.");
+            log.AppendLine($"Crossfire: {areas} areas (3 yards + field + sealed north), {gates} Rally Gates (carved blockers), {landings.Count} landings, {shrines.Count} respawn shrines with {standCount} stands; every area reaches {WarAreaTop} m over the rim.");
+        }
+
+        /// <summary>
+        /// How high the war area reaches over the rim (Unity y 0 of the zone): the top of the blockers (Master, 17 Nov 2026), so no Wallstride
+        /// run, jump or wall top ever takes a player out of the war (leaving the war area is instant: no place, no pay). Build data, not a game
+        /// rule, so it lives with the builder.
+        /// </summary>
+        const float WarAreaTop = 40f;
+        /// <summary>The sealed north box reaches this far under the rim (the outer ground and lava lie below it; nobody stands there).</summary>
+        const float WarAreaFloorBelowRim = 2f;
+
+        /// <summary>Keeps an area's bottom and lifts its top to <see cref="WarAreaTop"/> (the box is centred on its object, so the object moves up).</summary>
+        static void RaiseToWarTop(Transform t, CrossfireArea area)
+        {
+            float bottom = t.localPosition.y - area.size.y * 0.5f, top = t.localPosition.y + area.size.y * 0.5f;
+            if (top >= WarAreaTop) return;
+            Vector3 p = t.localPosition;
+            p.y = (bottom + WarAreaTop) * 0.5f;
+            t.localPosition = p;
+            area.size = new Vector3(area.size.x, WarAreaTop - bottom, area.size.z);
         }
 
 

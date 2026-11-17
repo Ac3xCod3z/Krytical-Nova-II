@@ -75,5 +75,49 @@ namespace KryticalNova.Crossfire.Tests
             }
             finally { Object.DestroyImmediate(go); }
         }
+
+        [Test]
+        public void WithStands_TheDeadTakeTheShrineStandsInTurn_FacingAsTheStandDoes_NeverOnTheShrine_AlwaysInsideTheBox()
+        {
+            var go = new GameObject("test yard");
+            try
+            {
+                go.transform.position = new Vector3(139f, 6f, 0f);
+                CrossfireArea yard = go.AddComponent<CrossfireArea>();
+                yard.size = new Vector3(42f, 14f, 80f);
+                var shrine = new GameObject("shrine").transform;
+                shrine.SetParent(go.transform, false);
+                shrine.position = new Vector3(152f, 0.9f, 0f);
+                yard.respawn = shrine;
+                // The Crucible's four stands round the shrine (Front, Left, Rear, Right), facing the gate; one empty slot is skipped
+                Vector3[] at4 = { new Vector3(146.5f, 0.9f, 0f), new Vector3(152f, 0.9f, 5.5f), new Vector3(157.5f, 0.9f, 0f), new Vector3(152f, 0.9f, -5.5f) };
+                var stands = new Transform[5];
+                for (int i = 0; i < 4; i++)
+                {
+                    stands[i < 2 ? i : i + 1] = new GameObject("stand " + i).transform;
+                    stands[i < 2 ? i : i + 1].SetParent(go.transform, false);
+                    stands[i < 2 ? i : i + 1].position = at4[i];
+                    stands[i < 2 ? i : i + 1].rotation = Quaternion.Euler(0f, 270f, 0f);
+                }
+                yard.respawnStands = stands;
+
+                for (int i = 0; i < 4; i++)
+                {
+                    yard.RespawnSpot(i, Spacing, Spots, out Vector3 first, out float yaw);
+                    Assert.AreEqual(at4[i], first, "dead " + i + " gets up on stand " + i + " itself");
+                    Assert.AreEqual(270f, yaw, 0.01f, "facing as the stand does");
+                }
+                var seen = new List<Vector3>();
+                for (int i = 0; i < Spots; i++)
+                {
+                    yard.RespawnSpot(i, Spacing, Spots, out Vector3 p, out _);
+                    Assert.IsTrue(yard.Contains(p), "respawn " + i + " stays in the yard (in the war)");
+                    Assert.Greater(Vector3.Distance(p, shrine.position), 1.5f, "respawn " + i + " is never on the shrine");
+                    foreach (Vector3 q in seen) Assert.Greater(Vector3.Distance(p, q), 0.9f, "respawn " + i + " stands apart from the others");
+                    seen.Add(p);
+                }
+            }
+            finally { Object.DestroyImmediate(go); }
+        }
     }
 }

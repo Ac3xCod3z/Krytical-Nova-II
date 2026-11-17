@@ -22,6 +22,8 @@ namespace KryticalNova.EditorTools.Crucible
 
         public JArray Objects, Materials, Boxes, ConvexHulls, GroundMeshes, Blockers, Flights, Gates, WallFaces, Lights, LavaPaths, HazeBoxes;
         public JArray EmberPoints, SmokePoints, StairSideWalls, WallFacesCutByStairs;
+        /// <summary>Fable's layout block of the objects file (arena, yards, sealed yard footprints; Blender axes, metres).</summary>
+        public JObject Layout;
         public Dictionary<string, float[]> Matrices = new Dictionary<string, float[]>();
         /// <summary>World box centres from Blender (Blender axes), for the placement check.</summary>
         public Dictionary<string, float[]> Centres = new Dictionary<string, float[]>();
@@ -32,6 +34,7 @@ namespace KryticalNova.EditorTools.Crucible
             var d = new CrucibleData();
             JObject objects = Read("CRUCIBLE_022b_OBJECTS.json");
             d.Objects = (JArray)objects["objects"];
+            d.Layout = objects["layout"] as JObject;
             d.Materials = (JArray)Read("MATERIALS_022b.json")["materials"];
             foreach (var kv in (JObject)Read("MATRICES_022b.json")["matrices"])
                 d.Matrices[kv.Key] = kv.Value.ToObject<float[]>();

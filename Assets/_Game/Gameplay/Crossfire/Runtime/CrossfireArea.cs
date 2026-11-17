@@ -23,6 +23,8 @@ namespace KryticalNova.Crossfire
         public Transform landing;
         [Tooltip("A Muster Yard: where its side's dead get up during a war (the yard's shrine), on the ground inside the box. Empty: the landing.")]
         public Transform respawn;
+        [Tooltip("A Muster Yard: the stand points round its shrine where the dead get up (The Crucible: Front, Left, Rear, Right). Each next one of its side's dead takes the next stand, a little apart on a small ring there; the shrine itself is never stood in. Empty: the respawn spot (or the landing).")]
+        public Transform[] respawnStands = new Transform[0];
 
         static readonly List<CrossfireArea> s_All = new List<CrossfireArea>();
 
@@ -75,9 +77,40 @@ namespace KryticalNova.Crossfire
         public void RespawnSpot(int index, float spacing, int spots, out Vector3 at, out float yawDegrees)
         {
             Transform t = respawn != null ? respawn : (landing != null ? landing : transform);
-            at = t.position + CrossfireRules.RespawnSpread(index, spacing, spots);
+            int stands = CountStands();
+            if (stands > 0)
+            {
+                // the stands take turns (Front, Left, Rear, Right, Front...), each with its own share of the spread's spots
+                index = Mathf.Max(0, index);
+                t = StandAt(index % stands);
+                index /= stands;
+                spots = Mathf.Max(1, spots / stands);
+            }
+            Vector3 offset = CrossfireRules.RespawnSpread(index, spacing, spots);
+            at = t.position + offset;
             yawDegrees = t.eulerAngles.y;
-            if (!Contains(at)) at = t.position;   // a spot near the box's edge: no spread rather than a spot outside the war
+            if (!Contains(at)) at = t.position - offset;   // a spot past the box's edge: the same spot on the other side of the stand
+            if (!Contains(at)) at = t.position;            // still outside: no spread rather than a spot outside the war
+        }
+
+        int CountStands()
+        {
+            int n = 0;
+            if (respawnStands != null)
+                for (int i = 0; i < respawnStands.Length; i++)
+                    if (respawnStands[i] != null) n++;
+            return n;
+        }
+
+        /// <summary>The <paramref name="k"/>-th stand that is set (empty slots are skipped).</summary>
+        Transform StandAt(int k)
+        {
+            for (int i = 0; i < respawnStands.Length; i++)
+            {
+                if (respawnStands[i] == null) continue;
+                if (k-- == 0) return respawnStands[i];
+            }
+            return transform;
         }
 
         /// <summary>The Rally Point (Muster Yard) of <paramref name="faction"/> in the loaded maps; false when it has none.</summary>
