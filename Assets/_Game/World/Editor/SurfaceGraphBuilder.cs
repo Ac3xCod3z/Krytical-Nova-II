@@ -62,7 +62,7 @@ namespace KryticalNova.EditorTools
             o.JoinReach = s.graphJoinReach;
             o.MinColliderHeight = s.minWallHeight;
             // Every solid thing but the players and their own parts.
-            o.Layers = Physics.DefaultRaycastLayers & ~LayerMask.GetMask("Player");
+            o.Layers = Physics.DefaultRaycastLayers & ~LayerMask.GetMask("Player", "Blocker");   // blockers are never walls (owner, 17 Nov 2026)
             return o;
         }
 

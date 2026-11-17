@@ -570,6 +570,62 @@ namespace KryticalNova.EditorTools.Crucible
             return true;
         }
 
+
+        /// <summary>
+        /// Proves the Crucible's spot in Zone01 is empty (Master's condition, 17 Nov 2026): nothing of Zone01 (terrain, renderer,
+        /// collider, NavMesh, spawn or hostile zone) within the sky dome (500 m round the heart, any height). Sky Concord sits 300 m
+        /// over the town, 3 km away. Writes Library/KryticalNova.CrucibleSpot.txt; batch: exits 1 when something is there.
+        /// </summary>
+        public static string SpotCheck()
+        {
+            var scene = EditorSceneManager.OpenScene(Zone01Path, OpenSceneMode.Single);
+            var log = new StringBuilder($"[Crucible] spot check: Zone01 within 500 m of {Zone01Offset} (the Crucible root left out)
+");
+            Vector2 c = new Vector2(Zone01Offset.x, Zone01Offset.z);
+            bool Near(Bounds b)
+            {
+                float dx = Mathf.Max(0f, Mathf.Abs(c.x - b.center.x) - b.extents.x), dz = Mathf.Max(0f, Mathf.Abs(c.y - b.center.z) - b.extents.z);
+                return dx * dx + dz * dz <= 500f * 500f;
+            }
+            int hits = 0;
+            var farthest = new Bounds();
+            bool any = false;
+            foreach (GameObject root in scene.GetRootGameObjects())
+            {
+                if (root.name == RootName) continue;
+                foreach (Renderer r in root.GetComponentsInChildren<Renderer>(true))
+                {
+                    if (!any) { farthest = r.bounds; any = true; } else farthest.Encapsulate(r.bounds);
+                    if (Near(r.bounds) && hits++ < 20) log.AppendLine($"  renderer {PathOf(r.transform)} at {r.bounds.center}");
+                }
+                foreach (Collider col in root.GetComponentsInChildren<Collider>(true))
+                    if (Near(col.bounds) && hits++ < 20) log.AppendLine($"  collider {PathOf(col.transform)} at {col.bounds.center}");
+                foreach (Terrain t in root.GetComponentsInChildren<Terrain>(true))
+                {
+                    var b = new Bounds(t.transform.position + t.terrainData.size * 0.5f, t.terrainData.size);
+                    log.AppendLine($"  terrain {t.name}: {b.min} .. {b.max}");
+                    if (Near(b)) { hits++; log.AppendLine("    INSIDE the dome"); }
+                }
+                foreach (NavMeshSurface s in root.GetComponentsInChildren<NavMeshSurface>(true))
+                    if (s.navMeshData != null && Near(s.navMeshData.sourceBounds) && hits++ < 20) log.AppendLine($"  NavMesh {PathOf(s.transform)}");
+                foreach (MonoBehaviour mb in root.GetComponentsInChildren<MonoBehaviour>(true))
+                {
+                    if (mb == null) continue;
+                    string tn = mb.GetType().Name;
+                    if ((tn.Contains("Spawn") || tn.Contains("HostileZone") || tn.Contains("Portal")) && Near(new Bounds(mb.transform.position, Vector3.one)) && hits++ < 20)
+                        log.AppendLine($"  {tn} {PathOf(mb.transform)} at {mb.transform.position}");
+                }
+            }
+            log.AppendLine($"  everything else in Zone01 spans {farthest.min} .. {farthest.max}");
+            log.AppendLine(hits == 0 ? "Spot check: PASS (nothing within 500 m)" : $"Spot check: FAIL ({hits} things within 500 m)");
+            File.WriteAllText("Library/KryticalNova.CrucibleSpot.txt", log.ToString());
+            return log.ToString();
+        }
+
+        public static void SpotCheckBatch() { string r = SpotCheck(); Debug.Log(r); EditorApplication.Exit(r.Contains("FAIL") ? 1 : 0); }
+
+        static string PathOf(Transform t) => t.parent == null ? t.name : PathOf(t.parent) + "/" + t.name;
+
         static Transform Child(Transform parent, string name)
         {
             var t = new GameObject(name).transform;
