@@ -52,8 +52,9 @@ namespace KryticalNova.EditorTools.Crucible
         public static string BuildAll()
         {
             string prefab = BuildPrefab();
+            string own = MakeOwnScene();
             string place = PlaceInZone01();
-            string text = prefab + "\n" + place;
+            string text = prefab + "\n" + own + "\n" + place;
             File.WriteAllText(ReportPath, text);
             return text;
         }
@@ -728,8 +729,7 @@ namespace KryticalNova.EditorTools.Crucible
         public static string SpotCheck()
         {
             var scene = EditorSceneManager.OpenScene(Zone01Path, OpenSceneMode.Single);
-            var log = new StringBuilder($"[Crucible] spot check: Zone01 within 500 m of {Zone01Offset} (the Crucible root left out)
-");
+            var log = new StringBuilder($"[Crucible] spot check: Zone01 within 500 m of {Zone01Offset} (the Crucible root left out)\n");
             Vector2 c = new Vector2(Zone01Offset.x, Zone01Offset.z);
             bool Near(Bounds b)
             {
