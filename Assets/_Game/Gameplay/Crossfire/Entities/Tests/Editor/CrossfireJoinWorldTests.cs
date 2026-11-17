@@ -98,6 +98,29 @@ namespace KryticalNova.Crossfire.Entities.Tests
             return (rig, clock, entry);
         }
 
+        /// <summary>A GM's war goes straight to the Rally (no join window): the bracket still gets the prompt there, once, and yes joins.</summary>
+        [Test]
+        public void AWarThatSkipsItsJoinWindow_SendsThePromptInTheRally_Once_AndYesJoins()
+        {
+            Entity low = Entity.Null;
+            var (rig, clock, entry) = Start(3, g => g == low ? 5 : 112);
+            using (rig)
+            {
+                Entity a = rig.ServerGhosts[0];
+                low = rig.ServerGhosts[2];
+                m_Now = Origin + 66;   // straight into the Rally, as gm.crossfire start does: the join window never ran
+                Settle(rig);
+                Assert.AreEqual(CrossfirePhase.Muster, clock.Current.Now.Phase);
+                Assert.AreEqual(2, entry.PromptsSent, "the bracket's two players are asked in the Rally, not the level-5 one");
+                m_Now += 1;
+                Settle(rig);
+                Assert.AreEqual(2, entry.PromptsSent, "once a war");
+                Assert.IsTrue(entry.AnswerPrompt(a, true));
+                Settle(rig);
+                Assert.IsTrue(CrossfireArea.TryRallyPoint(FactionId.Hegemony, out CrossfireArea yard) && yard.Contains(Meters(rig.ServerPose(0))), "yes lands A on Hegemony's Rally Point");
+            }
+        }
+
         [Test]
         public void EveryBracketPlayer_GetsTheJoinPrompt_YesGoesToTheirRallyPoint_NoCanStillJoinAtTheMarshal_AndAllGetTheResults()
         {

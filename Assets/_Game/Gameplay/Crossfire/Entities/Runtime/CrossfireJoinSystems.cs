@@ -78,7 +78,7 @@ namespace KryticalNova.Crossfire.Entities
         readonly Dictionary<Entity, double> m_JoinedAt = new Dictionary<Entity, double>();
         readonly HashSet<Entity> m_Prompted = new HashSet<Entity>();
         readonly HashSet<Entity> m_PromptDeclined = new HashSet<Entity>();
-        double m_PromptFor = double.NaN, m_FilledFor = double.NaN;
+        double m_PromptFor = double.NaN, m_FilledFor = double.NaN, m_RallyPromptFor = double.NaN;
         EntityQuery m_JoinRequests, m_PlayerGhosts;
 
         /// <summary>Join prompts sent; players a prompt, the Marshal or the port sent to their Rally Point; late joiners (tests).</summary>
@@ -178,13 +178,18 @@ namespace KryticalNova.Crossfire.Entities
             if (s == null || !state.Known) return;
             double war = state.Now.WarStart;
             bool window = state.Now.Phase == CrossfirePhase.Call && now >= state.JoinOpensAt;
-            if (!window) return;
+            // A war that skipped its join window (a GM's gm.crossfire start goes straight to the Rally) is still offered to the bracket:
+            // the prompt goes out in the Rally instead, until the gates open (crossfire-c's call for the Master, 17 Nov 2026).
+            bool rally = state.Now.Phase == CrossfirePhase.Muster && (m_RallyPromptFor.Equals(war) || !m_PromptFor.Equals(war));
+            if (!window && !rally) return;
+            if (rally) m_RallyPromptFor = war;
             if (!m_PromptFor.Equals(war))
             {
                 m_PromptFor = war;
                 m_Prompted.Clear();
                 m_PromptDeclined.Clear();
             }
+            double closes = rally ? war + s.musterSeconds : war;   // the settle (or, for a GM's war, the gates)
             // every player of a bracket with a zone, wherever they are and whatever they do, once a war (a player who logs in during the window too)
             EntityManager em = EntityManager;
             using NativeArray<Entity> ghosts = m_PlayerGhosts.ToEntityArray(Allocator.Temp);
@@ -199,7 +204,7 @@ namespace KryticalNova.Crossfire.Entities
                 {
                     Eyebrow = s.joinPromptEyebrow ?? string.Empty,
                     Text = CrossfireCaller.Fill(s.joinPromptText, s, bracket),
-                    Seconds = (float)Math.Max(1.0, war - now),   // until the settle: later they join at the Marshal
+                    Seconds = (float)Math.Max(1.0, closes - now),   // until the settle (a GM's war: the gates): later they join at the Marshal
                     WarStart = war,
                 };
                 SendTo(g, rpc);
