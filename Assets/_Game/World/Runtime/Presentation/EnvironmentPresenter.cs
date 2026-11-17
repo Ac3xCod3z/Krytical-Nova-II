@@ -156,6 +156,13 @@ namespace KryticalNova.World
         /// <summary>The presented (smoothed) time of day, 0-1, for other client presentation (street lamps).</summary>
         public static float PresentedTimeOfDay01 { get; private set; } = 0.5f;
 
+        /// <summary>
+        /// A place that keeps its own hour (owner, 17 Nov 2026: The Crucible is always night): while 0-1 the sky, moon, light,
+        /// ambient and APV scenario show this time of day instead of the world clock's; negative = the world clock. Client only:
+        /// the server never runs this presenter, and the world clock itself is untouched.
+        /// </summary>
+        public static float LocalTimeOfDay01 { get; set; } = -1f;
+
         /// <summary>Night brightness slider, 0-1 (Settings). 0.5 = the designed night; 0 darker, 1 about +0.8 EV brighter.</summary>
         public static float NightBrightness
         {
@@ -299,6 +306,7 @@ namespace KryticalNova.World
             float flash = lightning != null ? lightning.Flash : 0f;
             float dt = Time.deltaTime;
             float time01 = SmoothClock(env, dt);
+            if (LocalTimeOfDay01 >= 0f) time01 = Mathf.Repeat(LocalTimeOfDay01, 1f);
             // Continuous phase: whole days on the world clock plus today's fraction, over one lunar cycle.
             dayCount = (int)env.State.DayCount(env.Now);
             moonPhase01 = gmMoonPhase >= 0f ? gmMoonPhase

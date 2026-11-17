@@ -658,6 +658,10 @@ namespace KryticalNova.Player
         private bool TryPickPointerHit(Ray ray, out RaycastHit hit)
         {
             int clickLayers = raycastLayers.value | (1 << gameObject.layer);
+            // Invisible player blockers (a war map's tall walls over the perimeter, owner 17 Nov 2026) stop jumps, never a click:
+            // the click goes through to the ground behind them.
+            int blocker = LayerMask.NameToLayer("Blocker");
+            if (blocker >= 0) clickLayers &= ~(1 << blocker);
             int count = Physics.RaycastNonAlloc(ray, pointerHits, maximumRayDistance, clickLayers, QueryTriggerInteraction.Ignore);
             hit = default;
             if (count == 0) return false;

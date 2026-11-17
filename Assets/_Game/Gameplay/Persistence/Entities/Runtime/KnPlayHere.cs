@@ -166,6 +166,7 @@ namespace KryticalNova.Persistence.Entities
             || KnCombatProbe.On                                                                 // the cutover's combat proof (12 Nov)
             || KnCompanionFightProbe.On                                                         // the Mount Companion's DPS and HEALER (day list 19.3)
             || Environment.GetEnvironmentVariable(TwoPlayersVariable) == "1"                    // Trade, vendors, GM target with Player2 (12 Nov)
+            || KnCrucibleProbe.On                                                               // the Crucible's Play proofs (build 19)
             || KnCadenceProbe.On;                                                               // the Cadence probe (owner x6, 7 Nov)
         /// <summary>A folder: the scripted run saves a Game-view picture there every 0.1 s (proof for the owner, GUI Editor only).</summary>
         public const string CaptureVariable = "KN_PLAYHERE_CAPTURE";
@@ -852,7 +853,7 @@ namespace KryticalNova.Persistence.Entities
         /// <summary>A walk that has not arrived after this long counts as failed.</summary>
         public const float ArriveTimeoutSeconds = 25f;
         /// <summary>A batch run that is still going after this long quits with 1.</summary>
-        public const double BatchTimeoutSeconds = 300;
+        public static double BatchTimeoutSeconds => KnCrucibleProbe.On ? 600 : 300;
 
         // Set by the menu or Batch, read on entering Play. Not reset at SubsystemRegistration on purpose: they must outlive the Play start.
         static bool s_Requested, s_QuitAfter, s_RequestedTestSaves;
@@ -1492,7 +1493,7 @@ namespace KryticalNova.Persistence.Entities
                 // the scripted fight checks need a fight-ready Tester too (8 Nov 2026: the Cadence probe's skill press was refused at
                 // level 1, "Learn Perimeter Cut with a skill point first"); the traversal tries keep their own ranks
                 // the two-player proofs too (12 Nov 2026: the Player2 bot had no skills, so its copied jump was refused "Learn Jump first.")
-                if (HasScriptedTries && (KnCadenceProbe.On || TestMobs || TwoPlayersOn)) StartCoroutine(MakeEveryoneTestReady());
+                if (HasScriptedTries && (KnCadenceProbe.On || KnCrucibleProbe.On || TestMobs || TwoPlayersOn)) StartCoroutine(MakeEveryoneTestReady());
                 if (!HasScriptedTries)
                 {
                     // owner 5-6 Nov 2026 (findings item 20): the Tester AND everyone who joins this Play DOTS here (Player2) enter at the
@@ -1640,6 +1641,14 @@ namespace KryticalNova.Persistence.Entities
                     yield return KnCadenceProbe.Run(KnBootstrap.ServerWorld, ghost, body, OwnBody, Log, at => PressAt(OwnBody, at),
                         at => Teleport(cadenceEm, ghost, at + Vector3.up * cadenceOffset), ok => { if (ok) walls.Passed++; });
                 }
+                if (KnCrucibleProbe.On)
+                {
+                    walls.Tried++;
+                    EntityManager crucibleEm = KnBootstrap.ServerWorld.EntityManager;
+                    float crucibleOffset = body.GetComponent<UnityEngine.AI.NavMeshAgent>() is UnityEngine.AI.NavMeshAgent crucibleAgent ? crucibleAgent.baseOffset : 0f;
+                    yield return KnCrucibleProbe.Run(body, OwnBody, Log, at => Teleport(crucibleEm, ghost, at + Vector3.up * crucibleOffset),
+                        () => ServerPosition(ghost) - Vector3.up * crucibleOffset, ok => { if (ok) walls.Passed++; });
+                }
                 Log($"done: {arrived} of {tries} arrived, {landed} of {jumpPoints.Count} jumps passed, low-rank refusals {(lowRank.Ok ? "match" : "DIFFER")}, " +
                     $"{vaults.Passed} of {vaults.Tried} vaults passed, {waters.Passed} of {waters.Tried} Waterstride tries passed, " +
                     $"{walls.Passed} of {walls.Tried} wall walk tries passed, " +
@@ -1686,7 +1695,7 @@ namespace KryticalNova.Persistence.Entities
                 }
             }
 
-            bool HasScriptedTries => !string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun || ClimbRun || TreeRun || CatchRun || AutoRun || LedgeRun || FixesRun || AcrossRun || ItemsRun || MountRun || MountVaultRun || CompanionRun || RoofsRun || KnCombatProbe.On || KnCompanionFightProbe.On || TwoPlayersOn || KnCadenceProbe.On;
+            bool HasScriptedTries => !string.IsNullOrEmpty(Walk) || !string.IsNullOrEmpty(Jump) || VaultCount > 0 || WaterRun || WallRun || ClimbRun || TreeRun || CatchRun || AutoRun || LedgeRun || FixesRun || AcrossRun || ItemsRun || MountRun || MountVaultRun || CompanionRun || RoofsRun || KnCombatProbe.On || KnCompanionFightProbe.On || TwoPlayersOn || KnCadenceProbe.On || KnCrucibleProbe.On;
 
             /// <summary>Which scripted parts are on, for the log's first lines (a part that should run and is not listed shows at once).</summary>
             string ScriptedParts()
@@ -1713,6 +1722,7 @@ namespace KryticalNova.Persistence.Entities
                 if (TwoPlayersOn) on.Add("two players: Trade, vendors, GM target");
                 if (RoofsRun) on.Add("roof to roof");
                 if (KnCadenceProbe.On) on.Add("the Cadence probe");
+                if (KnCrucibleProbe.On) on.Add("the Crucible's Play proofs");
                 return on.Count > 0 ? string.Join(", ", on) : "none (by hand)";
             }
 
