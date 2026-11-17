@@ -37,6 +37,7 @@ namespace KryticalNova.Crossfire.Entities.Tests
             m_Settings.musterSeconds = 12f;
             m_Settings.warMinutes = 1f;
             m_Settings.endSeconds = 5f;
+            m_Settings.gateOpeningSeconds = 0f;     // the gate is fully open the moment the War starts (the opening swing has its own tests)
             m_Settings.minLevel = 1;
             m_Now = Origin;
             CrossfireClockServerSystem.ClockSource = () => (false, default(WorldEnvironmentState));

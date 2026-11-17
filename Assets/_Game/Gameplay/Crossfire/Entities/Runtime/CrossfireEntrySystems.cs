@@ -127,6 +127,7 @@ namespace KryticalNova.Crossfire.Entities
             CrossfireState state = m_Clock.Current;
             if (!state.Known) return;
             EntityManager em = EntityManager;
+            EndWarIfOver(state, em);
             if (CrossfireArea.All.Count > 0)
             {
                 // the yards take players in the join window and the settle, and a running War until its late-join cutoff (owner, 16 Nov 2026)
@@ -154,8 +155,16 @@ namespace KryticalNova.Crossfire.Entities
                 SendRefusedBack();
                 m_Entries.ForgetWhere(e => !em.Exists(e) || !em.HasComponent<PlayerPose>(e));
             }
-            // the war is over: back to the Gap (the End ran out, or a GM called it off), or out of the End into another war a GM started
             RunWar(state, m_Clock.Now);
+        }
+
+        /// <summary>
+        /// The war is over: back to the Gap (the End ran out, or a GM called it off), or out of the End into another war a GM started.
+        /// Runs FIRST in a tick, before anything of the new war: ending the old war after the new one's vote and join prompts were opened
+        /// in the same tick shut that vote for good and sent every prompt twice (EditMode, 16 Nov 2026).
+        /// </summary>
+        void EndWarIfOver(in CrossfireState state, EntityManager em)
+        {
             CrossfirePhase phase = state.Now.Phase;
             bool over = phase != m_LastPhase && m_LastPhase != CrossfirePhase.Gap
                 && (phase == CrossfirePhase.Gap || m_LastPhase == CrossfirePhase.End);

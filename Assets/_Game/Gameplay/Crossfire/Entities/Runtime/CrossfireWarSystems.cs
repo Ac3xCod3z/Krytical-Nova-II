@@ -745,6 +745,9 @@ namespace KryticalNova.Crossfire.Entities
             m_Sides.Clear();
             m_Votes.Clear();
             m_VoteOpen = false;
+            m_VoteFor = double.NaN;     // the next war (even the same start a GM runs again) opens its own vote,
+            m_PromptFor = double.NaN;   // sends its own join prompts
+            m_FilledFor = double.NaN;   // and settles its own sides
             m_Clock?.SetScore(0, 0, 0);
             Bots?.EndWar();
         }
