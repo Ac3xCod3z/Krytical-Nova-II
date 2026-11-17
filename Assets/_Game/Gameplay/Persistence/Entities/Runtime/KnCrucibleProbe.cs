@@ -358,14 +358,26 @@ namespace KryticalNova.Persistence.Entities
                 float g0 = Time.realtimeSinceStartup;
                 while (Time.realtimeSinceStartup - g0 < 12f) { yes.Tick(); yield return null; }
                 Log($"SEGMENT wargate end frame {Time.frameCount}");
-                // the fight: from above the heart, looking down the arena
-                s_ShotPos = root.TransformPoint(new Vector3(0f, 45f, -70f));
-                s_ShotRot = Quaternion.LookRotation(root.TransformPoint(new Vector3(0f, -7f, 0f)) - s_ShotPos);
+                // the fight (owner, 17 Nov 2026: the factions' War Bots fight, the kills show on the HUD counters): first the arena from
+                // the south rim, low enough to read the bodies, while the sides march in; then the Tester at the heart, on the game's own
+                // follow camera, in the middle of it
+                s_ShotPos = root.TransformPoint(new Vector3(0f, 22f, -58f));
+                s_ShotRot = Quaternion.LookRotation(root.TransformPoint(new Vector3(0f, -7f, 8f)) - s_ShotPos);
                 Log($"SEGMENT warfight start frame {Time.frameCount}");
                 float f0 = Time.realtimeSinceStartup;
-                while (Time.realtimeSinceStartup - f0 < 45f) { yes.Tick(); yield return null; }
+                while (Time.realtimeSinceStartup - f0 < 25f) { yes.Tick(); yield return null; }
                 Log($"SEGMENT warfight end frame {Time.frameCount}");
                 s_ShotOn = false;
+                teleport(root.TransformPoint(new Vector3(0f, -6.3f, -12f)));
+                Log($"SEGMENT warheart start frame {Time.frameCount}");
+                float h0 = Time.realtimeSinceStartup, hLog = 0f;
+                while (Time.realtimeSinceStartup - h0 < 60f)
+                {
+                    yes.Tick();
+                    if (Time.realtimeSinceStartup - h0 >= hLog) { hLog += 15f; Gm("gm.crossfire status"); }
+                    yield return null;
+                }
+                Log($"SEGMENT warheart end frame {Time.frameCount}");
                 // a death in the war and the rise at the side's shrine (the follow camera on the Tester)
                 Vector3 before = root.InverseTransformPoint(serverPosition());
                 Log($"SEGMENT wardeath start frame {Time.frameCount}");
