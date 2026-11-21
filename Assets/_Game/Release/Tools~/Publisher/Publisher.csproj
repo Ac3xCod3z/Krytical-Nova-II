@@ -12,7 +12,7 @@
     <RootNamespace>KryticalNova.Publisher</RootNamespace>
     <Deterministic>true</Deterministic>
     <Product>Krytical Nova Publisher</Product>
-    <Company>Ascension Studios</Company>
+    <Company>Ac3nsion Studios</Company>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <DebugType>none</DebugType>
     <ApplicationIcon>Publisher.ico</ApplicationIcon>

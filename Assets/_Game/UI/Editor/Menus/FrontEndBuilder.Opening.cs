@@ -7,7 +7,7 @@ using UnityEngine.UI;
 namespace KryticalNova.EditorTools
 {
     /// <summary>
-    /// The game's own look at the door (owner, 16 Oct 2026): the opening (the Ascension Studios crest, then the
+    /// The game's own look at the door (owner, 16 Oct 2026): the opening (the Ac3nsion Studios crest, then the
     /// Krytical Nova logo, <see cref="OpeningIntro"/>) in place of Unity's splash, the cover painting as the title screen
     /// in every faction skin, and the game's icons (the ring at small sizes, the name logo from 128 px up and as the
     /// default icon). The art is the owner's, from Pictures/Screenshots/Logos &amp; covertitle art.
