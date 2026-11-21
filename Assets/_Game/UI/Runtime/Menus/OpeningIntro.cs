@@ -7,7 +7,7 @@ using UnityEngine.UI;
 namespace KryticalNova.UI.Menus
 {
     /// <summary>
-    /// The game's opening (owner, 16 Oct 2026; Unity's own splash is off): on a dark field the Ascension Studios crest
+    /// The game's opening (owner, 16 Oct 2026; Unity's own splash is off): on a dark field the Ac3nsion Studios crest
     /// fades in and out, then the Krytical Nova logo comes in with a red and cyan glitch, the split its art is drawn with,
     /// holds, and the whole layer fades to show the title underneath. It plays over the Title scene the first time that
     /// scene opens after the game starts, never when a player comes back to the title. Any key or click skips it, and

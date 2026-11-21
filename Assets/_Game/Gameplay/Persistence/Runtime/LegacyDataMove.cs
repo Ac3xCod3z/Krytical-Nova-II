@@ -8,7 +8,9 @@ using Debug = UnityEngine.Debug;
 namespace KryticalNova.Persistence
 {
     /// <summary>
-    /// The owner renamed the company to "Ascension Studios" and the game to "Krytical Nova" (16 Oct 2026). Unity keeps a
+    /// The owner renamed the company to "Ascension Studios" and the game to "Krytical Nova" (16 Oct 2026; the studio has
+    /// been written "Ac3nsion Studios" since 21 Nov 2026, but Unity's companyName stays "Ascension Studios" so these
+    /// folders do not move again). Unity keeps a
     /// PC's own data under those names: the folder in AppData/LocalLow (local saves, the server list it keeps) and the
     /// settings (PlayerPrefs, in the registry). The first time a game or the Editor starts under the new names, this
     /// copies the old ones across once, so nothing looks lost: files that already exist under the new name are kept,
