@@ -26,6 +26,13 @@ namespace KryticalNova.Player
         private Vector3 originalScale = Vector3.one;
         private Vector3 originalPosition;
         private AnimancerState flipState;
+        // At rest (perf clean-ups round 2, chunk 13): the spring has settled on its target and the pose is written, so LateUpdate
+        // skips it until a jump stage changes the target or kicks the spring.
+        private bool resting;
+        private Vector3 lastScale = Vector3.one;
+
+        /// <summary>True while the squash spring is settled and nothing is written each frame (tests).</summary>
+        public bool Resting => resting;
         public bool IsReady => (animancerMotor != null) || (motionData != null && animancer != null && squashRoot != null
             && motionData.frontFlip != null && motionData.restPose != null);
 
@@ -53,9 +60,16 @@ namespace KryticalNova.Player
 
         private void LateUpdate()
         {
-            if (!IsReady || squashRoot == null || motionData == null) return;
+            if (resting || !IsReady || squashRoot == null || motionData == null) return;
             Vector3 scale = scaleSpring.TrackHalfLife(targetScale, motionData.springFrequency, motionData.springHalfLife, Time.deltaTime);
             scale = Vector3.Min(Vector3.one * MaximumScale, Vector3.Max(Vector3.one * MinimumScale, scale));
+            if ((scale - targetScale).sqrMagnitude < 1e-8f && (scale - lastScale).sqrMagnitude < 1e-10f)
+            {
+                scaleSpring.Reset(targetScale);   // snap to rest once, then nothing more until the next stage
+                scale = Vector3.Min(Vector3.one * MaximumScale, Vector3.Max(Vector3.one * MinimumScale, targetScale));
+                resting = true;
+            }
+            lastScale = scale;
             squashRoot.localScale = Vector3.Scale(originalScale, scale);
             squashRoot.localPosition = originalPosition + Vector3.up * ((scale.y - 1f) * visualPivotHeight);
         }
@@ -72,6 +86,7 @@ namespace KryticalNova.Player
             }
             PlayRestPose();
             if (motionData != null) targetScale = motionData.anticipationScale;
+            resting = false;
         }
 
         /// <summary>Stretches the body at launch, then lets the Boing spring settle naturally.</summary>
@@ -86,6 +101,7 @@ namespace KryticalNova.Player
             }
             if (motionData != null) scaleSpring.Reset(motionData.takeoffScale);
             targetScale = Vector3.one;
+            resting = false;
         }
 
         /// <summary>Starts the full forward flip exactly at the apex, fitting it into the remaining flight time.</summary>
@@ -119,6 +135,7 @@ namespace KryticalNova.Player
             PlayRestPose();
             targetScale = Vector3.one;
             if (motionData != null) scaleSpring.Reset(motionData.landingScale, motionData.landingScaleVelocity);
+            resting = false;
         }
 
         // ---- Warped jump: a chain of in-place clips, the motor moves the body with Motion Warping ----
@@ -187,6 +204,7 @@ namespace KryticalNova.Player
             PlayRestPose();
             targetScale = Vector3.one;
             scaleSpring.Reset(Vector3.one);
+            resting = false;
             if (squashRoot != null)
             {
                 squashRoot.localScale = originalScale;
