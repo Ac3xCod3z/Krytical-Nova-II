@@ -102,7 +102,19 @@ namespace KryticalNova.Player.Entities.Presentation
                 else
                 {
                     using var fresh = m_New.ToEntityArray(Allocator.Temp);
-                    foreach (var e in fresh) SpawnBody(em, e);
+                    // R3-5 B: one "body.spawn" marker per frame while the performance log records: bodies made, their ms, and the
+                    // KB each step put on the managed heap (BodySpawnCost), so a join's slow frames say which step costs
+                    bool timing = KryticalNova.Diagnostics.PerformanceLog.IsRecording;
+                    long began = timing ? System.Diagnostics.Stopwatch.GetTimestamp() : 0;
+                    int made = 0;
+                    foreach (var e in fresh) if (SpawnBody(em, e)) made++;
+                    if (timing && made > 0)
+                    {
+                        long now = System.Diagnostics.Stopwatch.GetTimestamp();
+                        string steps = BodySpawnCost.Take(out long bytes);
+                        KryticalNova.Diagnostics.PerformanceLog.Markers.Add("body.spawn", $"{made} bodies; KB {bytes / 1024} ({steps})", made,
+                            (float)((now - began) * 1000.0 / System.Diagnostics.Stopwatch.Frequency), false, now);
+                    }
                 }
             }
 
@@ -119,8 +131,9 @@ namespace KryticalNova.Player.Entities.Presentation
             }
         }
 
-        void SpawnBody(EntityManager em, Entity e)
+        bool SpawnBody(EntityManager em, Entity e)
         {
+            BodySpawnCost.Begin();
             var t = em.GetComponentData<LocalTransform>(e);
             var request = new PlayerBodyRequest
             {
@@ -138,7 +151,8 @@ namespace KryticalNova.Player.Entities.Presentation
                     m_WarnedFactory = true;
                     Debug.LogWarning($"PlayerBodySpawnSystem: the body factory returned no body for the ghost of NetworkId {request.NetworkId}; it is asked again next frame.");
                 }
-                return;
+                BodySpawnCost.Mark(BodySpawnCost.Step.Register);   // closes the body
+                return false;
             }
 
             var state = body.GetComponent<PlayerPresentationState>();
@@ -146,6 +160,8 @@ namespace KryticalNova.Player.Entities.Presentation
             state.NetworkId = request.NetworkId;
             GhostBodyRegistry.Register(World, e, request.NetworkId, request.Key, body, request.IsLocal);
             em.AddComponentData(e, new PlayerBodyLink { Linked = 1 });
+            BodySpawnCost.Mark(BodySpawnCost.Step.Register);
+            return true;
         }
 
         // GhostOwnerIsLocal settles a frame after the ghost appears, but the owner's NetworkId is already in the ghost: comparing it with
